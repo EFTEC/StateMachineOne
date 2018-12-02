@@ -1,0 +1,28 @@
+{
+    "name": "eftec/statemachineone",
+    "description": "statemachineone",
+    "version": "0.1",
+    "type": "example",
+    "keywords": [
+        "php"
+        ,"statemachine"
+    ],
+    "homepage": "https://github.com/EFTEC/StateMachineOne",
+    "authors": [
+        {
+            "name": "Jorge Castro Castillo",
+            "homepage": "https://github.com/EFTEC/"
+        }
+    ],
+    "minimum-stability": "beta",
+    "license": "LGPL-3.0",
+    "require": {
+        "composer/installers": "^1",
+        "eftec/validationone": "1.12"
+    },
+    "autoload": {
+      "psr-4": {
+        "eftec\\": "vendor/eftec/"
+      }
+    }
+}
