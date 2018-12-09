@@ -1,7 +1,4 @@
 <?php
-/*
- * Require the composer autoloader or create PSR-4 autoloaders for eftec\bladeone\ and eftec\tests\ found in composer.json.
- */
 
 
     function create_autoloader($prefix, $base_dir) {

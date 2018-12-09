@@ -2,8 +2,8 @@
 State Machine library for PHP with an optional store in mysql.  
 This library has only a simple external dependency, it is a minimalist (yet complete) library with only 3 classes. 
 
-[![Build Status](https://travis-ci.org/EFTEC/StateMachineOne.svg?branch=master)](https://travis-ci.org/EFTEC/BladeOne)
-[![Packagist](https://img.shields.io/packagist/v/eftec/statemachineone.svg)](https://packagist.org/packages/eftec/bladeone)
+[![Build Status](https://travis-ci.org/EFTEC/StateMachineOne.svg?branch=master)](https://travis-ci.org/EFTEC/StateMachineOne)
+[![Packagist](https://img.shields.io/packagist/v/eftec/statemachineone.svg)](https://packagist.org/packages/eftec/statemachineone)
 [![Maintenance](https://img.shields.io/maintenance/yes/2018.svg)]()
 [![composer](https://img.shields.io/badge/composer-%3E1.6-blue.svg)]()
 [![php](https://img.shields.io/badge/php->5.6-green.svg)]()
