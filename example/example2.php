@@ -24,6 +24,8 @@ $smachine->extraColumnJobs=['customerpresent','addressnotfound','signeddeliver',
 $smachine->setDB('localhost',"root","abc.123","statemachinedb");
 $smachine->createDbTable(true); // you don't need to create this table every time.
 
+$smachine->setStopTrigger(function($smo,$job) {echo "job is stopping<br>"; return true;});
+
 //$smachine->loadDBActiveJobs();
 
 

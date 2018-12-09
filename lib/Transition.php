@@ -78,7 +78,17 @@ class Transition
 cin;
     }
     
-    private function strToValue($job,$string) {
+    private function strToValue(Job $job,$string) {
+    	switch ($string) {
+		    case 'null':
+		    	return null;
+		    case 'now()':
+		    	return time();
+		    case 'interval()':
+		    	return time()- $job->dateLastChange;
+		    case 'fullinterval()':
+			    return time()- $job->dateInit;
+	    }
         $cField0=substr($string,0,1);
         if (ctype_alpha($cField0)) {
 	        if (strpos($string,'()')!==false) {
@@ -233,6 +243,7 @@ cin;
 				    $job->setIsUpdate(true);
 				    if ($smo->isDbActive()) $smo->saveDBJob($job);
 				    $smo->addLog($job->idJob, "INFO", "state changed from {$this->state0} to {$this->state1} stopped");
+				    $smo->callStopTrigger($job);
 				    $smo->removeJob($job); // job done, deleting from the queue.
 				    return true;
 			    }
@@ -244,6 +255,7 @@ cin;
     }
 
 	/**
+	 * Set the values of a job based in the operation of $this->set<br>
 	 * @param Job $job
 	 */
     public function doSetValues($job) {

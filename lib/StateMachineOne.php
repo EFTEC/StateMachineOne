@@ -68,7 +68,9 @@ class StateMachineOne {
     {
         $this->changeStateTrigger = $changeStateTrigger;
     }
-
+	public function callChangeStateTrigger($job) {
+		return call_user_func($this->changeStateTrigger,$this,$job);
+	}
     /**
      * It sets the method called when the job starts
      * @param callable $startTrigger
@@ -77,7 +79,9 @@ class StateMachineOne {
     {
         $this->startTrigger = $startTrigger;
     }
-
+	public function callStartTrigger($job) {
+		return call_user_func($this->startTrigger,$this,$job);
+	}
     /**
      * It sets the method called when job is paused
      * @param callable $pauseTrigger
@@ -86,7 +90,9 @@ class StateMachineOne {
     {
         $this->pauseTrigger = $pauseTrigger;
     }
-
+	public function callPauseTrigger($job) {
+		return call_user_func($this->pauseTrigger,$this,$job);
+	}
     /**
      * It sets the method called when the job stop
      * @param callable $stopTrigger
@@ -96,6 +102,9 @@ class StateMachineOne {
     {
     	//function(StateMachineOne $smo,Job $job) { return true; }
         $this->stopTrigger = $stopTrigger;
+    }
+    public function callStopTrigger($job) {
+	    return call_user_func($this->stopTrigger,$this,$job);
     }
 
     /**
@@ -512,7 +521,7 @@ class StateMachineOne {
         }
         if ($dateStart<=time() || $active=='active') {
             // it start.
-            call_user_func($this->startTrigger,$this,$job);
+	        $this->callStartTrigger($job);
             $job->setActive($active);
             if($this->dbActive)  {
                 $idJob=$this->saveDBJob($job); // we update the job  
@@ -541,7 +550,7 @@ class StateMachineOne {
     	$job=$this->jobQueue[$idJob]; // $job is an instance, not a copy!.
         if ($job->dateInit<=time() && $job->getActive()=='inactive') {
             // it starts the job.
-            call_user_func($this->startTrigger,$this,$job);
+	        $this->callStartTrigger($job);
             $job->setActive('active');
             $job->setIsUpdate(true);
         }
@@ -594,7 +603,7 @@ class StateMachineOne {
      * @return bool true if the operation was succesful, otherwise (error) it returns false
      */
     public function changeState(Job $job,$newState) {
-        if (call_user_func($this->changeStateTrigger,$this,$job->state,$newState)) {
+        if ($this->callChangeStateTrigger($job)) {
             //$this->addLog($job->idJob,'CHANGE',"Change state #{$job->idJob} from {$job->state }->{$newState}");
             $job->state = $newState;
 	        $job->isUpdate=true;
