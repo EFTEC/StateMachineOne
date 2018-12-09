@@ -36,16 +36,7 @@ $smachine->setStates([STATE_PICK=>'Pick order'
 	,STATE_HELP=>'Request assistance'
 	,STATE_DELIVERED=>'Delivered'
 	,STATE_ABORTED=>'Aborted']);
-/*
-$smachine->setStates([STATE_PICK
-	,STATE_CANCEL
-	,STATE_TRANSPORT
-	,STATE_ABORTTRANSPORT
-	,STATE_TODELIVER
-	,STATE_HELP
-	,STATE_DELIVERED
-	,STATE_ABORTED]);
-*/
+
 $smachine->fieldDefault=[
 	'customerpresent'=>-1
 	,'addressnotfound'=>-1
@@ -76,7 +67,7 @@ $smachine->addTransition(STATE_HELP,STATE_ABORTED
 $smachine->addTransition(STATE_HELP,STATE_DELIVERED
 	,'when addressnotfound = 0 and customerpresent = 1 and signeddeliver = 1',null,'change');
 
-//include "chopsuey_ui.php";
+
 $msg=$smachine->fetchUI();
 $smachine->checkAllJobs();
 
