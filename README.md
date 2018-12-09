@@ -101,26 +101,6 @@ Constructor of the class. By default, the construct set default triggers.
 StateMachineOne constructor.
 
 ### Parameters:  
-## Method __construct()
-
-
-### Parameters:  
-## Method __construct()
-
-
-### Parameters:  
-## Method __construct()
-
-
-### Parameters:  
-## Method __construct()
-
-
-### Parameters:  
-## Method __construct()
-
-
-### Parameters:  
 ## Method setDB()
 It sets the database
 
