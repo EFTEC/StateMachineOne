@@ -65,11 +65,22 @@ In this example, I am not including other values that it could be useful (such a
 It must include all the possible situation. The real world is not as easy as: sell and money.
 
 * **STATE_PICK**  The delivery boy will pick the food if any. For example, what if a customer asks for Pekin's duck and the restaurant doesn't have?.
+
+![cooker](Docs/cooker.jpg)
+
 * **STATE_CANCEL**   The order is canceled. 
-* **STATE_TRANSPORT**  The delivery boy is on route to deliver the food.  
+* **STATE_TRANSPORT**  The delivery boy is on route to deliver the food.
+
+![cooker](Docs/deliveryboy.jpg)
+
+  
 * **STATE_ABORTTRANSPORT**   Something happened, the delivery must be aborted. 
 * **STATE_HELP**    The delivery boy is ready to deliver but he is not able to find the address or maybe there is nobody, so he calls for help.  
-* **STATE_DELIVERED**  The food is delivered. Our hero returns to base (Chinese restaurant). 
+* **STATE_DELIVERED**  The food is delivered. Our hero returns to base (Chinese restaurant).
+
+![cooker](Docs/food.jpg)
+
+ 
 * **STATE_ABORTED**  The transaction is aborted, nobody at home or the address is wrong.
 
 ### Transitions (ChopSuey's exercise)
@@ -81,13 +92,6 @@ It must include all the possible situation. The real world is not as easy as: se
 * **STATE_TRANSPORT** -> **STATE_HELP**  When?. addressnotfound=1,customerpresent=0 and signeddeliver<>1. Our deliver calls to home and ask for new instructions. Is it Fake Street #1234 the right address?.  
 * **STATE_HELP** -> **STATE_ABORTED** (END) When?. (15 minutes deadline) or if abort=1.  Our deliver called home and yes, the address is fake (it's a shocking surprise)  
 * **STATE_HELP** -> **STATE_DELIVERED** (END) When?. addressnotfound=0,customerpresent=1 and signeddeliver=1. It is delivered, the customer is present and it signed the deliver (plus a tip, I hope it)  
-
-
-
-
-
-
-
 
 
 
