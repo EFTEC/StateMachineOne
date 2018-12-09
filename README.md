@@ -546,6 +546,7 @@ $tmp=$statemachineone->checkConsistencethis();
 
 ## Version
 
+* 1.2 2018-12-09 Updated dependency
 * 1.1 2018-12-09 Some corrections.  
 * 1.0 2018-12-08 First (non beta) version.
 

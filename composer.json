@@ -1,7 +1,7 @@
 {
     "name": "eftec/statemachineone",
     "description": "statemachineone",
-    "version": "1.1",
+    "version": "1.2",
     "type": "example",
     "keywords": [
         "php"
@@ -19,7 +19,7 @@
     "require": {
         "php": ">=5.6",      
         "composer/installers": "^1",
-        "eftec/daoone": "3.17",
+        "eftec/daoone": "^3.19",
         "ext-ctype": "*"
     },
     "require-dev": {

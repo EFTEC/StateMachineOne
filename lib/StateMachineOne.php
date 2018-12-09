@@ -9,7 +9,7 @@ use eftec\DaoOne;
  * Class StateMachineOne
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version 1.1 2018-12-09
+ * @version 1.2 2018-12-09
  * @link https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne {
