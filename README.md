@@ -1,5 +1,5 @@
 # StateMachineOne
-State Machine library for PHP with an optional store in mysql.  
+State Machine library for PHP with an optional store in MySQL.  
 This library has only a simple external dependency, it is a minimalist (yet complete) library with only 3 classes. 
 
 [![Build Status](https://travis-ci.org/EFTEC/StateMachineOne.svg?branch=master)](https://travis-ci.org/EFTEC/StateMachineOne)
@@ -13,9 +13,9 @@ This library has only a simple external dependency, it is a minimalist (yet comp
 
 ## What is a state machine?.
 
-A state machine (also called Automata, such as Nier minus her high heels) is a procedural execution of a **job** based in **states**. 
-Every job must has a state such as "INITIATED","PENDING","IN PROCESS" and so on,
-and the job changes of state (**transition**) according some logic or condition. Such conditions could be a field, a time or a custom function.   
+A State Machine (also called Automata, such as Nier minus her high heels) is a procedural execution of a **job** based in **states**. 
+Every job must have a single state at the same time, such as "INITIATED","PENDING","IN PROCESS" and so on,
+and the job changes of state (**transition**) according to some logic or condition. Such conditions could be a field, a time or a custom function.   
 
 
 The target of this library is to ease the process to create a state machine.
@@ -26,24 +26,24 @@ The target of this library is to ease the process to create a state machine.
 * **Job:** it's the process to run.  A job could have a single state.  
 * **State:** it's the current condition of the job.  
 * **Transition:** it's the change from one **state** to another. The transition is conditioned to a set of values, time or a function.  
-Also, every transition has a timeout. If the timeout is reached then the transition is done, no matter the values or the conditions (even if it has the **active** state paused).  Transition could have 3 outcomes:
+Also, every transition has a timeout. If the timeout is reached then the transition is done, no matter the values or the conditions (even if it has the **active** state paused).  The transition could have 3 outcomes:
 * * **change** The transition changes of state and the job is still active. It is only possible to do the transition if the job has the ACTIVE STATE = active.
 * * **pause**  The transition changes of state and the job is paused. It is only possible to do the transition if the job has the ACTIVE STATE = active.
 * * **continue**  The transition changes of state and the job resumes of the pause. It is only possible to do the transition if the job has the ACTIVE STATE = pause or active
 * * **stop** The transition changes of state and the job is stopped. It is only possible to do the transition if the job has the ACTIVE STATE = active or pause.
-* **Active:** Every job has an **active state**. There are 4: none,stop,active,inactive,pause. It is different to the states.
-So, for example, a job could has the **state**: INPROGRESS and the **active state**: PAUSE.   
+* **Active:** Every job has an **active state**. There are 4: none,stop,active,inactive,pause. It is different from the states.
+So, for example, a job could have the **state**: INPROGRESS and the **active state**: PAUSE.   
 * * **none** = the job doesn't exist. It can't change of state, neither it is loaded by default
-* * **stop** = the job has stopped (finished), it could be a succesful, aborted or cancelled. It can't change of state neither it is loaded by default.   
+* * **stop** = the job has stopped (finished), it could be a successful, aborted or canceled. It can't change of state neither it is loaded by default.   
 * * **pause** = the job is on hold, it will not change of state (unless it is forced) but it could be continued. 
 * * **active** = the job is running normally, it could change of state.
-* * **inactive** = the job is schedule to run at some date.  it couldn't change of state unless it is activated (by schedule) 
-* **Refs:** Every job has some related fields.  For example, if the job is about an invoice, then refs must be the number of the invoice. The State Machine doesn't use any refs but it keeps the values for integration with other systems.
+* * **inactive** = the job is scheduled to run at some date.  it couldn't change of state unless it is activated (by schedule) 
+* **Refs:** Every job has some related fields.  For example, if the job is about an invoice, then refs must be the number of the invoice. The State Machine doesn't use any refs, but it keeps the values for integration with other systems.
 * **Fields:** Every job has some fields or values, it could trigger a transition.
 
 ## Example, ChopSuey Chinese Delivery Food.
 
-We need to create a process to deliver chinese food at home. Is it easy?. Well, let's find it out.
+We need to create a process to deliver Chinese food at home. Is it easy?. Well, let's find it out.
 
 ![ChopSuey](Docs/ChopSuey.jpg)
 
@@ -51,7 +51,7 @@ We need to create a process to deliver chinese food at home. Is it easy?. Well, 
 ### Fields (ChopSuey's exercise)
 
 **Fields** are values used for out State Machine. 
-In this example, I am not including other values that it could be useful (such as money, customer name, address and such), because they are not part or used by of the state machine.
+In this example, I am not including other values that it could be useful (such as money, customer name, address and such) because they are not part or used by of the state machine.
 
 * **customerpresent** =1 if the customer is at home, 0=if not, =null not defined yet
 * **addressnotfound** =1 if the address is not found by the delivery boy, =0 if found, =null if it's not yet defined.
@@ -62,13 +62,13 @@ In this example, I am not including other values that it could be useful (such a
 
 ### States (ChopSuey's exercise)
 
-It must includes all the possible situation. The real world is not as easy as : sell and money.
+It must include all the possible situation. The real world is not as easy as: sell and money.
 
-* **STATE_PICK**  The deliver boy will pick the food, if any. For example, what if a customer asks for Pekin's duck and the restaurant doesn't have?.
-* **STATE_CANCEL**   The order is cancelled. 
-* **STATE_TRANSPORT**  The deliver boy is on route to deliver the food.  
-* **STATE_ABORTTRANSPORT**   Something happened, the deliver must be aborted. 
-* **STATE_HELP**    The deliver boy is ready to deliver but he is not able to find the address or maybe there is nobody, so he calls for a help.  
+* **STATE_PICK**  The delivery boy will pick the food if any. For example, what if a customer asks for Pekin's duck and the restaurant doesn't have?.
+* **STATE_CANCEL**   The order is canceled. 
+* **STATE_TRANSPORT**  The delivery boy is on route to deliver the food.  
+* **STATE_ABORTTRANSPORT**   Something happened, the delivery must be aborted. 
+* **STATE_HELP**    The delivery boy is ready to deliver but he is not able to find the address or maybe there is nobody, so he calls for help.  
 * **STATE_DELIVERED**  The food is delivered. Our hero returns to base (Chinese restaurant). 
 * **STATE_ABORTED**  The transaction is aborted, nobody at home or the address is wrong.
 
@@ -310,4 +310,5 @@ $tmp=$statemachineone->checkConsistencethis();
 
 ## Version
 
+1.1 2018-12-09 Some corrections.
 1.0 2018-12-08 First (non beta) version.
