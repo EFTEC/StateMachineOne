@@ -49,7 +49,7 @@ $smachine->addTransition(STATE_HELP,STATE_TODELIVER,'where addressnotfound = 0',
 $smachine->addTransition(STATE_TODELIVER,STATE_DELIVERED
 	,'where signeddeliver = 1 set addressnotfound = 0 and customerpresent = 1',60*30,"stop");
 
-$smachine->checkConsistence();
+$smachine->checkConsistency();
 
 $job=$smachine->createJob(['idref'=>1]
         ,['customerpresent'=>''

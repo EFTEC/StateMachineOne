@@ -27,13 +27,13 @@ The target of this library is to ease the process to create a state machine.
 * **State:** it's the current condition of the job.  
 * **Transition:** it's the change from one **state** to another. The transition is conditioned to a set of values, time or a function.  
 Also, every transition has a timeout. If the timeout is reached then the transition is done, no matter the values or the conditions (even if it has the **active** state paused).  The transition could have 3 outcomes:
-* * **change** The transition changes of state and the job is still active. It is only possible to do the transition if the job has the ACTIVE STATE = active.
-* * **pause**  The transition changes of state and the job is paused. It is only possible to do the transition if the job has the ACTIVE STATE = active.
-* * **continue**  The transition changes of state and the job resumes of the pause. It is only possible to do the transition if the job has the ACTIVE STATE = pause or active
-* * **stop** The transition changes of state and the job is stopped. It is only possible to do the transition if the job has the ACTIVE STATE = active or pause.
+* * **change** The transition changes of state and the job is keep active. It is only possible to do the transition if the job has the ****active state**** = active.
+* * **pause**  The transition changes of state and the job is paused. It is only possible to do the transition if the job has the **active state** = active.
+* * **continue**  The transition changes of state and the job resumes of the pause. It is only possible to do the transition if the job has the **active state** = pause or active
+* * **stop** The transition changes of state and the job is stopped. It is only possible to do the transition if the job has the **active state** = active or pause.
 * **Active:** Every job has an **active state**. There are 4: none,stop,active,inactive,pause. It is different from the states.
 So, for example, a job could have the **state**: INPROGRESS and the **active state**: PAUSE.   
-* * **none** = the job doesn't exist. It can't change of state, neither it is loaded by default
+* * **none** = the job doesn't exist. It can't change of state, neither it is loaded (fro the database) by default
 * * **stop** = the job has stopped (finished), it could be a successful, aborted or canceled. It can't change of state neither it is loaded by default.   
 * * **pause** = the job is on hold, it will not change of state (unless it is forced) but it could be continued. 
 * * **active** = the job is running normally, it could change of state.
@@ -65,7 +65,7 @@ customer name, address and such) because they are not part or used by the state 
 
 It must include all the possible situation. The real world is not as easy as: sell and money.
 
-* **STATE_PICK**  The delivery boy will pick the food if any. For example, what if a customer asks for Pekin's duck and the restaurant doesn't have?.
+* **STATE_PICK**  The delivery boy will pick the food if any. For example, what if a customer asks for Pekin's duck (with orange sauce) and the restaurant doesn't have?.
 
 ![cooker](Docs/cooker.jpg)
 

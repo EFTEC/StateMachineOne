@@ -122,7 +122,7 @@ class Job {
     }
 
     /**
-     * @param string $active= ['none','inactive','active','pause','stop','success'][$i]
+     * @param string $active= ['none','inactive','active','pause','stop'][$i]
      * @return Job
      */
     public function setActive($active)
@@ -144,7 +144,7 @@ class Job {
     }
 
     /**
-     * @return string= ['none','inactive','active','pause','stop','success'][$i]
+     * @return string= ['none','inactive','active','pause','stop'][$i]
      */
     public function getActive() {
         return $this->active;

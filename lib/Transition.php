@@ -19,6 +19,8 @@ class Transition
     var $function;
     /** @var int */
     var $duration;
+    /** @var string */
+    var $txtCondition;
 	/** @var array */
 	var $set;    
     /** @var callable|mixed  */
@@ -41,11 +43,13 @@ class Transition
         $this->state0 = $state0;
         $this->state1 = $state1;
         $this->result=$result;
-	    $this->duration = $duration;
+	    $this->duration = ($duration===null)?2000000:$duration; // 2 millions of seconds.
         if (is_callable($conditions)) {
+        	$this->txtCondition="custom function()";
             $this->function = $conditions;
         }
         if (is_string($conditions))  {
+        	$this->txtCondition=$conditions;
         	$conditions=trim($conditions);
         	$conditions=str_replace('"',"'",$conditions);
 	        $conditions=str_replace(["\t","\r\n","\n","  "]," ",$conditions);
@@ -140,7 +144,7 @@ cin;
     public function evalLogic(StateMachineOne $smo, Job $job) {
         
         if (count($this->logic)<=1) return;
-        if ($this->logic[1]=="timeout") return;  // the first command is start
+        if ($this->logic[1]=="timeout") return;  // the first command is where
         $arr=$this->logic;
         $r = false;
         $prev=false;
@@ -154,10 +158,10 @@ cin;
             $field1 = $this->strToValue($job, $arr[$i+3]);
             switch ($arr[$i+2]) {
                 case '=':
-                    $r = ($field0 == $field1);
+                    $r = ($field0 === $field1);
                     break;
                 case '<>':
-                    $r = ($field0 != $field1);
+                    $r = ($field0 !== $field1);
                     break;
                 case '<':
                     $r = ($field0 < $field1);
@@ -218,6 +222,7 @@ cin;
 			    break;
 		    case "pause":
 			    if ($job->getActive()=="active" || $job->getActive()=="pause" || $forced) { // we only changed if the job is paused or active.
+				    $smo->changeState($job, $this->state1);
 				    $job->setActive("pause");
 				    $this->doSetValues($job);
 				    $job->setIsUpdate(true);
@@ -228,6 +233,7 @@ cin;
 			    break;
 		    case "continue":
 			    if ($job->getActive()=="pause" || $job->getActive()=="active" || $forced) { // we only changed if the job is active or paused
+				    $smo->changeState($job, $this->state1);
 				    $job->setActive("active");
 				    $this->doSetValues($job);
 				    $job->setIsUpdate(true);
@@ -238,13 +244,16 @@ cin;
 			    break;
 		    case "stop":
 			    if ($job->getActive()=="active" || $job->getActive()=="pause" || $forced) { // we only changed if the job is paused or active.
+				    $smo->changeState($job, $this->state1);
 				    $job->setActive("stop");
 				    $this->doSetValues($job);
 				    $job->setIsUpdate(true);
 				    if ($smo->isDbActive()) $smo->saveDBJob($job);
 				    $smo->addLog($job->idJob, "INFO", "state changed from {$this->state0} to {$this->state1} stopped");
 				    $smo->callStopTrigger($job);
-				    $smo->removeJob($job); // job done, deleting from the queue.
+				    if ($smo->isAutoGarbage()) {
+				    	$smo->garbageCollector(); // job done, deleting from the queue.
+				    }
 				    return true;
 			    }
 			    break;
