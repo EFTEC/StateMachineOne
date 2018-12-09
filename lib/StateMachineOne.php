@@ -51,7 +51,7 @@ class StateMachineOne {
     /** @var array It indicates extra fields/states */
     var $fieldDefault=[''];
     
-    
+    private $changed=false;
     
     // callbacks
     /** @var callable it's called when we change state (by default it returns true)  */
@@ -459,16 +459,22 @@ class StateMachineOne {
         foreach($this->transitions as $trn) {
         	   if (isset($job)) { // the isset it is because the job could be deleted from the queue.
 	            if ($trn->state0 == $job->state) {
-		            if (time()-$job->dateLastChange >$trn->duration) {
-			            // time is up, we will do the transition anyways
-			            $trn->doTransition($this,$job,true);
+		            if (time()-$job->dateLastChange >= $trn->duration) {
+			            // timeout time is up, we will do the transition anyways
+			            if ($trn->doTransition($this,$job,true)) {
+				            $this->changed = true;
+			            }
 		            } else {
 			            if (count($trn->logic)) {
 				            // we check the transition based on table
-				            $trn->evalLogic($this, $job);
+				            if ($trn->evalLogic($this, $job)) {
+				            	$this->changed=true;
+				            }
 			            } else if (is_callable($trn->function)) {
 				            // we check the transition based on function
-				            call_user_func($trn->function, $this, $job);
+				            if (call_user_func($trn->function, $this, $job)) {
+					            $this->changed=true;
+				            }
 			            }
 		            }
 
@@ -482,18 +488,24 @@ class StateMachineOne {
      * @return bool true if the operation was successful, false if error.
      */
     public function checkAllJobs() {
-        foreach($this->jobQueue as $idx=> &$job) {
-	        if (get_class($job)=="eftec\statemachineone\Job") { // why?, because we use foreach
-	        	if ($job->getActive()!="none" && $job->getActive()!="stop") {
-			        try {
-				        $this->checkJob($idx);
-			        } catch (\Exception $e) {
-				        $this->addLog($idx, "ERROR", "State error " . $e->getMessage());
-				        return false;
-			        }
-		        }
-	        }
-        }
+    	for($iteraction=0;$iteraction<10;$iteraction++) {
+		    $this->changed=false;
+		    foreach ($this->jobQueue as $idx => &$job) {
+			    if (get_class($job) == "eftec\statemachineone\Job") { // why?, because we use foreach
+				    if ($job->getActive() != "none" && $job->getActive() != "stop") {
+					    try {
+						    $this->checkJob($idx);
+					    } catch (\Exception $e) {
+						    $this->addLog($idx, "ERROR", "State error " . $e->getMessage());
+						    return false;
+					    }
+				    }
+			    }
+		    }
+		    if (!$this->changed) {
+			    break;
+		    } // we don't test it again if we changed of state.		    
+	    }
         return true;
     }
 

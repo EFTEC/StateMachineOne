@@ -134,13 +134,14 @@ cin;
 			}
 		}
 		trigger_error("Error, you can't set a literal value [$variable]");
-	}    
+	}
 
-    /**
-     * @param StateMachineOne $smo
-     * @param Job $job
-     * @throws \Exception
-     */
+	/**
+	 * @param StateMachineOne $smo
+	 * @param Job $job
+	 * @return bool|void
+	 * @throws \Exception
+	 */
     public function evalLogic(StateMachineOne $smo, Job $job) {
         
         if (count($this->logic)<=1) return;
@@ -196,8 +197,9 @@ cin;
             $prev=$r;
         }
         if ($r) {
-            $this->doTransition($smo,$job);
+            return $this->doTransition($smo,$job);
         }
+        return false;
     }
 
 	/**
