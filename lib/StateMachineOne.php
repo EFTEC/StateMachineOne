@@ -64,7 +64,7 @@ class StateMachineOne {
      * It sets the method called when the job change state
      * @param callable $changeStateTrigger
      */
-    public function setChangeStateTrigger(callable $changeStateTrigger): void
+    public function setChangeStateTrigger(callable $changeStateTrigger)
     {
         $this->changeStateTrigger = $changeStateTrigger;
     }
@@ -75,7 +75,7 @@ class StateMachineOne {
      * It sets the method called when the job starts
      * @param callable $startTrigger
      */
-    public function setStartTrigger(callable $startTrigger): void
+    public function setStartTrigger(callable $startTrigger)
     {
         $this->startTrigger = $startTrigger;
     }
@@ -86,7 +86,7 @@ class StateMachineOne {
      * It sets the method called when job is paused
      * @param callable $pauseTrigger
      */
-    public function setPauseTrigger(callable $pauseTrigger): void
+    public function setPauseTrigger(callable $pauseTrigger)
     {
         $this->pauseTrigger = $pauseTrigger;
     }
@@ -98,7 +98,7 @@ class StateMachineOne {
      * @param callable $stopTrigger
      * @test void this(),'it must returns nothing'
      */
-    public function setStopTrigger(callable $stopTrigger): void
+    public function setStopTrigger(callable $stopTrigger)
     {
     	//function(StateMachineOne $smo,Job $job) { return true; }
         $this->stopTrigger = $stopTrigger;
@@ -112,7 +112,7 @@ class StateMachineOne {
      * or via an internal counter.
      * @param callable $getNumberTrigger
      */
-    public function setGetNumberTrigger(callable $getNumberTrigger): void
+    public function setGetNumberTrigger(callable $getNumberTrigger)
     {
         $this->getNumberTrigger = $getNumberTrigger;
     }
@@ -126,7 +126,7 @@ class StateMachineOne {
 	 * @param int $duration Duration of the transition in seconds.
 	 * @param string $result =['change','pause','continue','stop'][$i]
 	 */
-    public function addTransition(string $state0, string $state1,  $conditions, int $duration=null,$result="change") {
+    public function addTransition($state0, $state1,  $conditions, $duration=null,$result="change") {
         $this->transitions[]=new Transition($state0,$state1,$conditions,$duration,$result);
     }
 
@@ -141,7 +141,7 @@ class StateMachineOne {
      * Returns true if the database is active
      * @return bool
      */
-    public function isDbActive(): bool
+    public function isDbActive()
     {
         return $this->dbActive;
     }
@@ -150,7 +150,7 @@ class StateMachineOne {
      * It sets the database as active. When we call setDb() then it is set as true automatically.
      * @param bool $dbActive
      */
-    public function setDbActive(bool $dbActive): void
+    public function setDbActive($dbActive)
     {
         $this->dbActive = $dbActive;
     }
@@ -159,7 +159,7 @@ class StateMachineOne {
 	 * Returns true if is in debug mode.
 	 * @return bool
 	 */
-	public function isDebug(): bool
+	public function isDebug()
 	{
 		return $this->debug;
 	}
@@ -168,7 +168,7 @@ class StateMachineOne {
 	 * Set the debug mode. By default the debug mode is false.
 	 * @param bool $debug
 	 */
-	public function setDebug(bool $debug): void
+	public function setDebug($debug)
 	{
 		$this->debug = $debug;
 	}
@@ -179,7 +179,7 @@ class StateMachineOne {
      * Returns the job queue.
      * @return Job[]
      */
-    public function getJobQueue(): array
+    public function getJobQueue()
     {
         return $this->jobQueue;
     }
@@ -188,7 +188,7 @@ class StateMachineOne {
      * Set the job queue
      * @param Job[] $jobQueue
      */
-    public function setJobQueue(array $jobQueue): void
+    public function setJobQueue(array $jobQueue)
     {
         $this->jobQueue = $jobQueue;
     }
@@ -196,7 +196,7 @@ class StateMachineOne {
     /**
      * @param int $defaultInitState
      */
-    public function setDefaultInitState(int $defaultInitState): void
+    public function setDefaultInitState($defaultInitState)
     {
         $this->defaultInitState = $defaultInitState;
     }
@@ -205,7 +205,7 @@ class StateMachineOne {
      * Gets an array with the states
      * @return array
      */
-    public function getStates(): array
+    public function getStates()
     {
         return $this->states;
     }
@@ -214,7 +214,7 @@ class StateMachineOne {
      * Set the array with the states
      * @param array $states
      */
-    public function setStates(array $states): void
+    public function setStates(array $states)
     {
         $this->states = $states;
     }

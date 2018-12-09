@@ -1,8 +1,5 @@
 <?php
 namespace eftec\statemachineone;
-use eftec\MessageItem;
-use eftec\MessageList;
-
 
 
 /**
@@ -42,8 +39,7 @@ class Job {
     var $isNew=false;
     var $isUpdate=false;
 
-    /** @var MessageItem[] */
-    var $messages;    
+ 
     /** @var array */
     var $log;
 
@@ -52,7 +48,6 @@ class Job {
      */
     public function __construct()
     {
-        $this->messages=[];
         $this->log=[];
     }
 
@@ -61,7 +56,7 @@ class Job {
      * @param int[] $idRef
      * @return Job
      */
-    public function setIdRef(array $idRef): Job
+    public function setIdRef(array $idRef)
     {
         $this->idRef = $idRef;
         return $this;
@@ -71,7 +66,7 @@ class Job {
      * @param int $dateInit
      * @return Job
      */
-    public function setDateInit(int $dateInit): Job
+    public function setDateInit($dateInit)
     {
         $this->dateInit = $dateInit;
         return $this;
@@ -81,7 +76,7 @@ class Job {
 	 * @param int $dateLastChange
 	 * @return Job
 	 */
-	public function setDateLastChange(int $dateLastChange): Job
+	public function setDateLastChange($dateLastChange)
 	{
 		$this->dateLastChange = $dateLastChange;
 		return $this;
@@ -90,7 +85,7 @@ class Job {
      * @param int $dateEnd
      * @return Job
      */
-    public function setDateEnd(int $dateEnd): Job
+    public function setDateEnd($dateEnd)
     {
         $this->dateEnd = $dateEnd;
         return $this;
@@ -100,7 +95,7 @@ class Job {
      * @param int $dateExpired
      * @return Job
      */
-    public function setDateExpired(int $dateExpired): Job
+    public function setDateExpired($dateExpired)
     {
         $this->dateExpired = $dateExpired;
         return $this;
@@ -120,7 +115,7 @@ class Job {
      * @param array $fields
      * @return Job
      */
-    public function setFields(array $fields): Job
+    public function setFields(array $fields)
     {
         $this->fields = $fields;
         return $this;
@@ -130,12 +125,12 @@ class Job {
      * @param string $active= ['none','inactive','active','pause','stop','success'][$i]
      * @return Job
      */
-    public function setActive($active): Job
+    public function setActive($active)
     {
         $this->active=$active;
         return $this;
     }
-    public function setActiveNumber($activeNum): Job
+    public function setActiveNumber($activeNum)
     {
         switch ($activeNum) {
             case 0: $this->active='none'; break;
@@ -176,7 +171,7 @@ class Job {
      * @param bool $isNew
      * @return Job
      */
-    public function setIsNew(bool $isNew): Job
+    public function setIsNew($isNew)
     {
         $this->isNew = $isNew;
         return $this;
@@ -186,7 +181,7 @@ class Job {
      * @param bool $isUpdate
      * @return Job
      */
-    public function setIsUpdate(bool $isUpdate): Job
+    public function setIsUpdate($isUpdate)
     {
         $this->isUpdate = $isUpdate;
         return $this;

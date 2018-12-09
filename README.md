@@ -1,5 +1,15 @@
 # StateMachineOne
-State Machine library for PHP with an optional store in mysql.  This library has not external dependencies, it is a minimalist (yet complete) library with only 3 classes. 
+State Machine library for PHP with an optional store in mysql.  
+This library has only a simple external dependency, it is a minimalist (yet complete) library with only 3 classes. 
+
+[![Build Status](https://travis-ci.org/EFTEC/StateMachineOne.svg?branch=master)](https://travis-ci.org/EFTEC/BladeOne)
+[![Packagist](https://img.shields.io/packagist/v/eftec/statemachineone.svg)](https://packagist.org/packages/eftec/bladeone)
+[![Maintenance](https://img.shields.io/maintenance/yes/2018.svg)]()
+[![composer](https://img.shields.io/badge/composer-%3E1.6-blue.svg)]()
+[![php](https://img.shields.io/badge/php->5.6-green.svg)]()
+[![php](https://img.shields.io/badge/php-7.x-green.svg)]()
+[![CocoaPods](https://img.shields.io/badge/docs-70%25-yellow.svg)]()
+
 
 ## What is a state machine?.
 
@@ -15,8 +25,8 @@ The target of this library is to ease the process to create a state machine.
 
 * **Job:** it's the process to run.  A job could have a single state.  
 * **State:** it's the current condition of the job.  
-* **Transition:** it's the pass from one state to another. The transition is conditional to a set of values, time or function.  
-Also, every transition has a timeout. If the timeout is reached then the transition is done, no matter the values or the conditions (even if it has the ACTIVE STATE paused).  Transition could have 3 outcomes:
+* **Transition:** it's the change from one **state** to another. The transition is conditioned to a set of values, time or a function.  
+Also, every transition has a timeout. If the timeout is reached then the transition is done, no matter the values or the conditions (even if it has the **active** state paused).  Transition could have 3 outcomes:
 * * **change** The transition changes of state and the job is still active. It is only possible to do the transition if the job has the ACTIVE STATE = active.
 * * **pause**  The transition changes of state and the job is paused. It is only possible to do the transition if the job has the ACTIVE STATE = active.
 * * **continue**  The transition changes of state and the job resumes of the pause. It is only possible to do the transition if the job has the ACTIVE STATE = pause or active
@@ -297,3 +307,7 @@ We check if the states are consistents. It is only for testing.
 ```php
 $tmp=$statemachineone->checkConsistencethis(); 
 ```
+
+## Version
+
+1.0 2018-12-08 First (non beta) version.

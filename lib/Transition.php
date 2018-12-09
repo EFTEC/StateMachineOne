@@ -36,7 +36,7 @@ class Transition
      * @param int $duration
      * @param string $result
      */
-    public function __construct(string $state0, string $state1,  $conditions, int $duration=null,$result="")
+    public function __construct($state0, $state1,  $conditions, $duration=null,$result="")
     {
         $this->state0 = $state0;
         $this->state1 = $state1;
@@ -268,7 +268,7 @@ cin;
 		    // set variable = 2 , variable = 5 
 		    for($i=0;$i<$c;$i=$i+4) {
 		    	$varName=$this->set[$i+1];
-		    	$op=$this->set[$i+2];
+		    	//$op=$this->set[$i+2]; it could be "="
 		    	$varSet=$this->strToValue($job,$this->set[$i+3]);
 		    	echo "setting $varName = $varSet<br>";
 		        $this->strToVariable($job,$varName,$varSet);	
@@ -279,7 +279,7 @@ cin;
      * @param string $state0
      * @return Transition
      */
-    public function setState0(string $state0): Transition
+    public function setState0($state0)
     {
         $this->state0 = $state0;
         return $this;
@@ -289,7 +289,7 @@ cin;
      * @param string $state1
      * @return Transition
      */
-    public function setState1(string $state1): Transition
+    public function setState1($state1)
     {
         $this->state1 = $state1;
         return $this;
@@ -299,7 +299,7 @@ cin;
      * @param callable $function
      * @return Transition
      */
-    public function setFunction(callable $function): Transition
+    public function setFunction(callable $function)
     {
         $this->function = $function;
         return $this;
@@ -309,7 +309,7 @@ cin;
      * @param int $duration
      * @return Transition
      */
-    public function setDuration(int $duration): Transition
+    public function setDuration($duration)
     {
         $this->duration = $duration;
         return $this;
