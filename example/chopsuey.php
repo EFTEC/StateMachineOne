@@ -41,7 +41,7 @@ $smachine->setStates([STATE_PICK
 	,STATE_DELIVERED
 	,STATE_ABORTED]);
 */
-$smachine->extraColumnJobs=['customerpresent','addressnotfound'
+$smachine->fieldDefault=['customerpresent','addressnotfound'
 	,'signeddeliver','abort','instock','picked'];
 $smachine->setDB('localhost',"root","abc.123","statemachinedb");
 $smachine->createDbTable(false); // you don't need to create this table every time.
@@ -52,19 +52,19 @@ $smachine->loadDBAllJob(); // we load all jobs, including finished ones.
 
 // business rules
 $smachine->addTransition(STATE_PICK,STATE_CANCEL
-	,'where instock = 0 set abort = 1',null,'stop');
+	,'when instock = 0 set abort = 1',null,'stop');
 $smachine->addTransition(STATE_PICK,STATE_TRANSPORT
-	,'where instock = 1',null,'change');
+	,'when instock = 1',null,'change');
 $smachine->addTransition(STATE_TRANSPORT,STATE_ABORTTRANSPORT
-	,'where abort = 1',null,'stop');
+	,'when abort = 1',null,'stop');
 $smachine->addTransition(STATE_TRANSPORT,STATE_DELIVERED
-	,'where addressnotfound = 0 and customerpresent = 1 and signeddeliver = 1',60*60,'stop'); // 1 hour max.
+	,'when addressnotfound = 0 and customerpresent = 1 and signeddeliver = 1',60*60,'stop'); // 1 hour max.
 $smachine->addTransition(STATE_TRANSPORT,STATE_HELP
-	,'where addressnotfound = 1 or customerpresent = 0',60*60,'change'); // 1 hour max
+	,'when addressnotfound = 1 or customerpresent = 0',60*60,'change'); // 1 hour max
 $smachine->addTransition(STATE_HELP,STATE_ABORTED
-	,'where timeout',60*15,'change'); // it waits 15 minutes max.
+	,'when timeout',60*15,'change'); // it waits 15 minutes max.
 $smachine->addTransition(STATE_HELP,STATE_DELIVERED
-	,'where addressnotfound = 0 and customerpresent = 1 and signeddeliver = 1',null,'change');
+	,'when addressnotfound = 0 and customerpresent = 1 and signeddeliver = 1',null,'change');
 
 //include "chopsuey_ui.php";
 $msg=$smachine->fetchUI();

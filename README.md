@@ -96,6 +96,70 @@ It must include all the possible situation. The real world is not as easy as: se
 
 
 
+## Transition language
+
+Let's say the next transition
+
+```php
+$smachine->addTransition(STATE_PICK,STATE_CANCEL
+	,'when instock = 0 set abort = 1',null,'stop');
+
+```
+
+The transition is written as follow:
+* initial state
+* end state
+* Transition language
+* timeout (in seconds), if null then it never stop.
+* outcome, it could be change (default value),stop,pause and continue
+
+The transition language is written with the next syntax.
+* it uses spaces between each operation. It is a must (it's for optimization)  
+* there are two operations we could do **when** and **set**
+
+### Transition when  
+> when field = 0
+
+It compares a constant. The binary operator for comparison are
+* = Equals
+* &lt;&gt; Not equals
+* &lt; &lt;= Less and less than
+* &gt; &gt;= Great and great than
+* contain If a text contains other.
+
+Values of the field could be as the next ones:
+* field = it is a field of the job.
+* $var = it is a global variable (php)
+* 0 = it is a numeric constant
+* "AAA", 'aaa' = it is a literal 
+* function() = it is a global function. Every function must have the parameter $job. 
+* null it is the null value
+* now() it defines the current timestamp (in seconds)
+* interval() it returns the current interval between now and the last state.
+* fullinterval() it returns the current interval between now and the start of the job.
+
+For example  
+> when field2 = 2 and field3 > someFunction() and  field4=$var  
+> > Where somefunction must be defined as someFunction(Job $job) {}
+
+### Transition set
+> set field = 0 , field2 = 3
+
+It sets a field of the job.
+
+* The first value of the operation can't be a constant. 
+> set 0 = 20  // is invalid
+* The first value could be a function.
+> set myfunc() = 20  
+> > Where the function (global) must be defined as myfunc(Job $job,$input) {}
+* The firsr value could be a field or a (global) variable
+> set field=20  
+> set $variable=20  
+
+
+
+# Definition of the class
+
   
 
 ## Field tableJobs (string)

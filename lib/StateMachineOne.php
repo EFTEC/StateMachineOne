@@ -47,9 +47,9 @@ class StateMachineOne {
 	var $columnJobLogs=['idjoblog','idjob','type','description','date'];
   
     /** @var string[] It indicates a special field to set the reference of the job. */
-    var $idRef=['idref'];
+    var $idRef=['idref'=>0];
     /** @var array It indicates extra fields/states */
-    var $extraColumnJobs=[''];
+    var $fieldDefault=[''];
     
     
     
@@ -197,12 +197,12 @@ class StateMachineOne {
             ->setDateExpired(strtotime($row['dateexpired']))
             ->setDateEnd(strtotime($row['dateend']));
         $arr=[];
-        foreach($this->idRef as $k) {
+        foreach($this->idRef as $k=>$v) {
             $arr[$k]=$row[$k];
         }
         $job->setIdRef($arr);
         $arr=[];
-        foreach($this->extraColumnJobs as $k) {
+        foreach($this->fieldDefault as $k=>$v) {
             $arr[$k]=$row[$k];
         }
         $job->setFields($arr);
@@ -222,10 +222,10 @@ class StateMachineOne {
 	    $arr['datelastchange']=date("Y-m-d H:i:s",$job->dateLastChange);
         $arr['dateexpired']=date("Y-m-d H:i:s",$job->dateExpired);
         $arr['dateend']=date("Y-m-d H:i:s",$job->dateEnd);
-        foreach($this->idRef as $k) {
+        foreach($this->idRef as $k=>$v) {
             $arr[$k]=$job->idRef[$k];
         }
-        foreach($this->extraColumnJobs as $k) {
+        foreach($this->fieldDefault as $k=>$v) {
             $arr[$k]=$job->fields[$k];
         }        
         return $arr;
@@ -259,11 +259,11 @@ class StateMachineOne {
                   `datelastchange` timestamp,
                   `dateexpired` timestamp,
                   `dateend` timestamp,";
-        foreach($this->idRef as $k) {
-            $sql.=" `$k` varchar(50),";
+        foreach($this->idRef as $k=>$v) {
+	        $sql.=$this->createColTable($k,$v);
         }
-        foreach($this->extraColumnJobs as $k) {
-            $sql.=" `$k` varchar(50),";
+        foreach($this->fieldDefault as $k=>$v) {
+        	$sql.=$this->createColTable($k,$v);
         }
         $sql.="PRIMARY KEY (`idjob`));";
         $this->getDB()->runRawQuery($sql);
@@ -286,6 +286,23 @@ class StateMachineOne {
 		        $this->getDB()->runRawQuery($sql);
             }
         }
+    }
+    private function createColTable($k,$v) {
+    	$sql="";
+	    switch (1==1) {
+		    case is_string($v):
+			    $sql = " `$k` varchar(50),";
+			    break;
+		    case is_float($v):
+		    case is_double($v):
+			    $sql = " `$k` decimal(10,2),";
+			    break;
+		    case is_numeric($v):
+		    case is_bool($v):
+			    $sql = " `$k` int,";
+			    break;
+	    }
+	    return $sql;
     }
 
     /**
@@ -364,7 +381,7 @@ class StateMachineOne {
 
     /**
      * It creates a new job.
-     * @param int[] $idRef  Every job must refence some object/operation/entity/individual.
+     * @param array $idRef  Every job must refence some object/operation/entity/individual.
      * @param array $fields
      * @param string $active=['none','inactive','active','pause','stop'][$i]
      * @param mixed $initState
@@ -553,7 +570,6 @@ class StateMachineOne {
      * @test void removeJob(null)
      */
     public function removeJob($job) {
-    	die("trying to kill job");
     	if ($job===null) return;
     	$id=$job->idJob;
     	$job=null;
@@ -566,7 +582,10 @@ class StateMachineOne {
 	 * @throws \Exception
 	 */
 	public function deleteJobDB(Job $job) {
-    	$this->getDB()->where('idjob=?',[$job->idJob])->delete($this->tableJobs);
+    	$this->getDB()
+		    ->from($this->tableJobs)
+		    ->where('idjob=?',[$job->idJob])
+		    ->delete();
     }
     
 
@@ -608,31 +627,34 @@ class StateMachineOne {
 
 	//<editor-fold desc="UI">
 
-	public function fetchUI($defaultref=[],$defaultFields=[]) {
+	public function fetchUI() {
 		$job=$this->getLastJob();
-		$idJob=($job===null)?"??":$job->idJob;
+
 		
 		// fetch values
 		$button=@$_REQUEST['frm_button'];
 		$new_state=@$_REQUEST['frm_new_state'];
 		$msg="";
+		$fetchField=$this->fieldDefault;
+		foreach ($this->fieldDefault as $colFields=>$value) {
+			if (isset($_REQUEST['frm_' . $colFields])) {
+				$fetchField[$colFields] = @$_REQUEST['frm_' . $colFields];
+				$fetchField[$colFields] =($fetchField[$colFields]==="")?null:$fetchField[$colFields];
+			}
+		}
+
 		switch ($button) {
 			case 'create':
-				$this->createJob(['idref'=>1]
-					,['customerpresent'=>null
-						,'addressnotfound'=>null
-						,'signeddeliver'=>null
-						,'abort'=>null
-						,'fieldnotstored'=>'hi'
-						,'instock'=>null
-						,'picked'=>null]);
+				$this->createJob($this->idRef
+					,$fetchField);
 				$msg="Job created";
 				break;
 			case 'delete':
 				if ($job!=null) {
 					$job->setActive('none');
 					$job->isUpdate=true;
-					$this->saveDBJob($job);
+					//$this->saveDBJob($job);
+					$this->deleteJobDB($job);
 					$this->removeJob($job);
 				}
 				$msg="Job deleted";
@@ -645,20 +667,13 @@ class StateMachineOne {
 				$this->saveDBJob($job);
 				$msg="State changed";
 				break;				
-			case 'send':
+			case 'setfield':
 				if ($job!==null) {
-					$changed=false;
-					foreach ($this->extraColumnJobs as $colFields) {
-						if (isset($_REQUEST['frm_' . $colFields])) {
-							$changed=true;
-							$job->fields[$colFields] = @$_REQUEST['frm_' . $colFields];
-						}
-					}
-					if ($changed) {
-						$job->isUpdate=true;
-						$this->saveDBJob($job);
-						$msg="Job updated";
-					}
+					$job->fields=$fetchField;
+					$job->isUpdate=true;
+					$this->saveDBJob($job);
+					$msg="Job updated";
+					
 				}
 				break;
 			case 'check':
@@ -698,83 +713,86 @@ class StateMachineOne {
 
 		if ($job===null) {
 			echo "<h2>There is not a job created</h2><br>";
-			echo "<button class='btn btn-primary' name='frm_button' type='submit' value='refresh'>Refresh</button>&nbsp;&nbsp;&nbsp;";
-			echo "<button class='btn btn-warning' name='frm_button' type='submit' value='check'>Check consistency</button>&nbsp;&nbsp;&nbsp;";
-			echo "<button class='btn btn-success' name='frm_button' type='submit' value='create'>Create a new Job</button>&nbsp;&nbsp;&nbsp;";
-		} else {
-			echo "<div class='form-group row'>";
-			echo "<label class='col-sm-2 col-form-label'>Job #</label>";
-			echo "<div class='col-sm-10'><span>".$job->idJob."</span></br>";
-			echo "</div></div>";
+			$job=new Job();
+			$job->fields=$this->fieldDefault;
+			$job->idRef=$this->idRef;
+			
+		}
+		echo "<div class='form-group row'>";
+		echo "<label class='col-sm-2 col-form-label'>Job #</label>";
+		echo "<div class='col-sm-10'><span>".$job->idJob."</span></br>";
+		echo "</div></div>";
 
-			echo "<div class='form-group row'>";
-			echo "<label class='col-sm-2 col-form-label'>Current State</label>";
-			echo "<div class='col-sm-10'><span class='badge badge-primary'>".@$this->getStates()[$job->state]." (".$job->state.")</span></br>";
-			echo "</div></div>";
+		echo "<div class='form-group row'>";
+		echo "<label class='col-sm-2 col-form-label'>Current State</label>";
+		echo "<div class='col-sm-10'><span class='badge badge-primary'>".@$this->getStates()[$job->state]." (".$job->state.")</span></br>";
+		echo "</div></div>";
 
-			$tr=[];
-			foreach($this->transitions as $tran) {
-				if ($tran->state0==$job->state) {
-					$tr[]="<span class='badge badge-primary' title='{$tran->txtCondition}'>".@$this->getStates()[$tran->state1]." (".$tran->state1.")</span>";
-				}
-			}
-			
-			echo "<div class='form-group row'>";
-			echo "<label class='col-sm-2 col-form-label'>Possible next states</label>";
-			echo "<div class='col-sm-10'><span >".implode(', ',$tr)."</span></br>";
-			echo "</div></div>";
-			
-			
-			echo "<div class='form-group row'>";
-			echo "<label class='col-sm-2 col-form-label'>Current Active state</label>";
-			echo "<div class='col-sm-10'><span class='badge badge-primary'>".$job->getActive()." (".$job->getActiveNumber().")"."</span></br>";
-			echo "</div></div>";
-
-
-			echo "<div class='form-group row'>";
-			echo "<label class='col-sm-2 col-form-label'>Elapsed full (sec)</label>";
-			echo "<div class='col-sm-10'><span>".gmdate("H:i:s",(time()-$job->dateInit))."</span></br>";
-			echo "</div></div>";
-			echo "<div class='form-group row'>";
-			echo "<label class='col-sm-2 col-form-label'>Elapsed last state (sec)</label>";
-			echo "<div class='col-sm-10'><span>".gmdate("H:i:s",(time()-$job->dateLastChange))."</span></br>";
-			echo "</div></div>";
-			echo "<div class='form-group row'>";
-			echo "<label class='col-sm-2 col-form-label'>Change State</label>";
-			echo "<div class='col-sm-8'><select class='form-control' name='frm_new_state'>";
-			foreach($this->states as $k=>$s) {
-				if ($job->state==$k) {
-					echo "<option value='$k' selected>$s</option>\n";
-				} else {
-					echo "<option value='$k'>$s</option>\n";
-				}
-			} 
-			echo "</select></div>";
-			echo "<div class='col-sm-2'><button class='btn btn-success' name='frm_button' type='submit' value='change'>Change State</button></div>";
-			echo "</div>";	
-			
-			echo "<div class='form-group'>";
-			echo "<button class='btn btn-primary' name='frm_button' type='submit' value='refresh'>Refresh</button>&nbsp;&nbsp;&nbsp;";
-			echo "<button class='btn btn-primary' name='frm_button' type='submit' value='send'>Send</button>&nbsp;&nbsp;&nbsp;";
-			echo "<button class='btn btn-success' name='frm_button' type='submit' value='create'>Create a new Job</button>&nbsp;&nbsp;&nbsp;";
-			
-			
-			echo "<button class='btn btn-warning' name='frm_button' type='submit' value='check'>Check consisentence</button>&nbsp;&nbsp;&nbsp;";
-			echo "<button class='btn btn-danger' name='frm_button' type='submit' value='delete'>Delete this job</button>&nbsp;&nbsp;&nbsp;";
-			echo "</div>";
-			echo "<br><br>";
-			foreach ($this->extraColumnJobs as $colFields) {
-				echo "<div class='form-group row'>";
-				echo "<label class='col-sm-2 col-form-label'>$colFields</label>";
-				echo "<div class='col-sm-10'>";
-				echo "<input class='form-control' autocomplete='off' type='text' name='frm_$colFields' value='" .htmlentities($job->fields[$colFields]) . "' /></br>";
-				echo "</div>";
-				echo "</div>";
+		$tr=[];
+		foreach($this->transitions as $tran) {
+			if ($tran->state0==$job->state) {
+				$tr[]="<span class='badge badge-primary' title='{$tran->txtCondition}'>".@$this->getStates()[$tran->state1]." (".$tran->state1.")</span>";
 			}
 		}
+		
+		echo "<div class='form-group row'>";
+		echo "<label class='col-sm-2 col-form-label'>Possible next states</label>";
+		echo "<div class='col-sm-10'><span >".implode(', ',$tr)."</span></br>";
+		echo "</div></div>";
+		
+		
+		echo "<div class='form-group row'>";
+		echo "<label class='col-sm-2 col-form-label'>Current Active state</label>";
+		echo "<div class='col-sm-10'><span class='badge badge-primary'>".$job->getActive()." (".$job->getActiveNumber().")"."</span></br>";
+		echo "</div></div>";
+
+
+		echo "<div class='form-group row'>";
+		echo "<label class='col-sm-2 col-form-label'>Elapsed full (sec)</label>";
+		echo "<div class='col-sm-10'><span>".gmdate("H:i:s",(time()-$job->dateInit))."</span></br>";
+		echo "</div></div>";
+		
+		echo "<div class='form-group row'>";
+		echo "<label class='col-sm-2 col-form-label'>Elapsed last state (sec)</label>";
+		echo "<div class='col-sm-10'><span>".gmdate("H:i:s",(time()-$job->dateLastChange))."</span></br>";
+		echo "</div></div>";
+		
+		echo "<div class='form-group row'>";
+		echo "<label class='col-sm-2 col-form-label'>Change State</label>";
+		echo "<div class='col-sm-8'><select class='form-control' name='frm_new_state'>";
+		foreach($this->states as $k=>$s) {
+			if ($job->state==$k) {
+				echo "<option value='$k' selected>$s</option>\n";
+			} else {
+				echo "<option value='$k'>$s</option>\n";
+			}
+		} 
+		echo "</select></div>";
+		echo "<div class='col-sm-2'><button class='btn btn-success' name='frm_button' type='submit' value='change'>Change State</button></div>";
+		echo "</div>";	
+		
+		echo "<div class='form-group'>";
+		echo "<button class='btn btn-primary' name='frm_button' type='submit' value='refresh'>Refresh</button>&nbsp;&nbsp;&nbsp;";
+		echo "<button class='btn btn-primary' name='frm_button' type='submit' value='setfield'>Set field values</button>&nbsp;&nbsp;&nbsp;";
+		echo "<button class='btn btn-success' name='frm_button' type='submit' value='create'>Create a new Job</button>&nbsp;&nbsp;&nbsp;";
+		
+		
+		echo "<button class='btn btn-warning' name='frm_button' type='submit' value='check'>Check consisentence</button>&nbsp;&nbsp;&nbsp;";
+		echo "<button class='btn btn-danger' name='frm_button' type='submit' value='delete'>Delete this job</button>&nbsp;&nbsp;&nbsp;";
+		echo "</div>";
+		echo "<br><br>";
+		foreach ($this->fieldDefault as $colFields=>$value) {
+			echo "<div class='form-group row'>";
+			echo "<label class='col-sm-2 col-form-label'>$colFields</label>";
+			echo "<div class='col-sm-10'>";
+			echo "<input class='form-control' autocomplete='off' type='text' 
+			name='frm_$colFields' value='" .htmlentities($job->fields[$colFields]) . "' /></br>";
+			echo "</div>";
+			echo "</div>";
+		}
+		
 
 		echo "</form>";
-
 		echo "</div>";
 		echo "</div></div>"; //card
 		echo "</div><!-- col --></div><!-- row -->";

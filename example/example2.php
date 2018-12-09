@@ -20,7 +20,7 @@ $smachine->setDebug(true);
 $smachine->tableJobs="deliver_product";
 $smachine->tableJobLogs="deliver_product_log";
 $smachine->setDefaultInitState(STATE_PICK);
-$smachine->extraColumnJobs=['customerpresent','addressnotfound','signeddeliver','abort','instock','picked'];
+$smachine->fieldDefault=['customerpresent','addressnotfound','signeddeliver','abort','instock','picked'];
 $smachine->setDB('localhost',"root","abc.123","statemachinedb");
 $smachine->createDbTable(true); // you don't need to create this table every time.
 
@@ -39,15 +39,15 @@ function dummy($job) {
 	return 'hello';
 }
 
-$smachine->addTransition(STATE_PICK,STATE_CANCEL,'where instock = 0',60*30,"stop");
-$smachine->addTransition(STATE_PICK,STATE_TRANSPORT,'where picked = 1',60*30,"change");
-$smachine->addTransition(STATE_TRANSPORT,STATE_TODELIVER,'where addressnotfound = 0',60*30,"change");
-$smachine->addTransition(STATE_TRANSPORT,STATE_HELP,'where addressnotfound = 1',60*30,"change");
-$smachine->addTransition(STATE_HELP,STATE_ABORTED,'where addressnotfound = 9999',1,"stop"); // we wait 2 seconds, then we give it up
-$smachine->addTransition(STATE_HELP,STATE_TODELIVER,'where addressnotfound = 0',60*30,"change");
+$smachine->addTransition(STATE_PICK,STATE_CANCEL,'when instock = 0',60*30,"stop");
+$smachine->addTransition(STATE_PICK,STATE_TRANSPORT,'when picked = 1',60*30,"change");
+$smachine->addTransition(STATE_TRANSPORT,STATE_TODELIVER,'when addressnotfound = 0',60*30,"change");
+$smachine->addTransition(STATE_TRANSPORT,STATE_HELP,'when addressnotfound = 1',60*30,"change");
+$smachine->addTransition(STATE_HELP,STATE_ABORTED,'when addressnotfound = 9999',1,"stop"); // we wait 2 seconds, then we give it up
+$smachine->addTransition(STATE_HELP,STATE_TODELIVER,'when addressnotfound = 0',60*30,"change");
 
 $smachine->addTransition(STATE_TODELIVER,STATE_DELIVERED
-	,'where signeddeliver = 1 set addressnotfound = 0 and customerpresent = 1',60*30,"stop");
+	,'when signeddeliver = 1 set addressnotfound = 0 and customerpresent = 1',60*30,"stop");
 
 $smachine->checkConsistency();
 

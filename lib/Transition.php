@@ -144,7 +144,7 @@ cin;
     public function evalLogic(StateMachineOne $smo, Job $job) {
         
         if (count($this->logic)<=1) return;
-        if ($this->logic[1]=="timeout") return;  // the first command is where
+        if ($this->logic[1]=="timeout") return;  // the first command is "when"
         $arr=$this->logic;
         $r = false;
         $prev=false;
@@ -158,10 +158,10 @@ cin;
             $field1 = $this->strToValue($job, $arr[$i+3]);
             switch ($arr[$i+2]) {
                 case '=':
-                    $r = ($field0 === $field1);
+                    $r = ($field0 == $field1);
                     break;
                 case '<>':
-                    $r = ($field0 !== $field1);
+                    $r = ($field0 != $field1);
                     break;
                 case '<':
                     $r = ($field0 < $field1);
@@ -188,7 +188,7 @@ cin;
                 case 'or':
                     $r=$prev || $r;
                     break;
-                case 'where':
+                case 'when':
                     break;
                 default:
                     trigger_error("union {$union} not defined for transaction.");                    
