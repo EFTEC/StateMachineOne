@@ -281,7 +281,6 @@ cin;
 		    	$varName=$this->set[$i+1];
 		    	//$op=$this->set[$i+2]; it could be "="
 		    	$varSet=$this->strToValue($job,$this->set[$i+3]);
-		    	echo "setting $varName = $varSet<br>";
 		        $this->strToVariable($job,$varName,$varSet);	
 		    }
 	    }
