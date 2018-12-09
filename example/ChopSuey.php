@@ -1,4 +1,9 @@
 <?php
+/**
+ * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
+ * @link https://github.com/EFTEC/StateMachineOne
+ */
+
 use eftec\statemachineone\Job;
 use eftec\statemachineone\StateMachineOne;
 use eftec\statemachineone\Transition;
@@ -41,8 +46,13 @@ $smachine->setStates([STATE_PICK
 	,STATE_DELIVERED
 	,STATE_ABORTED]);
 */
-$smachine->fieldDefault=['customerpresent','addressnotfound'
-	,'signeddeliver','abort','instock','picked'];
+$smachine->fieldDefault=[
+	'customerpresent'=>-1
+	,'addressnotfound'=>-1
+	,'signeddeliver'=>-1
+	,'abort'=>-1
+	,'instock'=>-1
+	,'picked'=>-1];
 $smachine->setDB('localhost',"root","abc.123","statemachinedb");
 $smachine->createDbTable(false); // you don't need to create this table every time.
 

@@ -1,4 +1,5 @@
 /.idea
 composer.lock
 vendor/
+Docs/
 tests/resources/compiled/

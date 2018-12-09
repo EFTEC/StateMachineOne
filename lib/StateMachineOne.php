@@ -9,7 +9,7 @@ use eftec\DaoOne;
  * Class StateMachineOne
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version 1.0 2018-12-08
+ * @version 1.1 2018-12-09
  * @link https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne {
@@ -501,7 +501,6 @@ class StateMachineOne {
 	 * Delete the none/stop jobs of the queue.
 	 */
     public function garbageCollector() {
-    	echo "deleting jobs";
 	    foreach($this->jobQueue as $idx=> &$job) {
 		    if (get_class($job)=="eftec\statemachineone\Job") {
 		    	if ($job->getActive()=='none' || $job->getActive()=='stop') {
@@ -777,7 +776,7 @@ class StateMachineOne {
 		echo "<button class='btn btn-success' name='frm_button' type='submit' value='create'>Create a new Job</button>&nbsp;&nbsp;&nbsp;";
 		
 		
-		echo "<button class='btn btn-warning' name='frm_button' type='submit' value='check'>Check consisentence</button>&nbsp;&nbsp;&nbsp;";
+		echo "<button class='btn btn-warning' name='frm_button' type='submit' value='check'>Check consistency</button>&nbsp;&nbsp;&nbsp;";
 		echo "<button class='btn btn-danger' name='frm_button' type='submit' value='delete'>Delete this job</button>&nbsp;&nbsp;&nbsp;";
 		echo "</div>";
 		echo "<br><br>";
