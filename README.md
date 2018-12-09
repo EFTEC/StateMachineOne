@@ -13,7 +13,7 @@ This library has only a simple external dependency, it is a minimalist (yet comp
 
 ## What is a state machine?.
 
-A State Machine (also called Automata, such as Nier minus her high heels) is a procedural execution of a **job** based in **states**. 
+A State Machine (also called **Automata**) is a procedural execution of a **job** based in **states**. 
 Every job must have a single state at the same time, such as "INITIATED","PENDING","IN PROCESS" and so on,
 and the job changes of state (**transition**) according to some logic or condition. Such conditions could be a field, a time or a custom function.   
 
@@ -51,7 +51,8 @@ We need to create a process to deliver Chinese food at home. Is it easy?. Well, 
 ### Fields (ChopSuey's exercise)
 
 **Fields** are values used for out State Machine. 
-In this example, I am not including other values that it could be useful (such as money, customer name, address and such) because they are not part or used by of the state machine.
+In this example, I am not including other values that it could be useful (such as money, 
+customer name, address and such) because they are not part or used by the state machine.
 
 * **customerpresent** =1 if the customer is at home, 0=if not, =null not defined yet
 * **addressnotfound** =1 if the address is not found by the delivery boy, =0 if found, =null if it's not yet defined.
