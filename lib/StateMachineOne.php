@@ -99,7 +99,7 @@ class StateMachineOne {
         $this->changeStateTrigger=function(StateMachineOne $smo, Job $job, $newState) {
             return true;
         };
-        $this->startTrigger=function(StateMachineOne $smo,Job $job) {
+	    $this->startTrigger=function(StateMachineOne $smo, Job $job) {
             return true;
         };
         $this->pauseTrigger=function(StateMachineOne $smo,Job $job) {
@@ -406,7 +406,6 @@ class StateMachineOne {
             ->setActive($active)
             ->setIsNew(true)
             ->setIsUpdate(false);
-
         if(!$this->dbActive) {
             $idJob=call_user_func($this->getNumberTrigger,$this);
             $job->idJob=$idJob;
@@ -665,10 +664,15 @@ class StateMachineOne {
 					$job->setActive('none');
 					$job->isUpdate=true;
 					//$this->saveDBJob($job);
-					$this->deleteJobDB($job);
+					try {
+						$this->deleteJobDB($job);
+						$msg="Job deleted";
+					} catch (\Exception $e) {
+						$msg="Error deleting the job ".$e->getMessage();
+					}
 					$this->removeJob($job);
 				}
-				$msg="Job deleted";
+				
 				break;
 			case 'change':
 				$this->changeState($job,$new_state);

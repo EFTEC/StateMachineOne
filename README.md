@@ -1,5 +1,5 @@
 # StateMachineOne
-State Machine library for PHP with an optional store in MySQL.  
+It is State Machine library written on PHP aimed to business process.   
 This library has only a simple external dependency, it is a minimalist (yet complete) library with only 3 classes. 
 
 [![Build Status](https://travis-ci.org/EFTEC/StateMachineOne.svg?branch=master)](https://travis-ci.org/EFTEC/StateMachineOne)
@@ -19,7 +19,7 @@ Every job must have a single state at the same time, such as "INITIATED","PENDIN
 and the job changes of state (**transition**) according to some logic or condition. Such conditions could be a field, a time or a custom function.   
 
 
-The target of this library is to ease the process to create a state machine.
+The target of this library is to ease the process to create a state machine for business.
 
 
 - [StateMachineOne](#statemachineone)

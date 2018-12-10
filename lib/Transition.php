@@ -66,21 +66,7 @@ class Transition
         }
     }
 
-	/**
-	 * For use future
-	 * @param $arr
-	 */
-    private function compiler($arr) {
-    	$result= <<<'cin'
-    	function ff(StateMachineOne $smo,Job $job) {
-    		$r=false;
-    		if ($job->field['aaa']==2 && $job->field['bbb']==3) $r=true;
-    		if ($r) {
-    		    $this->doTransition($smo,$job);
-    		}    		
-    	}
-cin;
-    }
+
     
     private function strToValue(Job $job,$string) {
     	switch ($string) {
@@ -114,22 +100,34 @@ cin;
         }
         return $string;
     }
-	private function strToVariable($job,$variable,$setValue) {
+    
+	private function strToVariable($job,$variable,$setValue,$op) {
 		$cField0=substr($variable,0,1);
 		if (ctype_alpha($cField0)) {
 			if (strpos($variable,'()')!==false) {
-				// it's a function.
+				// it's a function. (regardless of the op)
 				call_user_func(substr($variable,0,-2),$job,$setValue);
 				return;
 			} else {
 				// it's a field
-				$job->fields[$variable]=$setValue;
+				switch ($op) {
+					case '=': $job->fields[$variable]=$setValue;break;
+					case '+': $job->fields[$variable]+=$setValue;break;
+					case '-': $job->fields[$variable]-=$setValue;break;
+					default: trigger_error('operator ['.$op.'] for set transition not defined');
+				}
 				return;
 			}
 		} else {
 			if ($cField0=='$') {
 				// it's a global variable.
-				@$GLOBALS[substr($variable,1)]=$setValue;
+				switch ($op) {
+					case '=': @$GLOBALS[substr($variable,1)]=$setValue;;break;
+					case '+': @$GLOBALS[substr($variable,1)]+=$setValue;;break;
+					case '-': @$GLOBALS[substr($variable,1)]-=$setValue;;break;
+					default: trigger_error('operator ['.$op.'] for set transition not defined');
+				}
+				
 				return;
 			}
 		}
@@ -139,13 +137,13 @@ cin;
 	/**
 	 * @param StateMachineOne $smo
 	 * @param Job $job
-	 * @return bool|void
+	 * @return bool
 	 * @throws \Exception
 	 */
     public function evalLogic(StateMachineOne $smo, Job $job) {
         
-        if (count($this->logic)<=1) return;
-        if ($this->logic[1]=="timeout") return;  // the first command is "when"
+        if (count($this->logic)<=1) return false;
+        if ($this->logic[1]=="timeout") return false;  // the first command is "when"
         $arr=$this->logic;
         $r = false;
         $prev=false;
@@ -279,9 +277,9 @@ cin;
 		    // set variable = 2 , variable = 5 
 		    for($i=0;$i<$c;$i=$i+4) {
 		    	$varName=$this->set[$i+1];
-		    	//$op=$this->set[$i+2]; it could be "="
+		    	$op=$this->set[$i+2]; // = (set), + (add), - (rest)
 		    	$varSet=$this->strToValue($job,$this->set[$i+3]);
-		        $this->strToVariable($job,$varName,$varSet);	
+		        $this->strToVariable($job,$varName,$varSet,$op);	
 		    }
 	    }
     }
