@@ -197,7 +197,7 @@ Let's say the next transition
 
 ```php
 $smachine->addTransition(STATE_PICK,STATE_CANCEL
-	,'when instock = 0 set abort = 1',null,'stop');
+	,'when instock = 0 set abort = 1','stop');
 
 ```
 
