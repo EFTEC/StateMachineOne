@@ -57,7 +57,7 @@ $smachine->loadDBAllJob(); // we load all jobs, including finished ones.
 $smachine->addTransition(INITIAL_STATE,DRIVING_TO_BUY_MILK
 	,'when milk = 0 and gas > 0');
 $smachine->addTransition(INITIAL_STATE,CANCEL_DRIVING
-	,'when gas = 0',null,'stop'); // null means, no timeout and stop means, the job will stop
+	,'when gas = 0','stop'); // null means, no timeout and stop means, the job will stop
 $smachine->addTransition(DRIVING_TO_BUY_MILK,PICKING_THE_MILK
 	,'when store_open = 1 and stock_milk > 0');
 $smachine->addTransition(DRIVING_TO_BUY_MILK,UNABLE_TO_PURCHASE
@@ -67,9 +67,9 @@ $smachine->addTransition(PICKING_THE_MILK,PAYING_FOR_THE_MILK
 $smachine->addTransition(PICKING_THE_MILK,UNABLE_TO_PURCHASE
 	,'when money < price');
 $smachine->addTransition(UNABLE_TO_PURCHASE,DRIVE_BACK_HOME
-	,'when timeout',0,'stop');
+	,'when timeout','stop');
 $smachine->addTransition(PAYING_FOR_THE_MILK,DRIVE_BACK_HOME
-	,'when timeout',0,'stop');
+	,'when timeout','stop');
 
 $msg=$smachine->fetchUI(); // we show a visual id (it is optional and it's only for debug purpose)
 $smachine->checkAllJobs(); // we check every (active,pause,continue) job available.

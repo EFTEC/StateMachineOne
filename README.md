@@ -11,6 +11,25 @@ This library has only a simple external dependency, it is a minimalist (yet comp
 [![php](https://img.shields.io/badge/php-7.x-green.svg)]()
 [![CocoaPods](https://img.shields.io/badge/docs-70%25-yellow.svg)]()
 
+- [StateMachineOne](#statemachineone)
+  * [What is a state machine?.](#what-is-a-state-machine-)
+  * [Notes](#notes)
+  * [Example, ChopSuey Chinese Delivery Food.](#example--chopsuey-chinese-delivery-food)
+    + [Fields (ChopSuey's exercise)](#fields--chopsuey-s-exercise-)
+    + [States (ChopSuey's exercise)](#states--chopsuey-s-exercise-)
+    + [Transitions (ChopSuey's exercise)](#transitions--chopsuey-s-exercise-)
+    + [Final Code (ChopSuey's example)](#final-code--chopsuey-s-example-)
+  * [Other examples](#other-examples)
+  * [Transition language](#transition-language)
+  * [The transition language is written with the next syntax.](#the-transition-language-is-written-with-the-next-syntax)
+    + [Transition when](#transition-when)
+    + [Transition set](#transition-set)
+    + [Transition timeout (in seconds)](#transition-timeout--in-seconds-)
+    + [Transition fulltimeout (in seconds)](#transition-fulltimeout--in-seconds-)
+  * [Classes](#classes)
+  * [Version](#version)
+  * [What is missing](#what-is-missing)
+
 
 ## What is a state machine?.
 
@@ -20,104 +39,6 @@ and the job changes of state (**transition**) according to some logic or conditi
 
 
 The target of this library is to ease the process to create a state machine for business.
-
-
-- [StateMachineOne](#statemachineone)
-  * [What is a state machine?.](#what-is-a-state-machine-)
-  * [Notes](#notes)
-  * [Example, ChopSuey Chinese Delivery Food.](#example--chopsuey-chinese-delivery-food)
-    + [Fields (ChopSuey's exercise)](#fields--chopsuey-s-exercise-)
-    + [States (ChopSuey's exercise)](#states--chopsuey-s-exercise-)
-    + [Transitions (ChopSuey's exercise)](#transitions--chopsuey-s-exercise-)
-    + [Final Code (ChopSuey's example)](#final-code--chopsuey-s-example-)
-  * [Transition language](#transition-language)
-    + [Transition when](#transition-when)
-    + [Transition set](#transition-set)
-- [Definition of the class](#definition-of-the-class)
-  * [Field tableJobs (string)](#field-tablejobs--string-)
-  * [Field tableJobLogs (string)](#field-tablejoblogs--string-)
-  * [Field columnJobs (array)](#field-columnjobs--array-)
-  * [Field columnJobLogs (array)](#field-columnjoblogs--array-)
-  * [Field idRef (string[])](#field-idref--string---)
-  * [Field extraColumnJobs (array)](#field-extracolumnjobs--array-)
-  * [Method setChangeStateTrigger()](#method-setchangestatetrigger--)
-    + [Parameters:](#parameters-)
-  * [Method setStartTrigger()](#method-setstarttrigger--)
-    + [Parameters:](#parameters--1)
-  * [Method setPauseTrigger()](#method-setpausetrigger--)
-    + [Parameters:](#parameters--2)
-  * [Method setStopTrigger()](#method-setstoptrigger--)
-    + [Parameters:](#parameters--3)
-  * [Method setGetNumberTrigger()](#method-setgetnumbertrigger--)
-    + [Parameters:](#parameters--4)
-  * [Method addTransition()](#method-addtransition--)
-    + [Parameters:](#parameters--5)
-  * [Method resetTransition()](#method-resettransition--)
-    + [Parameters:](#parameters--6)
-  * [Method isDbActive()](#method-isdbactive--)
-    + [Parameters:](#parameters--7)
-  * [Method setDbActive()](#method-setdbactive--)
-    + [Parameters:](#parameters--8)
-  * [Method isDebug()](#method-isdebug--)
-    + [Parameters:](#parameters--9)
-  * [Method setDebug()](#method-setdebug--)
-    + [Parameters:](#parameters--10)
-  * [Method getJobQueue()](#method-getjobqueue--)
-    + [Parameters:](#parameters--11)
-  * [Method setJobQueue()](#method-setjobqueue--)
-    + [Parameters:](#parameters--12)
-  * [Method setDefaultInitState()](#method-setdefaultinitstate--)
-    + [Parameters:](#parameters--13)
-  * [Method getStates()](#method-getstates--)
-    + [Parameters:](#parameters--14)
-  * [Method setStates()](#method-setstates--)
-    + [Parameters:](#parameters--15)
-  * [Method __construct()](#method---construct--)
-    + [Parameters:](#parameters--16)
-  * [Method setDB()](#method-setdb--)
-    + [Parameters:](#parameters--17)
-  * [Method getDB()](#method-getdb--)
-    + [Parameters:](#parameters--18)
-  * [Method loadDBJob()](#method-loaddbjob--)
-    + [Parameters:](#parameters--19)
-  * [Method loadDBActiveJobs()](#method-loaddbactivejobs--)
-    + [Parameters:](#parameters--20)
-  * [Method loadDBAllJob()](#method-loaddballjob--)
-    + [Parameters:](#parameters--21)
-  * [Method arrayToJob()](#method-arraytojob--)
-    + [Parameters:](#parameters--22)
-  * [Method jobToArray()](#method-jobtoarray--)
-    + [Parameters:](#parameters--23)
-  * [Method createDbTable()](#method-createdbtable--)
-    + [Parameters:](#parameters--24)
-  * [Method saveDBJob()](#method-savedbjob--)
-    + [Parameters:](#parameters--25)
-  * [Method saveDBJobLog()](#method-savedbjoblog--)
-    + [Parameters:](#parameters--26)
-  * [Method saveDBAllJob()](#method-savedballjob--)
-    + [Parameters:](#parameters--27)
-  * [Method createJob()](#method-createjob--)
-    + [Parameters:](#parameters--28)
-  * [Method getJob()](#method-getjob--)
-    + [Parameters:](#parameters--29)
-  * [Method checkJob()](#method-checkjob--)
-    + [Parameters:](#parameters--30)
-  * [Method checkAllJobs()](#method-checkalljobs--)
-    + [Parameters:](#parameters--31)
-  * [Method changeState()](#method-changestate--)
-    + [Parameters:](#parameters--32)
-  * [Method dateToString()](#method-datetostring--)
-    + [Parameters:](#parameters--33)
-  * [Method addLog()](#method-addlog--)
-    + [Parameters:](#parameters--34)
-  * [Method removeJob()](#method-removejob--)
-    + [Parameters:](#parameters--35)
-  * [Method checkConsistence()](#method-checkconsistence--)
-    + [Parameters:](#parameters--36)
-  * [Version](#version)
-  * [What is missing](#what-is-missing)
-
-
 
 
 ## Notes
@@ -196,6 +117,12 @@ It must include all the possible situation. The real world is not as easy as: se
 ### Final Code (ChopSuey's example)
 [Example/ChopSuey.php](example/ChopSuey.php)
 
+## Other examples
+
+[Example/BuyMilk.php](example/BuyMilk.php) (buy milk)
+
+[Example/Car.php](example/Car.php) (car parking)
+
 ```php
 <?php
 use eftec\statemachineone\StateMachineOne;
@@ -241,19 +168,19 @@ $smachine->loadDBAllJob(); // we load all jobs, including finished ones.
 
 // business rules
 $smachine->addTransition(STATE_PICK,STATE_CANCEL
-	,'when instock = 0 set abort = 1',null,'stop');
+	,'when instock = 0 set abort = 1','stop');
 $smachine->addTransition(STATE_PICK,STATE_TRANSPORT
-	,'when instock = 1',null,'change');
+	,'when instock = 1','change');
 $smachine->addTransition(STATE_TRANSPORT,STATE_ABORTTRANSPORT
-	,'when abort = 1',null,'stop');
+	,'when abort = 1','stop');
 $smachine->addTransition(STATE_TRANSPORT,STATE_DELIVERED
-	,'when addressnotfound = 0 and customerpresent = 1 and signeddeliver = 1',60*60,'stop'); // 1 hour max.
+	,'when addressnotfound = 0 and customerpresent = 1 and signeddeliver = 1 timeout 3600','stop'); // 1 hour max.
 $smachine->addTransition(STATE_TRANSPORT,STATE_HELP
-	,'when addressnotfound = 1 or customerpresent = 0',60*60,'change'); // 1 hour max
+	,'when addressnotfound = 1 or customerpresent = 0 timeout 3600','change'); // 1 hour max
 $smachine->addTransition(STATE_HELP,STATE_ABORTED
-	,'when timeout',60*15,'change'); // it waits 15 minutes max.
+	,'when wait timeout 900','change'); // it waits 15 minutes max.
 $smachine->addTransition(STATE_HELP,STATE_DELIVERED
-	,'when addressnotfound = 0 and customerpresent = 1 and signeddeliver = 1',null,'change');
+	,'when addressnotfound = 0 and customerpresent = 1 and signeddeliver = 1','change');
 
 
 $msg=$smachine->fetchUI();
@@ -278,33 +205,54 @@ The transition is written as follow:
 * initial state
 * end state
 * Transition language
-* timeout (in seconds), if null then it never stop.
 * outcome, it could be change (default value),stop,pause and continue
 
-The transition language is written with the next syntax.
+## The transition language is written with the next syntax.
+> _when_ **var1** = **var2** and **var3** = **var4** or **var4** = **var5**
+> _set_ **var1** = **var2** , **var3** = **var4**
+> _timeout_ **var1**
+> _fulltimeout_ **var2**
 * it uses spaces between each operation. It is a must (it's for optimization)  
-* there are two operations we could do **when** and **set**
+* there are two operations we could do **when** and/or **set**
 
-### Transition when  
-> when field = 0
+### Transition when
+The transition happens when this condition meets. For example:  
+> when field = 0  // it happens when the field is zero.   
+> when $var = 'hi' // it happens when the global variable is 'hi'   
+> when fn() = 44 // the transition is triggered when the function fn() returns 44  
 
 It compares a constant. The binary operator for comparison are
 * = Equals
-* &lt;&gt; Not equals
-* &lt; &lt;= Less and less than
-* &gt; &gt;= Great and great than
-* contain If a text contains other.
+* **&lt;&gt;** Not equals
+* **&lt; &lt;=** Less and less than
+* **&gt; &gt;=** Great and great than
+* **contain** If a text contains other.
+> when field contain 'text'
 
 Values of the field could be as the next ones:
-* field = it is a field of the job.
-* $var = it is a global variable (php)
-* 0 = it is a numeric constant
-* "AAA", 'aaa' = it is a literal 
-* function() = it is a global function. Every function must have the parameter $job. 
-* null it is the null value
-* now() it defines the current timestamp (in seconds)
-* interval() it returns the current interval between now and the last state.
-* fullinterval() it returns the current interval between now and the start of the job.
+* **field** = it is a field of the job.
+> when field = field2  // when field (of the job) is equals to field2
+* **$var** = it is a global variable (php)
+* **777** = it is a numeric constant
+> when field = 777 // when field is equals to 777
+* **"AAA"**, **'aaa'** = it is a literal     
+> when field = 'hello' // when field is equals to the textr hello
+* **function()** = it is a global function. Every function must have the parameter $job.
+> when field = somefunc() // function somefunc(Job $job) {...} 
+* **null()** it is the null value
+> when field = null() 
+* **true()** it is the true value (true)
+> when field = true() // when field is equals to true
+* **false()** it is the false value (false)
+> when field = true() // when field is equals to false
+* **on()** it is the on value (1)  
+* **off()** it is the off value (0)  
+* **undef()** it is the undefined value (-1)  
+* **flip()** indicates that the value will be flipped (1=>0 and 0=>1). Example (x=1) x = flip(), now (x=0). If the value is not zero, then it's flipped to zero.    
+> set field=flip() // it is only valid for set.
+* **now()** it defines the current timestamp (in seconds)
+* **interval()** it returns the current interval between now and the last state.
+* **fullinterval()** it returns the current interval between now and the start of the job.
 
 For example  
 > when field2 = 2 and field3 > someFunction() and  field4=$var  
@@ -324,234 +272,51 @@ It sets a field of the job.
 > set field=20  
 > set $variable=20  
 
+> set field = 0  
+
+It sets the field to the value 0
+
+> set field + 1
+
+It increases the value of field by 1 (field=field+1)
+
+> set field - 1
+
+It decreases the value of field by 1 (field=field-1)
+
+### Transition timeout (in seconds)
+
+It sets the timeout between the time of current state and the current time.
+If a timeout happens, then the transition is executed.
+
+> timeout 3600   // 1 hour timeout  
+> timeout field // timeout by field, it is calculated each time.  
+
+### Transition fulltimeout (in seconds)
+
+It sets the timeout between the time of initial state and the current time.
+If a timeout happens, then the transition is executed.
+
+> fulltimeout 3600   // 1 hour timeout  
+> fulltimeout field // timeout by field, the field is evaluated each time.    
 
 
-# Definition of the class
-
-  
-
-## Field tableJobs (string)
-The name of the table to store the jobs
-## Field tableJobLogs (string)
-The name of the table to store the logs per job. If it's empty then it is not used
-## Field columnJobs (array)
-The list of database columns used by the job
-## Field columnJobLogs (array)
-The List of database columns used by the log of the job
-## Field idRef (string[])
-It indicates a special field to set the reference of the job.
-## Field extraColumnJobs (array)
-It indicates extra fields/states
-## Method setChangeStateTrigger()
-It sets the method called when the job change state
-
-### Parameters:  
-* **$changeStateTrigger** param callable $changeStateTrigger (callable)
-## Method setStartTrigger()
-It sets the method called when the job starts
-
-### Parameters:  
-* **$startTrigger** param callable $startTrigger (callable)
-## Method setPauseTrigger()
-It sets the method called when job is paused
-
-### Parameters:  
-* **$pauseTrigger** param callable $pauseTrigger (callable)
-## Method setStopTrigger()
-It sets the method called when the job stop
-
-### Parameters:  
-* **$stopTrigger** param callable $stopTrigger (callable)
-```php
-$tmp=$statemachineone->setStopTriggerthis(); 
-```
-## Method setGetNumberTrigger()
-It sets a function to returns the number of the process. By default, it is obtained by the database
-or via an internal counter.
-
-### Parameters:  
-* **$getNumberTrigger** param callable $getNumberTrigger (callable)
-## Method addTransition()
-add a new transition
-
-### Parameters:  
-* **$state0** Initial state (string)
-* **$state1** Ending state (string)
-* **$conditions** Conditions, it could be a function or a string 'instock = "hello"' (mixed)
-* **$duration** Duration of the transition in seconds. (int)
-* **$result** =['change','pause','continue','stop'][$i] (string)
-## Method resetTransition()
-We clear all transitions.
-
-### Parameters:  
-## Method isDbActive()
-Returns true if the database is active
-
-### Parameters:  
-## Method setDbActive()
-It sets the database as active. When we call setDb() then it is set as true automatically.
-
-### Parameters:  
-* **$dbActive** param bool $dbActive (bool)
-## Method isDebug()
-Returns true if is in debug mode.
-
-### Parameters:  
-## Method setDebug()
-Set the debug mode. By default the debug mode is false.
-
-### Parameters:  
-* **$debug** param bool $debug (bool)
-## Method getJobQueue()
-Returns the job queue.
-
-### Parameters:  
-## Method setJobQueue()
-Set the job queue
-
-### Parameters:  
-* **$jobQueue** param Job[] $jobQueue (Job[])
-## Method setDefaultInitState()
 
 
-### Parameters:  
-* **$defaultInitState** param int $defaultInitState (int)
-## Method getStates()
-Gets an array with the states
-
-### Parameters:  
-## Method setStates()
-Set the array with the states
-
-### Parameters:  
-* **$states** param array $states (array)
-## Method __construct()
-Constructor of the class. By default, the construct set default triggers.
-StateMachineOne constructor.
-
-### Parameters:  
-## Method setDB()
-It sets the database
-
-### Parameters:  
-* **$server**    server ip, example "localhost" (string)
-* **$user**      user of the database, example "root" (string)
-* **$pwd**       password of the database, example "123456" (string)
-* **$db**        database(schema), example "sakila" (string)
-## Method getDB()
-It returns the current connection. If there is not a connection then it generates a new one.
-
-### Parameters:  
-## Method loadDBJob()
-Loads a job from the database
-
-### Parameters:  
-* **$idJob** param $idJob ()
-## Method loadDBActiveJobs()
-It loads all jobs from the database with all active state but none and stopped.
-
-### Parameters:  
-## Method loadDBAllJob()
-It loads all jobs from the database regardless its active state.
-
-### Parameters:  
-## Method arrayToJob()
-
-
-### Parameters:  
-## Method jobToArray()
-
-
-### Parameters:  
-* **$job** param Job $job (Job)
-## Method createDbTable()
-(optional), it creates a database table, including indexes.
-
-### Parameters:  
-* **$drop** if true, then the table will be dropped. (bool)
-## Method saveDBJob()
-It saves a job in the database. It only saves a job that is marked as new or updated
-
-### Parameters:  
-* **$job** param Job $job (Job)
-## Method saveDBJobLog()
-Insert a new job log into the database.
-
-### Parameters:  
-* **$idJob** param $idJob ()
-* **$arr** param $arr ()
-## Method saveDBAllJob()
-It saves all jobs in the database that are marked as new or updated.
-
-### Parameters:  
-## Method createJob()
-It creates a new job.
-
-### Parameters:  
-* **$idRef**  Every job must refence some object/operation/entity/individual. (int[])
-* **$fields** param array $fields (array)
-* **$active=['none','inactive','active','pause','stop'][$i]** param string $active=['none','inactive','active','pause','stop'][$i] (string)
-* **$initState** param mixed $initState (mixed)
-* **$dateStart** param int|null $dateStart (int|null)
-* **$durationSec** Duration (maximum) in seconds of the event (int|null)
-* **$expireSec** param int|null $expireSec (int|null)
-## Method getJob()
-It gets a job by id.
-
-### Parameters:  
-* **$idJob** param int $idJob (int)
-## Method checkJob()
-It checks a specific job and proceed to change state.
-We check a job and we change the state
-
-### Parameters:  
-* **$idJob** param $idJob ()
-## Method checkAllJobs()
-It checks all jobs available (if the active state of the job is any but none or stop)
-
-### Parameters:  
-## Method changeState()
-It changes the state of a job manually.
-It changes the state manually.
-
-### Parameters:  
-* **$job** param Job $job (Job)
-* **$newState** param mixed $newState (mixed)
-## Method dateToString()
-
-
-### Parameters:  
-* **$time** timestamp with microseconds (int|null)
-## Method addLog()
-It adds a log of the job.
-
-### Parameters:  
-* **$idJob** param int $idJob (int)
-* **$type=['ERROR','WARNING','INFO','DEBUG'][$i]** param string $type=['ERROR','WARNING','INFO','DEBUG'][$i] (string)
-* **$description** param string $description (string)
-## Method removeJob()
-It removes a jobs of the queue.
-
-### Parameters:  
-* **$job** param Job $job (Job)
-```php
-$tmp=$statemachineone->removeJobthis(); 
-```
-## Method checkConsistence()
-We check if the states are consistents. It is only for testing.
-
-### Parameters:  
-```php
-$tmp=$statemachineone->checkConsistencethis(); 
-```
+## Classes
+[StateMachineOne](StateMachineOne.md) It is the main class.
+[Job](Job.md) It is the model class for the job  
+[Transition](Transition.md) It is the model class for the transitions.  
 
 ## Version
 
+* 1.3 2018-12-11 Added addEvent() and callEvent() and added timeout and fulltimeout to the transition language
 * 1.2 2018-12-09 Updated dependency
 * 1.1 2018-12-09 Some corrections.  
 * 1.0 2018-12-08 First (non beta) version.
 
 ## What is missing
 
-* Most unit test, now it is only the barebone.
+* ~~events and timeout~~
+* Most unit test, ~~now it is only the barebone.~~ the unit test is real but it's still basic. 
 * Increase the log features.  

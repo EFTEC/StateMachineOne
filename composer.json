@@ -1,8 +1,8 @@
 {
     "name": "eftec/statemachineone",
     "description": "statemachineone",
-    "version": "1.2",
-    "type": "example",
+    "version": "1.3",
+    "type": "library",
     "keywords": [
         "php"
         ,"statemachine"

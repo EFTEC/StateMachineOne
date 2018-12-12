@@ -12,8 +12,6 @@ namespace eftec\statemachineone;
 class Job {
 	/** @var int number or position of the job on the queue */
     var $idJob=0;
-    /** @var int[] reference value. For example, (order number) or (order number, customer id) */
-    var $idRef;
     /** @var int */
     var $dateInit;
 	/** @var int */
@@ -43,7 +41,127 @@ class Job {
     /** @var array */
     var $log;
 
-    /**
+
+
+	public function strToVariable($variable,$setValue,$op) {
+		$cField0=substr($variable,0,1);
+		if (ctype_alpha($cField0)) {
+			if (strpos($variable,'()')!==false) {
+				// it's a function. (regardless of the op)
+				call_user_func(substr($variable,0,-2),$this,$setValue);
+				return;
+			} else {
+				// it's a field
+				switch ($op) {
+					case '=':
+						if ($setValue==='___FLIP___') {
+							$this->fields[$variable]=(!$this->fields[$variable])?1:0;
+						} else {
+							$this->fields[$variable] = $setValue;
+						}
+						break;
+					case '+': $this->fields[$variable]+=$setValue;break;
+					case '-': $this->fields[$variable]-=$setValue;break;
+					default: trigger_error('operator ['.$op.'] for set transition not defined');
+				}
+				return;
+			}
+		} else {
+			if ($cField0=='$') {
+				// it's a global variable.
+				switch ($op) {
+					case '=':
+						if ($setValue==='___FLIP___') {
+							@$GLOBALS[substr($variable,1)]=(!@$GLOBALS[substr($variable,1)])?1:0;
+						} else {
+							@$GLOBALS[substr($variable,1)]=$setValue;
+						}
+						break;
+					case '+': @$GLOBALS[substr($variable,1)]+=$setValue;break;
+					case '-': @$GLOBALS[substr($variable,1)]-=$setValue;break;
+					default: trigger_error('operator ['.$op.'] for set transition not defined');
+				}
+
+				return;
+			}
+		}
+		trigger_error("Error, you can't set a literal value [$variable]");
+	}
+
+	/**
+	 * Set the values of a job based in the operation of $this->set<br>
+	 * @param string[] $set
+	 */
+	public function doSetValues($set) {
+		if ($set===null) return;
+		if (count($set)) {
+			$c=count($set);
+			if ($c % 4 !=0) {
+				trigger_error("logic incorrect number of operators. Tips: don't forget the spaces");
+			}
+			//  0     1     2 3 0    1     2 3     
+			// set variable = 2 , variable = 5 
+			for($i=0;$i<$c;$i=$i+4) {
+				$varName=$set[$i+1];
+				$op=$set[$i+2]; // = (set), + (add), - (rest)
+				$varSet=$this->strToValue($set[$i+3]);
+				$this->strToVariable($varName,$varSet,$op);
+			}
+			$this->setIsUpdate(true);
+		}
+	}
+	
+	
+	public function strToValue($string) {
+		switch ($string) {
+			case 'null()':
+				return null;
+			case 'false()':
+				return false;
+			case 'true()':
+				return true;
+			case 'on()':
+				return 1;
+			case 'off()':
+				return 0;
+			case 'undef()':
+				return -1;
+			case 'flip()':
+				return "___FLIP___"; // value must be flipped (only for set).
+			case 'now()':
+			case 'timer()':
+				return time();
+			case 'interval()':
+				return time()- $this->dateLastChange;
+			case 'fullinterval()':
+				return time()- $this->dateInit;
+		}
+		$cField0=$string[0];
+		if (ctype_alpha($cField0)) {
+			if (strpos($string,'()')!==false) {
+				// it's a function.
+				$string=call_user_func(substr($string,0,-2),$this);
+			} else {
+				// it's a field
+				$string=$this->fields[$string];
+			}
+		} else {
+			if ($cField0=='$') {
+				// it's a global variable.
+				$string=@$GLOBALS[substr($string,1)];
+			}
+			if ($cField0=='"' || $cField0=="'") {
+				// its a string
+				$string=substr($string,1,-1);
+			}
+		}
+		return $string;
+	}
+
+
+
+
+	/**
      * StateMachineJob constructor.
      */
     public function __construct()
@@ -51,17 +169,7 @@ class Job {
         $this->log=[];
     }
 
-
-    /**
-     * @param int[] $idRef
-     * @return Job
-     */
-    public function setIdRef(array $idRef)
-    {
-        $this->idRef = $idRef;
-        return $this;
-    }
-
+    
     /**
      * @param int $dateInit
      * @return Job

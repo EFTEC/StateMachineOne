@@ -21,6 +21,9 @@ define("STATE_HELP",6);
 define("STATE_DELIVERED",7);
 define("STATE_ABORTED",8);
 
+define("EVENT_ABORT",'ABORT'); // it could be a number too
+define("EVENT_FLIPABORT",'FLIP ABORT'); // it could be a number too
+
 $smachine=new StateMachineOne();
 $smachine->setDebug(true);
 $smachine->tableJobs="chopsuey_jobs";
@@ -53,20 +56,23 @@ $smachine->loadDBAllJob(); // we load all jobs, including finished ones.
 
 // business rules
 $smachine->addTransition(STATE_PICK,STATE_CANCEL
-	,'when instock = 0 set abort = 1',null,'stop');
+	,'when instock = 0 set abort = 1 timeout instock fulltimeout abort','stop');
 $smachine->addTransition(STATE_PICK,STATE_TRANSPORT
-	,'when instock = 1',null,'change');
+	,'when instock = 1','change');
 $smachine->addTransition(STATE_TRANSPORT,STATE_ABORTTRANSPORT
-	,'when abort = 1',null,'stop');
+	,'when abort = 1','stop');
 $smachine->addTransition(STATE_TRANSPORT,STATE_DELIVERED
-	,'when addressnotfound = 0 and customerpresent = 1 and signeddeliver = 1',60*60,'stop'); // 1 hour max.
+	,'when addressnotfound = 0 and customerpresent = 1 and signeddeliver = 1 timeout 3600','stop'); // 1 hour max.
 $smachine->addTransition(STATE_TRANSPORT,STATE_HELP
-	,'when addressnotfound = 1 or customerpresent = 0',60*60,'change'); // 1 hour max
+	,'when addressnotfound = 1 or customerpresent = 0 timeout 3600','change'); // 1 hour max
 $smachine->addTransition(STATE_HELP,STATE_ABORTED
-	,'when timeout',60*15,'change'); // it waits 15 minutes max.
+	,'when wait timeout 900 fulltimeout 2000','change'); // it waits 15 minutes max.
 $smachine->addTransition(STATE_HELP,STATE_DELIVERED
-	,'when addressnotfound = 0 and customerpresent = 1 and signeddeliver = 1',null,'change');
+	,'when addressnotfound = 0 and customerpresent = 1 and signeddeliver = 1','change');
 
+$smachine->addEvent(EVENT_ABORT,'set abort = 1');
+$smachine->addEvent(EVENT_FLIPABORT,'set abort = flip()');
+// $smachine->callEvent(EVENT_ABORT);
 
 $msg=$smachine->fetchUI();
 $smachine->checkAllJobs();

@@ -29,6 +29,9 @@ class StateMachineOne {
     private $states=[];
     /** @var Transition[] */
     private $transitions=[];
+
+	private $events=[];
+    
     /** @var bool If the database must be used. It is marked true every automatically when we set the database. */
     private $dbActive=false;
     private $dbServer="";
@@ -46,8 +49,6 @@ class StateMachineOne {
     /** @var array The List of database columns used by the log of the job  */
 	var $columnJobLogs=['idjoblog','idjob','type','description','date'];
   
-    /** @var string[] It indicates a special field to set the reference of the job. */
-    var $idRef=['idref'=>0];
     /** @var array It indicates extra fields/states */
     var $fieldDefault=[''];
     
@@ -71,12 +72,45 @@ class StateMachineOne {
 	 * @param string $state0 Initial state
 	 * @param string $state1 Ending state
 	 * @param mixed $conditions Conditions, it could be a function or a string 'instock = "hello"'
-	 * @param int $duration Duration of the transition in seconds.
 	 * @param string $result =['change','pause','continue','stop'][$i]
 	 */
-    public function addTransition($state0, $state1,  $conditions, $duration=null,$result="change") {
-        $this->transitions[]=new Transition($state0,$state1,$conditions,$duration,$result);
+    public function addTransition($state0, $state1,  $conditions, $result="change") {
+        $this->transitions[]=new Transition($state0,$state1,$conditions,$result);
     }
+
+	/**
+	 * It adds an event with a name
+	 * @param int|string $name name of the event
+	 * @param string $conditions Example: 'set field = field2 , field = 0 , field = function()
+	 */
+    public function addEvent($name,$conditions) {
+    	$conditions=$this->cleanConditions($conditions);
+	    $this->events[$name]=explode(' ',$conditions);
+    }
+    
+    public function callEvent($name,$job=null) {
+    	if (!isset($this->events[$name])) {
+    		trigger_error('event [$name] not defined');
+	    }
+    	if ($job===null) {
+    		$jobExec=$this->getLastJob();
+	    } else {
+    		$jobExec=$job;
+	    }
+    	$jobExec->doSetValues($this->events[$name]);
+    	$this->checkJob($jobExec);
+    	if ($this->dbActive) $this->saveDBJob($jobExec);
+    }
+    
+	private function cleanConditions($conditions) {
+		$conditions=trim($conditions);
+		$conditions=str_replace('"',"'",$conditions);
+		$conditions=str_replace(["\t","\r\n","\n","  "]," ",$conditions);
+		// we converted 4 spaces,3 spaces and 2 spaces into 1. Why?. let's say that there are 6 spaces, it removes all.
+		$conditions=str_replace(["    ","   ","  "]," ",$conditions);
+		return $conditions;
+	}
+
 
 	/**
 	 * We clear all transitions.
@@ -197,11 +231,6 @@ class StateMachineOne {
             ->setDateExpired(strtotime($row['dateexpired']))
             ->setDateEnd(strtotime($row['dateend']));
         $arr=[];
-        foreach($this->idRef as $k=>$v) {
-            $arr[$k]=$row[$k];
-        }
-        $job->setIdRef($arr);
-        $arr=[];
         foreach($this->fieldDefault as $k=>$v) {
             $arr[$k]=$row[$k];
         }
@@ -222,9 +251,6 @@ class StateMachineOne {
 	    $arr['datelastchange']=date("Y-m-d H:i:s",$job->dateLastChange);
         $arr['dateexpired']=date("Y-m-d H:i:s",$job->dateExpired);
         $arr['dateend']=date("Y-m-d H:i:s",$job->dateEnd);
-        foreach($this->idRef as $k=>$v) {
-            $arr[$k]=$job->idRef[$k];
-        }
         foreach($this->fieldDefault as $k=>$v) {
             $arr[$k]=$job->fields[$k];
         }        
@@ -259,15 +285,11 @@ class StateMachineOne {
                   `datelastchange` timestamp,
                   `dateexpired` timestamp,
                   `dateend` timestamp,";
-        foreach($this->idRef as $k=>$v) {
-	        $sql.=$this->createColTable($k,$v);
-        }
         foreach($this->fieldDefault as $k=>$v) {
         	$sql.=$this->createColTable($k,$v);
         }
         $sql.="PRIMARY KEY (`idjob`));";
         $this->getDB()->runRawQuery($sql);
-
 	    if ($exist!=1) {
 	        // We created index.
 	        $sql="ALTER TABLE `".$this->tableJobs."`
@@ -297,6 +319,7 @@ class StateMachineOne {
 		    case is_double($v):
 			    $sql = " `$k` decimal(10,2),";
 			    break;
+		    case is_null($v):
 		    case is_numeric($v):
 		    case is_bool($v):
 			    $sql = " `$k` int,";
@@ -320,7 +343,7 @@ class StateMachineOne {
             foreach($arr as $k=>$item) {
                 $this->getDB()->set($k.'=?',$item);
             }
-            $job->idJob=$this->getDB()->insert();
+	        $job->idJob=$this->getDB()->insert();
             $job->isNew=false;
             //$this->jobQueue[$job->idJob]=$job;
             return $job->idJob;
@@ -381,7 +404,6 @@ class StateMachineOne {
 
     /**
      * It creates a new job.
-     * @param array $idRef  Every job must refence some object/operation/entity/individual.
      * @param array $fields
      * @param string $active=['none','inactive','active','pause','stop'][$i]
      * @param mixed $initState
@@ -390,14 +412,13 @@ class StateMachineOne {
      * @param int|null $expireSec
      * @return Job
      */
-    public function createJob($idRef, $fields, $active='active', $initState=null, $dateStart=null, $durationSec=null, $expireSec=null) {
+    public function createJob($fields, $active='active', $initState=null, $dateStart=null, $durationSec=null, $expireSec=null) {
         $initState=$initState===null?$this->defaultInitState:$initState;
         $dateStart=$dateStart===null?time():$dateStart;
         $dateEnd=$durationSec===null?2147483640:$dateStart+$durationSec;
         $dateExpire=$expireSec===null?2147483640:$dateStart+$expireSec;
         $job=new Job();
-        $job->setIdRef($idRef)
-            ->setDateInit($dateStart)
+        $job->setDateInit($dateStart)
 	        ->setDateLastChange(time()) // now.
             ->setDateEnd($dateEnd)
             ->setDateExpired($dateExpire)
@@ -444,11 +465,10 @@ class StateMachineOne {
     /**
      * It checks a specific job and proceed to change state.
      * We check a job and we change the state
-     * @param $idJob
+     * @param Job $job
      * @throws \Exception
      */
-    public function checkJob($idJob) {
-    	$job=$this->jobQueue[$idJob]; // $job is an instance, not a copy!.
+    public function checkJob($job) {
         if ($job->dateInit<=time() && $job->getActive()=='inactive') {
             // it starts the job.
 	        $this->callStartTrigger($job);
@@ -458,7 +478,8 @@ class StateMachineOne {
         foreach($this->transitions as $trn) {
         	   if (isset($job)) { // the isset it is because the job could be deleted from the queue.
 	            if ($trn->state0 == $job->state) {
-		            if (time()-$job->dateLastChange >= $trn->duration) {
+		            if (time()-$job->dateLastChange >= $trn->getDuration($job) ||
+			            time()-$job->dateInit >= $trn->getFullDuration($job) ) {
 			            // timeout time is up, we will do the transition anyways
 			            if ($trn->doTransition($this,$job,true)) {
 				            $this->changed = true;
@@ -493,7 +514,7 @@ class StateMachineOne {
 			    if (get_class($job) == "eftec\statemachineone\Job") { // why?, because we use foreach
 				    if ($job->getActive() != "none" && $job->getActive() != "stop") {
 					    try {
-						    $this->checkJob($idx);
+						    $this->checkJob($job);
 					    } catch (\Exception $e) {
 						    $this->addLog($idx, "ERROR", "State error " . $e->getMessage());
 						    return false;
@@ -597,42 +618,89 @@ class StateMachineOne {
 		    ->where('idjob=?',[$job->idJob])
 		    ->delete();
     }
-    
+
 
 	/**
 	 * We check if the states are consistency. It is only for testing.
 	 * @test void this()
+	 * @param bool $output if true then it echo the result
+	 * @return bool
 	 */
-    public function checkConsistency() {
+    public function checkConsistency($output=true) {
         $arr=array_keys($this->states);
         $arrCopy=$arr;
-        echo "<hr>checking:<hr>";
-        foreach($this->transitions as $trans) {
+        if($output) echo "<hr>checking:<hr>";
+        $result=true;
+        foreach($this->transitions as $trId=>$trans) {
         	$name0=$this->states[$trans->state0];
 	        $name1=$this->states[$trans->state1];
-            echo "CHECKING: <b>{$name0}</b>-><b>{$name1}</b> ";
+	        if($output) echo "CHECKING: <b>{$name0}</b>-><b>{$name1}</b>: ";
             $fail=false;
             if (!in_array($trans->state0,$arr)) {
                 $fail=true;
-                echo "ERROR: Transition <b>{$name0}</b> -> <b>{$name1}</b> with missing initial state<br>";
+	            $result=false;
+                if($output) echo "ERROR: Transition <b>{$name0}</b> -> <b>{$name1}</b> with missing initial state<br>";
             } else {
                 $arrCopy[]=$trans->state0;
             }
             if (!in_array($trans->state1,$arr)) {
                 $fail=true;
-                echo "ERROR: Transition <b>{$name0}</b> -> <b>{$name1}</b> with missing ending state<br>";
+	            $result=false;
+	            if($output) echo "ERROR: Transition <b>{$name0}</b> -> <b>{$name1}</b> with missing ending state<br>";
             } else {
                 $arrCopy[]=$trans->state1;
-            }         
+            }
+            // checking if the fields exists
+	        for($e=0;$e<count($trans->logic);$e+=4) {
+	        	$logic=$trans->logic[$e+1];
+		        $logic2=$trans->logic[$e+3];
+	        	if((ctype_alpha($logic[0]) && strpos($logic,'()')===false)) {
+	        		if(!array_key_exists($logic,$this->fieldDefault)) {
+				        $fail=true;
+				        $result=false;
+				        if($output) echo "ERROR: field [{$logic}] in transaction #{$trId} doesn't exist<br>";
+			        }
+		        }
+		        if((ctype_alpha($logic2[0]) && strpos($logic2,'()')===false)) {
+			        if(!array_key_exists($logic2,$this->fieldDefault)) {
+				        $fail=true;
+				        $result=false;
+				        if($output) echo "ERROR: second field [{$logic2}] in transaction #{$trId} doesn't exist<br>";
+			        }
+		        }
+	        }
+	        if ($trans->set!==null) {
+		        for ($e = 0; $e < count($trans->set); $e += 4) {
+			        $logic = $trans->set[$e + 1];
+			        $logic2 = $trans->set[$e + 3];
+			        if ((ctype_alpha($logic[0]) && strpos($logic, '()') === false)) {
+				        if (!array_key_exists($logic, $this->fieldDefault)) {
+					        $fail = true;
+					        $result = false;
+					        if ($output) echo "ERROR: field [{$logic}] in transaction #{$trId} doesn't exist<br>";
+				        }
+			        }
+			        if ((ctype_alpha($logic2[0]) && strpos($logic2, '()') === false)) {
+				        if (!array_key_exists($logic2, $this->fieldDefault)) {
+					        $fail = true;
+					        $result = false;
+					        if ($output) echo "ERROR: second field [{$logic2}] in transaction #{$trId} doesn't exist<br>";
+				        }
+			        }
+		        }
+	        }
             if (!$fail) {
-                echo "OK<br>";
+	            if($output) echo "OK<br>";
             }
         }
         foreach($arr as $missing) {
             if (!in_array($missing,$arrCopy)) {
-                echo "State: {$missing} not used<br>";
+	            $result=false;
+	            if($output) echo "State: {$missing} not used<br>";
             }
         }
+        
+        return $result;
     }
 
 	//<editor-fold desc="UI">
@@ -643,6 +711,7 @@ class StateMachineOne {
 		
 		// fetch values
 		$button=@$_REQUEST['frm_button'];
+		$buttonEvent=@$_REQUEST['frm_button_event'];
 		$new_state=@$_REQUEST['frm_new_state'];
 		$msg="";
 		$fetchField=$this->fieldDefault;
@@ -652,11 +721,14 @@ class StateMachineOne {
 				$fetchField[$colFields] =($fetchField[$colFields]==="")?null:$fetchField[$colFields];
 			}
 		}
+		if ($buttonEvent) {
+			$this->callEvent($buttonEvent);
+			$msg="Event $buttonEvent called";
+		}
 
 		switch ($button) {
 			case 'create':
-				$this->createJob($this->idRef
-					,$fetchField);
+				$this->createJob($fetchField);
 				$msg="Job created";
 				break;
 			case 'delete':
@@ -727,10 +799,9 @@ class StateMachineOne {
 		}
 
 		if ($job===null) {
-			echo "<h2>There is not a job created</h2><br>";
+			echo "<h2>There is not a job active</h2><br>";
 			$job=new Job();
 			$job->fields=$this->fieldDefault;
-			$job->idRef=$this->idRef;
 			
 		}
 		echo "<div class='form-group row'>";
@@ -795,7 +866,17 @@ class StateMachineOne {
 		echo "<button class='btn btn-warning' name='frm_button' type='submit' value='check'>Check consistency</button>&nbsp;&nbsp;&nbsp;";
 		echo "<button class='btn btn-danger' name='frm_button' type='submit' value='delete'>Delete this job</button>&nbsp;&nbsp;&nbsp;";
 		echo "</div>";
-		echo "<br><br>";
+
+		echo "<div class='form-group row'>";
+		echo "<label class='col-sm-2 col-form-label'>Eventsf</label>";
+		echo "<div class='col-sm-10'><span>";
+		foreach($this->events as $k=>$v) {
+			echo "<button class='btn btn-primary' name='frm_button_event' type='submit' value='$k' title='".implode(' ',$v)."'>$k</button>&nbsp;&nbsp;&nbsp;";
+		}		
+		echo "</span></br>";
+		echo "</div></div>";		
+
+
 		foreach ($this->fieldDefault as $colFields=>$value) {
 			echo "<div class='form-group row'>";
 			echo "<label class='col-sm-2 col-form-label'>$colFields</label>";
