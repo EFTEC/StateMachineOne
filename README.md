@@ -310,8 +310,12 @@ If a timeout happens, then the transition is executed.
 
 ## Version
 
-* 1.3 2018-12-11 Added addEvent() and callEvent() and added timeout and fulltimeout to the transition language
-* 1.2 2018-12-09 Updated dependency
+* 1.3 2018-12-11 
+* * Added addEvent() and callEvent()   
+* * Added timeout and fulltimeout to the transition language  
+* * Now transitions doesn't require the timeout.  
+* * idRef are not longer used.    
+* 1.2 2018-12-09 Updated dependency  
 * 1.1 2018-12-09 Some corrections.  
 * 1.0 2018-12-08 First (non beta) version.
 
