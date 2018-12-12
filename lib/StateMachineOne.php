@@ -9,12 +9,12 @@ use eftec\DaoOne;
  * Class StateMachineOne
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version 1.2 2018-12-09
+ * @version 1.2 2018-12-11
  * @link https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne {
 	
-	public $VERSION='1.0';
+	public $VERSION='1.3';
 	
 	private $debug=false;
 	/** @var bool  */
