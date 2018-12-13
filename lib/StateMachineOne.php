@@ -57,12 +57,20 @@ class StateMachineOne {
     // callbacks
     /** @var callable it's called when we change state (by default it returns true)  */
     private $changeStateTrigger;
+	/** @var string =['after','before','instead'][$i] */
+	private $changeStateTriggerWhen;
     /** @var callable it's called when we start the job (by default it returns true) */
     private $startTrigger;
+	/** @var string =['after','before','instead'][$i] */
+	private $startTriggerWhen;
     /** @var callable it's called when we pause the job (by default it returns true) */
     private $pauseTrigger;
+    /** @var string =['after','before','instead'][$i] */
+    public $pauseTriggerWhen;
     /** @var callable it's called when we stop the job (by default it returns true) */
     private $stopTrigger;
+	/** @var string =['after','before','instead'][$i] */
+	private $stopTriggerWhen;
     /** @var callable This function increased in 1 the next id of the job. It is only called if we are not using a database */
     private $getNumberTrigger;
 
@@ -653,6 +661,7 @@ class StateMachineOne {
             // checking if the fields exists
 	        for($e=0;$e<count($trans->logic);$e+=4) {
 	        	$logic=$trans->logic[$e+1];
+	        	if ($logic==='wait') break;
 		        $logic2=$trans->logic[$e+3];
 	        	if((ctype_alpha($logic[0]) && strpos($logic,'()')===false)) {
 	        		if(!array_key_exists($logic,$this->fieldDefault)) {
@@ -868,7 +877,7 @@ class StateMachineOne {
 		echo "</div>";
 
 		echo "<div class='form-group row'>";
-		echo "<label class='col-sm-2 col-form-label'>Eventsf</label>";
+		echo "<label class='col-sm-2 col-form-label'>Events</label>";
 		echo "<div class='col-sm-10'><span>";
 		foreach($this->events as $k=>$v) {
 			echo "<button class='btn btn-primary' name='frm_button_event' type='submit' value='$k' title='".implode(' ',$v)."'>$k</button>&nbsp;&nbsp;&nbsp;";
@@ -1011,32 +1020,39 @@ class StateMachineOne {
 	/**
 	 * It sets the method called when the job change state
 	 * @param callable $changeStateTrigger
+	 * @param string $when=['after','before','instead'][$i]
 	 */
-	public function setChangeStateTrigger(callable $changeStateTrigger)
+	public function setChangeStateTrigger(callable $changeStateTrigger,$when='after')
 	{
 		$this->changeStateTrigger = $changeStateTrigger;
+		$this->changeStateTriggerWhen=$when;
 	}
 	public function callChangeStateTrigger(Job $job,$newState) {
 		return call_user_func($this->changeStateTrigger,$this,$job,$newState);
 	}
 	/**
 	 * It sets the method called when the job starts
+	 * @param string $when=['after','before','instead'][$i]
 	 * @param callable $startTrigger
 	 */
-	public function setStartTrigger(callable $startTrigger)
+	public function setStartTrigger(callable $startTrigger,$when='after')
 	{
 		$this->startTrigger = $startTrigger;
+		$this->startTriggerWhen=$when;
 	}
 	public function callStartTrigger($job) {
 		return call_user_func($this->startTrigger,$this,$job);
 	}
+
 	/**
 	 * It sets the method called when job is paused
 	 * @param callable $pauseTrigger
+	 * @param string $when=['after','before','instead'][$i]
 	 */
-	public function setPauseTrigger(callable $pauseTrigger)
+	public function setPauseTrigger(callable $pauseTrigger,$when='after')
 	{
 		$this->pauseTrigger = $pauseTrigger;
+		$this->pauseTriggerWhen=$when;
 	}
 	public function callPauseTrigger($job) {
 		return call_user_func($this->pauseTrigger,$this,$job);
@@ -1044,12 +1060,14 @@ class StateMachineOne {
 	/**
 	 * It sets the method called when the job stop
 	 * @param callable $stopTrigger
+	 * @param string $when=['after','before','instead'][$i]
 	 * @test void this(),'it must returns nothing'
 	 */
-	public function setStopTrigger(callable $stopTrigger)
+	public function setStopTrigger(callable $stopTrigger,$when='after')
 	{
 		//function(StateMachineOne $smo,Job $job) { return true; }
 		$this->stopTrigger = $stopTrigger;
+		$this->stopTriggerWhen=$when;
 	}
 	public function callStopTrigger($job) {
 		return call_user_func($this->stopTrigger,$this,$job);

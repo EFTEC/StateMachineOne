@@ -43,17 +43,17 @@ The target of this library is to ease the process to create a state machine for 
 
 ## Notes
 
-* **Job:** it's the process to run.  A job could have a single state.  
+* **Job:** it's the process to run.  A job could have a single state at the same time.  
 * **State:** it's the current condition of the job.  
 * **Transition:** it's the change from one **state** to another. The transition is conditioned to a set of values, time or a function.  
-Also, every transition has a timeout. If the timeout is reached then the transition is done, no matter the values or the conditions (even if it has the **active** state paused).  The transition could have 3 outcomes:
+Also, every transition could have a timeout. If the timeout is reached then the transition is done, no matter the values or the conditions (even if it has the **active** state paused).  The transition could have 3 outcomes:
 * * **change** The transition changes of state and the job is keep active. It is only possible to do the transition if the job has the ****active state**** = active.
 * * **pause**  The transition changes of state and the job is paused. It is only possible to do the transition if the job has the **active state** = active.
 * * **continue**  The transition changes of state and the job resumes of the pause. It is only possible to do the transition if the job has the **active state** = pause or active
 * * **stop** The transition changes of state and the job is stopped. It is only possible to do the transition if the job has the **active state** = active or pause.
 * **Active:** Every job has an **active state**. There are 4: none,stop,active,inactive,pause. It is different from the states.
 So, for example, a job could have the **state**: INPROGRESS and the **active state**: PAUSE.   
-* * **none** = the job doesn't exist. It can't change of state, neither it is loaded (fro the database) by default
+* * **none** = the job doesn't exist. It can't change of state, neither it is loaded (from the database) by default
 * * **stop** = the job has stopped (finished), it could be a successful, aborted or canceled. It can't change of state neither it is loaded by default.   
 * * **pause** = the job is on hold, it will not change of state (unless it is forced) but it could be continued. 
 * * **active** = the job is running normally, it could change of state.
@@ -190,7 +190,6 @@ $smachine->viewUI(null,$msg); // null means it takes the current job
 ```
 
 
-
 ## Transition language
 
 Let's say the next transition
@@ -205,7 +204,11 @@ The transition is written as follow:
 * initial state
 * end state
 * Transition language
-* outcome, it could be change (default value),stop,pause and continue
+* outcome, it could be **change** (default value),**stop**,**pause** and **continue**
+* * **change** means the state will change from **initial state** to **end state** if it meets the condition (or timeout).  It will only change if the state is active.  
+* * **stop** means the state will change and the job will stop (end of the job)  
+* * **pause** it means the state will change and the job will pause.  A job paused can't change of state, even if it meets the condition.  
+* * **continue** it means the state will change and the job will continue from pause.  
 
 ## The transition language is written with the next syntax.
 > _when_ **var1** = **var2** and **var3** = **var4** or **var4** = **var5**
@@ -300,7 +303,11 @@ If a timeout happens, then the transition is executed.
 > fulltimeout 3600   // 1 hour timeout  
 > fulltimeout field // timeout by field, the field is evaluated each time.    
 
+## GUI
 
+This library has a build-in GUI for testing.
+
+![GUID](Docs/uid.jpg)
 
 
 ## Classes
@@ -310,6 +317,8 @@ If a timeout happens, then the transition is executed.
 
 ## Version
 
+* 1.4 2018-12-12
+* * Some fixes.  
 * 1.3 2018-12-11 
 * * Added addEvent() and callEvent()   
 * * Added timeout and fulltimeout to the transition language  

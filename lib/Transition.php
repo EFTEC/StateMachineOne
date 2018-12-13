@@ -116,8 +116,8 @@ class Transition
 	 * @throws \Exception
 	 */
     public function evalLogic(StateMachineOne $smo, Job $job) {
-        if (count($this->logic)<=1) return false;
-        if ($this->logic[1]=="wait") return false;  // the first command is "when"
+        if (count($this->logic)<=1) return false; // the first command is "when"
+        if ($this->logic[1]=="wait") return false;  
         $arr=$this->logic;
         $r = false;
         $prev=false;
@@ -186,6 +186,7 @@ class Transition
 	    switch ($this->result) {
 		    case "change":
 		    	if ($job->getActive()=="active" || $forced) { // we only changed if the job is active.
+	
 				    $smo->changeState($job, $this->state1);
 				    $job->doSetValues($this->set);
 				    if ($smo->isDbActive()) $smo->saveDBJob($job);
@@ -197,19 +198,29 @@ class Transition
 			    break;
 		    case "pause":
 			    if ($job->getActive()=="active" || $job->getActive()=="pause" || $forced) { // we only changed if the job is paused or active.
-				    $smo->changeState($job, $this->state1);
-				    $job->setActive("pause");
-				    $job->doSetValues($this->set);
-				    if ($smo->isDbActive()) $smo->saveDBJob($job);
-				    $smo->addLog($job->idJob, "INFO", "state changed from "
-					    .$smo->getStates()[$this->state0]."({$this->state0}) to "
-					    .$smo->getStates()[$this->state1]."({$this->state1}) {$this->result}");
-				    return true;
+				    if ($smo->pauseTriggerWhen==='instead') {
+					    return $smo->callPauseTrigger($job);
+				    } else {
+					    if ($smo->pauseTriggerWhen === 'before') {
+						    $smo->callPauseTrigger($job);
+					    }
+					    $smo->changeState($job, $this->state1);
+					    $job->setActive("pause");
+					    $job->doSetValues($this->set);
+					    if ($smo->isDbActive()) $smo->saveDBJob($job);
+					    $smo->addLog($job->idJob, "INFO", "state changed from "
+						    . $smo->getStates()[$this->state0] . "({$this->state0}) to "
+						    . $smo->getStates()[$this->state1] . "({$this->state1}) {$this->result}");
+					    if ($smo->pauseTriggerWhen === 'after') {
+						    $smo->callPauseTrigger($job);
+					    }
+					    return true;
+				    }
 			    }
 			    break;
 		    case "continue":
 			    if ($job->getActive()=="pause" || $job->getActive()=="active" || $forced) { // we only changed if the job is active or paused
-				    $smo->changeState($job, $this->state1);
+			    	$smo->changeState($job, $this->state1);
 				    $job->setActive("active");
 				    $job->doSetValues($this->set);
 				    if ($smo->isDbActive()) $smo->saveDBJob($job);

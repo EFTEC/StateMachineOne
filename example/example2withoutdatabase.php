@@ -17,8 +17,6 @@ define("STATE_ABORTED",8);
 
 $smachine=new StateMachineOne();
 $smachine->setDebug(true);
-$smachine->tableJobs="deliver_product";
-$smachine->tableJobLogs="deliver_product_log";
 $smachine->setDefaultInitState(STATE_PICK);
 $smachine->fieldDefault=[
 	'customerpresent'=>null
@@ -27,11 +25,11 @@ $smachine->fieldDefault=[
 	,'abort'=>null
 	,'instock'=>null
 	,'picked'=>null];
-$smachine->setDB('localhost',"root","abc.123","statemachinedb");
-$smachine->createDbTable(true); // you don't need to create this table every time.
+//$smachine->setDB('localhost',"root","abc.123","statemachinedb");
+//$smachine->createDbTable(true); // you don't need to create this table every time.
 
 $smachine->setStopTrigger(function($smo,$job) {echo "Trigger: job is stopping<br>"; return true;});
-$smachine->setPauseTrigger(function($smo,$job) {echo "Trigger: job is paused<br>"; return true;},'after');
+
 //$smachine->loadDBActiveJobs();
 
 
