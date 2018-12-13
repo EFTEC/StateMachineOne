@@ -56,7 +56,7 @@ $smachine->loadDBAllJob(); // we load all jobs, including finished ones.
 
 // business rules
 $smachine->addTransition(STATE_PICK,STATE_CANCEL
-	,'when instock = 0 set abort = 1 timeout instock fulltimeout abort','stop');
+	,'when instock = 0 set abort = 1','stop');
 $smachine->addTransition(STATE_PICK,STATE_TRANSPORT
 	,'when instock = 1','change');
 $smachine->addTransition(STATE_TRANSPORT,STATE_ABORTTRANSPORT
