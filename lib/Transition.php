@@ -7,7 +7,7 @@ namespace eftec\statemachineone;
  * @package eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
  * @version 1.3 2018-12-11
- * @link https://github.com/EFTEC/StateMachineOne 
+ * @link https://github.com/EFTEC/StateMachineOne
  */
 class Transition
 {
@@ -20,11 +20,11 @@ class Transition
     /** @var int Maximum duration (in seconds) of this transition. If the time it's up, then the transition is executed */
     private $duration=2000000;
 	/** @var int Maximum duration (in second) considering the whole job. If the time it's up then this transitin is done */
-	private $fullDuration=2000000;    
+	private $fullDuration=2000000;
     /** @var string */
     var $txtCondition;
 	/** @var array */
-	var $set;    
+	var $set;
     /** @var callable|mixed  */
     var $conditions=null;
     /** @var string[]  */
@@ -44,7 +44,7 @@ class Transition
         $this->state0 = $state0;
         $this->state1 = $state1;
         $this->result=$result;
-        
+
         if (is_callable($conditions)) {
         	$this->txtCondition="custom function()";
             $this->function = $conditions;
@@ -59,10 +59,10 @@ class Transition
 	        var_dump($this->duration);
 	        var_dump($this->fullDuration);
 	        var_dump($this->getDuration(new Job()));
-	        var_dump($this->getFullDuration(new Job()));	        
+	        var_dump($this->getFullDuration(new Job()));
 	        echo "</pre>";
 	        */
-	        
+
         }
     }
 
@@ -95,9 +95,9 @@ class Transition
 			    	trigger_error('malformed condition ['.$subArray[0].']');
 		    }
 	    }
-	    
+
     }
-    
+
     private function cleanConditions($conditions) {
 	    $conditions=trim($conditions);
 	    $conditions=str_replace('"',"'",$conditions);
@@ -117,7 +117,7 @@ class Transition
 	 */
     public function evalLogic(StateMachineOne $smo, Job $job) {
         if (count($this->logic)<=1) return false; // the first command is "when"
-        if ($this->logic[1]=="wait") return false;  
+        if ($this->logic[1]=="wait") return false;
         $arr=$this->logic;
         $r = false;
         $prev=false;
@@ -164,7 +164,7 @@ class Transition
                 case 'when':
                     break;
                 default:
-                    trigger_error("union {$union} not defined for transaction.");                    
+                    trigger_error("union {$union} not defined for transaction.");
             }
             $prev=$r;
         }
@@ -186,7 +186,7 @@ class Transition
 	    switch ($this->result) {
 		    case "change":
 		    	if ($job->getActive()=="active" || $forced) { // we only changed if the job is active.
-	
+
 				    $smo->changeState($job, $this->state1);
 				    $job->doSetValues($this->set);
 				    if ($smo->isDbActive()) $smo->saveDBJob($job);
@@ -278,7 +278,7 @@ class Transition
 			return $job->strToValue($this->duration);
 		}
 	}
-	
+
 
 	/**
 	 * @return string

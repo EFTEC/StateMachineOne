@@ -15,16 +15,16 @@ class Job {
     /** @var int */
     var $dateInit;
 	/** @var int */
-	var $dateLastChange;    
+	var $dateLastChange;
     /** @var int */
     var $dateEnd;
     /** @var int */
-    var $dateExpired;    
+    var $dateExpired;
     /** @var mixed */
     var $state;
     /** @var array */
     var $fields;
-    /** 
+    /**
      * none= the job doesn't exist or it's deleted.
      * inactive= the job exists but it hasn't started
      * active = the job is running
@@ -37,7 +37,7 @@ class Job {
     var $isNew=false;
     var $isUpdate=false;
 
- 
+
     /** @var array */
     var $log;
 
@@ -99,8 +99,8 @@ class Job {
 			if ($c % 4 !=0) {
 				trigger_error("logic incorrect number of operators. Tips: don't forget the spaces");
 			}
-			//  0     1     2 3 0    1     2 3     
-			// set variable = 2 , variable = 5 
+			//  0     1     2 3 0    1     2 3
+			// set variable = 2 , variable = 5
 			for($i=0;$i<$c;$i=$i+4) {
 				$varName=$set[$i+1];
 				$op=$set[$i+2]; // = (set), + (add), - (rest)
@@ -110,8 +110,8 @@ class Job {
 			$this->setIsUpdate(true);
 		}
 	}
-	
-	
+
+
 	public function strToValue($string) {
 		switch ($string) {
 			case 'null()':
@@ -169,7 +169,7 @@ class Job {
         $this->log=[];
     }
 
-    
+
     /**
      * @param int $dateInit
      * @return Job
@@ -273,7 +273,7 @@ class Job {
                 trigger_error("type active not defined");
                 return -1;
         }
-    }    
+    }
 
     /**
      * @param bool $isNew
@@ -294,7 +294,7 @@ class Job {
         $this->isUpdate = $isUpdate;
         return $this;
     }
-    
-    
-    
+
+
+
 } // end StateMachineJob

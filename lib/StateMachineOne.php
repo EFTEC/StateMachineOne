@@ -13,25 +13,25 @@ use eftec\DaoOne;
  * @link https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne {
-	
+
 	public $VERSION='1.3';
-	
+
 	private $debug=false;
 	/** @var bool  */
 	private $autoGarbage=false;
-	
+
     private $counter=0;
     /** @var Job[] */
     private $jobQueue;
     /** @var int  */
     private $defaultInitState=0;
-    
+
     private $states=[];
     /** @var Transition[] */
     private $transitions=[];
 
 	private $events=[];
-    
+
     /** @var bool If the database must be used. It is marked true every automatically when we set the database. */
     private $dbActive=false;
     private $dbServer="";
@@ -48,12 +48,12 @@ class StateMachineOne {
     var $columnJobs=['idjob','idactive','idstate','dateinit','datelastchange','dateexpired','dateend'];
     /** @var array The List of database columns used by the log of the job  */
 	var $columnJobLogs=['idjoblog','idjob','type','description','date'];
-  
+
     /** @var array It indicates extra fields/states */
     var $fieldDefault=[''];
-    
+
     private $changed=false;
-    
+
     // callbacks
     /** @var callable it's called when we change state (by default it returns true)  */
     private $changeStateTrigger;
@@ -74,7 +74,7 @@ class StateMachineOne {
     /** @var callable This function increased in 1 the next id of the job. It is only called if we are not using a database */
     private $getNumberTrigger;
 
-  
+
 	/**
 	 * add a new transition
 	 * @param string $state0 Initial state
@@ -95,7 +95,7 @@ class StateMachineOne {
     	$conditions=$this->cleanConditions($conditions);
 	    $this->events[$name]=explode(' ',$conditions);
     }
-    
+
     public function callEvent($name,$job=null) {
     	if (!isset($this->events[$name])) {
     		trigger_error('event [$name] not defined');
@@ -109,7 +109,7 @@ class StateMachineOne {
     	$this->checkJob($jobExec);
     	if ($this->dbActive) $this->saveDBJob($jobExec);
     }
-    
+
 	private function cleanConditions($conditions) {
 		$conditions=trim($conditions);
 		$conditions=str_replace('"',"'",$conditions);
@@ -149,9 +149,9 @@ class StateMachineOne {
         };
         $this->stopTrigger=function(StateMachineOne $smo,Job $job) {
             return true;
-        };        
+        };
         $this->getNumberTrigger=function(StateMachineOne $smo) {
-            
+
             // you could use the database if you are pleased to.
             $smo->counter++;
             return $smo->counter;
@@ -209,7 +209,7 @@ class StateMachineOne {
      * @throws \Exception
      */
     public function loadDBActiveJobs() {
-        $rows=$this->getDB()->select("*")->from($this->tableJobs)->where("idactive not in (0,4)")->order('dateinit')->toList(); 
+        $rows=$this->getDB()->select("*")->from($this->tableJobs)->where("idactive not in (0,4)")->order('dateinit')->toList();
         $this->jobQueue=[];
         foreach($rows as $row) {
             $this->jobQueue[$row['idjob']]=$this->arrayToJob($row);
@@ -225,8 +225,8 @@ class StateMachineOne {
 		foreach($rows as $row) {
 			$this->jobQueue[$row['idjob']]=$this->arrayToJob($row);
 		}
-	}    
-    
+	}
+
     private function arrayToJob($row) {
         $job=new Job();
         $job->idJob=$row['idjob'];
@@ -261,7 +261,7 @@ class StateMachineOne {
         $arr['dateend']=date("Y-m-d H:i:s",$job->dateEnd);
         foreach($this->fieldDefault as $k=>$v) {
             $arr[$k]=$job->fields[$k];
-        }        
+        }
         return $arr;
     }
 
@@ -272,18 +272,18 @@ class StateMachineOne {
 	 */
     public function createDbTable($drop=false) {
 
-    	
+
         if ($drop) {
             $sql='DROP TABLE IF EXISTS `'.$this->tableJobs.'`';
             $this->getDB()->runRawQuery($sql);
 	        $sql='DROP TABLE IF EXISTS `'.$this->tableJobLogs.'`';
-	        $this->getDB()->runRawQuery($sql);            
+	        $this->getDB()->runRawQuery($sql);
         }
 	    $exist=$this->getDB()->select(1)->from('information_schema.tables')
 		    ->where('table_schema=?',[$this->dbSchema])
 		    ->where('table_name=? ',[$this->tableJobs])
 		    ->limit('1')->firstScalar();
-	    
+
 
 	    $sql="CREATE TABLE IF NOT EXISTS `".$this->tableJobs."` (
                   `idjob` INT NOT NULL AUTO_INCREMENT,
@@ -337,12 +337,12 @@ class StateMachineOne {
     }
 
     /**
-     * It saves a job in the database. It only saves a job that is marked as new or updated 
+     * It saves a job in the database. It only saves a job that is marked as new or updated
      * @param Job $job
      * @return int Returns the id of the new job, 0 if not saved or -1 if error.
      */
     public function saveDBJob($job) {
-    	
+
         try {
         if ($job->isNew) {
             $r = $this->getDB()
@@ -390,13 +390,13 @@ class StateMachineOne {
 			$this->getDB()->set('description=?',$arr['description']);
 			$this->getDB()->set('date=?',date("Y-m-d H:i:s",$arr['date']));
 			$this->getDB()->insert();
-			return true;	
+			return true;
 		} catch (\Exception $e) {
 			echo "error ".$e->getMessage();
 			return false;
 			//$this->addLog(0,"ERROR","Saving the joblog ".$e->getMessage());
 		}
-		
+
 	}
 
     /**
@@ -446,8 +446,8 @@ class StateMachineOne {
 	        $this->callStartTrigger($job);
             $job->setActive($active);
             if($this->dbActive)  {
-                $idJob=$this->saveDBJob($job); // we update the job  
-            } 
+                $idJob=$this->saveDBJob($job); // we update the job
+            }
         }
         $this->jobQueue[$job->idJob]=$job; // we store the job created in the list of jobs
         return $job;
@@ -532,7 +532,7 @@ class StateMachineOne {
 		    }
 		    if (!$this->changed) {
 			    break;
-		    } // we don't test it again if we changed of state.		    
+		    } // we don't test it again if we changed of state.
 	    }
         return true;
     }
@@ -566,7 +566,7 @@ class StateMachineOne {
             return true;
         } else {
             $this->addLog($job->idJob,'ERROR',"Change state #{$job->idJob} from {$job->state }->{$newState} failed");
-            return false; 
+            return false;
         }
     }
 
@@ -595,10 +595,10 @@ class StateMachineOne {
 	    if ($this->debug) {
 	    	echo "<b>Job #{$idJob}</b> ".$this->dateToString(microtime(true))." [$type]:  $description<br>";
 	    }
-        
-        
+
+
         if ($this->dbActive) {
-	         
+
         	$this->saveDBJobLog($idJob,$arr);
         }
     }
@@ -708,7 +708,7 @@ class StateMachineOne {
 	            if($output) echo "State: {$missing} not used<br>";
             }
         }
-        
+
         return $result;
     }
 
@@ -717,7 +717,7 @@ class StateMachineOne {
 	public function fetchUI() {
 		$job=$this->getLastJob();
 
-		
+
 		// fetch values
 		$button=@$_REQUEST['frm_button'];
 		$buttonEvent=@$_REQUEST['frm_button_event'];
@@ -753,7 +753,7 @@ class StateMachineOne {
 					}
 					$this->removeJob($job);
 				}
-				
+
 				break;
 			case 'change':
 				$this->changeState($job,$new_state);
@@ -762,14 +762,14 @@ class StateMachineOne {
 				}
 				$this->saveDBJob($job);
 				$msg="State changed";
-				break;				
+				break;
 			case 'setfield':
 				if ($job!==null) {
 					$job->fields=$fetchField;
 					$job->isUpdate=true;
 					$this->saveDBJob($job);
 					$msg="Job updated";
-					
+
 				}
 				break;
 			case 'check':
@@ -787,7 +787,7 @@ class StateMachineOne {
 	public function viewUI($job=null,$msg="") {
 		$job=($job===null)?$this->getLastJob():$job;
 		$idJob=($job===null)?"??":$job->idJob;
-		
+
 		echo "<!doctype html>";
 		echo "<html lang='en'>";
 		echo "<head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>";
@@ -811,7 +811,7 @@ class StateMachineOne {
 			echo "<h2>There is not a job active</h2><br>";
 			$job=new Job();
 			$job->fields=$this->fieldDefault;
-			
+
 		}
 		echo "<div class='form-group row'>";
 		echo "<label class='col-sm-2 col-form-label'>Job #</label>";
@@ -829,13 +829,13 @@ class StateMachineOne {
 				$tr[]="<span class='badge badge-primary' title='{$tran->txtCondition}'>".@$this->getStates()[$tran->state1]." (".$tran->state1.")</span>";
 			}
 		}
-		
+
 		echo "<div class='form-group row'>";
 		echo "<label class='col-sm-2 col-form-label'>Possible next states</label>";
 		echo "<div class='col-sm-10'><span >".implode(', ',$tr)."</span></br>";
 		echo "</div></div>";
-		
-		
+
+
 		echo "<div class='form-group row'>";
 		echo "<label class='col-sm-2 col-form-label'>Current Active state</label>";
 		echo "<div class='col-sm-10'><span class='badge badge-primary'>".$job->getActive()." (".$job->getActiveNumber().")"."</span></br>";
@@ -846,12 +846,12 @@ class StateMachineOne {
 		echo "<label class='col-sm-2 col-form-label'>Elapsed full (sec)</label>";
 		echo "<div class='col-sm-10'><span>".gmdate("H:i:s",(time()-$job->dateInit))."</span></br>";
 		echo "</div></div>";
-		
+
 		echo "<div class='form-group row'>";
 		echo "<label class='col-sm-2 col-form-label'>Elapsed last state (sec)</label>";
 		echo "<div class='col-sm-10'><span>".gmdate("H:i:s",(time()-$job->dateLastChange))."</span></br>";
 		echo "</div></div>";
-		
+
 		echo "<div class='form-group row'>";
 		echo "<label class='col-sm-2 col-form-label'>Change State</label>";
 		echo "<div class='col-sm-8'><select class='form-control' name='frm_new_state'>";
@@ -861,17 +861,17 @@ class StateMachineOne {
 			} else {
 				echo "<option value='$k'>$s</option>\n";
 			}
-		} 
+		}
 		echo "</select></div>";
 		echo "<div class='col-sm-2'><button class='btn btn-success' name='frm_button' type='submit' value='change'>Change State</button></div>";
-		echo "</div>";	
-		
+		echo "</div>";
+
 		echo "<div class='form-group'>";
 		echo "<button class='btn btn-primary' name='frm_button' type='submit' value='refresh'>Refresh</button>&nbsp;&nbsp;&nbsp;";
 		echo "<button class='btn btn-primary' name='frm_button' type='submit' value='setfield'>Set field values</button>&nbsp;&nbsp;&nbsp;";
 		echo "<button class='btn btn-success' name='frm_button' type='submit' value='create'>Create a new Job</button>&nbsp;&nbsp;&nbsp;";
-		
-		
+
+
 		echo "<button class='btn btn-warning' name='frm_button' type='submit' value='check'>Check consistency</button>&nbsp;&nbsp;&nbsp;";
 		echo "<button class='btn btn-danger' name='frm_button' type='submit' value='delete'>Delete this job</button>&nbsp;&nbsp;&nbsp;";
 		echo "</div>";
@@ -881,36 +881,36 @@ class StateMachineOne {
 		echo "<div class='col-sm-10'><span>";
 		foreach($this->events as $k=>$v) {
 			echo "<button class='btn btn-primary' name='frm_button_event' type='submit' value='$k' title='".implode(' ',$v)."'>$k</button>&nbsp;&nbsp;&nbsp;";
-		}		
+		}
 		echo "</span></br>";
-		echo "</div></div>";		
+		echo "</div></div>";
 
 
 		foreach ($this->fieldDefault as $colFields=>$value) {
 			echo "<div class='form-group row'>";
 			echo "<label class='col-sm-2 col-form-label'>$colFields</label>";
 			echo "<div class='col-sm-10'>";
-			echo "<input class='form-control' autocomplete='off' type='text' 
+			echo "<input class='form-control' autocomplete='off' type='text'
 			name='frm_$colFields' value='" .htmlentities($job->fields[$colFields]) . "' /></br>";
 			echo "</div>";
 			echo "</div>";
 		}
-		
+
 
 		echo "</form>";
 		echo "</div>";
 		echo "</div></div>"; //card
 		echo "</div><!-- col --></div><!-- row -->";
-		echo "</body></html>";    	
+		echo "</body></html>";
 	}
-	
+
 	//</editor-fold>
-    
+
 	//<editor-fold desc="setter and getters">
-	
+
 	/**
 	 * if true then the jobs are cleaned out of the queue when they are stopped.
-	 * @return bool 
+	 * @return bool
 	 */
 	public function isAutoGarbage()
 	{
@@ -919,13 +919,13 @@ class StateMachineOne {
 
 	/**
 	 * It sets if the jobs must be clean automatically each time the job is stopped
-	 * @param bool $autoGarbage 
+	 * @param bool $autoGarbage
 	 */
 	public function setAutoGarbage($autoGarbage)
 	{
 		$this->autoGarbage = $autoGarbage;
 	}
-	
+
 	/**
 	 * Returns true if the database is active
 	 * @return bool
@@ -1090,7 +1090,7 @@ class StateMachineOne {
 	{
 		return $this->transitions;
 	}
-	
+
 	//</editor-fold>
 
 
