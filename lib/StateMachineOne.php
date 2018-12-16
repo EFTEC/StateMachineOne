@@ -9,12 +9,12 @@ use eftec\DaoOne;
  * Class StateMachineOne
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version 1.2 2018-12-11
+ * @version 1.4 2018-12-16
  * @link https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne {
 
-	public $VERSION='1.3';
+	public $VERSION='1.4';
 
 	private $debug=false;
 	/** @var bool  */
@@ -439,14 +439,14 @@ class StateMachineOne {
             $idJob=call_user_func($this->getNumberTrigger,$this);
             $job->idJob=$idJob;
         } else {
-            $idJob=$this->saveDBJob($job);
+            $this->saveDBJob($job); 
         }
         if ($dateStart<=time() || $active=='active') {
             // it start.
 	        $this->callStartTrigger($job);
             $job->setActive($active);
             if($this->dbActive)  {
-                $idJob=$this->saveDBJob($job); // we update the job
+                $this->saveDBJob($job); 
             }
         }
         $this->jobQueue[$job->idJob]=$job; // we store the job created in the list of jobs
