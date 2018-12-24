@@ -219,16 +219,15 @@ The transition is written as follow:
 > _set_ **var1** = **var2** , **var3** = **var4**
 > _timeout_ **var1**
 > _fulltimeout_ **var2**
-* it uses spaces between each operation. It is a must (it's for optimization)  
 * there are two operations we could do **when** and/or **set**
 
 ### Transition when
 The transition happens when this condition meets. For example:  
-> when field = 0  // it happens when the field is zero.   
-> when $var = 'hi' // it happens when the global variable is 'hi'   
-> when fn() = 44 // the transition is triggered when the function fn() returns 44  
-> when timeout // it waits until the timeout. it is the same than "when 1=2"
-> when always // its always true. It is the same than "when 1=1"
+> when field=0  // it happens when the field is zero.   
+> when $var='hi' // it happens when the global variable is 'hi'   
+> when fn()=44 // the transition is triggered when the function fn() returns 44  
+> when timeout // it waits until the timeout. it is the same than "when 1=2". The transition is never executed (never until timeout)
+> when always // its always true. It is the same than "when 1=1". The transition is always executed
 
 It compares a constant. The binary operator for comparison are
 * = Equals
