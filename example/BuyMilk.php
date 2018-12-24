@@ -67,9 +67,9 @@ $smachine->addTransition(PICKING_THE_MILK,PAYING_FOR_THE_MILK
 $smachine->addTransition(PICKING_THE_MILK,UNABLE_TO_PURCHASE
 	,'when money < price');
 $smachine->addTransition(UNABLE_TO_PURCHASE,DRIVE_BACK_HOME
-	,'when timeout','stop');
+	,'when always','stop');
 $smachine->addTransition(PAYING_FOR_THE_MILK,DRIVE_BACK_HOME
-	,'when timeout','stop');
+	,'when always','stop');
 
 $msg=$smachine->fetchUI(); // we show a visual id (it is optional and it's only for debug purpose)
 $smachine->checkAllJobs(); // we check every (active,pause,continue) job available.

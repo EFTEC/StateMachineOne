@@ -2,6 +2,7 @@
 
 namespace eftec\statemachineone;
 
+
 /**
  * Class Transition
  * @package eftec\statemachineone
@@ -17,20 +18,18 @@ class Transition
     var $state1;
     /** @var callable */
     var $function;
-    /** @var int Maximum duration (in seconds) of this transition. If the time it's up, then the transition is executed */
+    /** @var int|array Maximum duration (in seconds) of this transition. If the time it's up, then the transition is executed */
     private $duration=2000000;
-	/** @var int Maximum duration (in second) considering the whole job. If the time it's up then this transitin is done */
+	/** @var int|array Maximum duration (in second) considering the whole job. If the time it's up then this transitin is done */
 	private $fullDuration=2000000;
     /** @var string */
     var $txtCondition;
-	/** @var array */
-	var $set;
     /** @var callable|mixed  */
     var $conditions=null;
-    /** @var string[]  */
-    var $logic=[];
     /** @var string=['change','pause','continue','stop'][$i]  */
     var $result="";
+    /** @var MiniLang */
+    var $miniLang;
 
     /**
      * Transition constructor.
@@ -50,65 +49,18 @@ class Transition
             $this->function = $conditions;
         }
         if (is_string($conditions))  {
+        	$this->miniLang=new MiniLang(['wait','always'],['timeout','fulltimeout']);
         	$this->txtCondition=$conditions;
-	        $this->splitConditions($conditions);
-	        /*
-	        echo "<pre>";
-	        var_dump($this->logic);
-	        var_dump($this->set);
-	        var_dump($this->duration);
-	        var_dump($this->fullDuration);
-	        var_dump($this->getDuration(new Job()));
-	        var_dump($this->getFullDuration(new Job()));
-	        echo "</pre>";
-	        */
+	        $this->miniLang->separate($conditions);
+	        if (isset($this->miniLang->areaValue['timeout'])) {
+		        $this->duration = $this->miniLang->areaValue['timeout'];
+	        }
+	        if (isset($this->miniLang->areaValue['fulltimeout'])) {
+		        $this->fullDuration = $this->miniLang->areaValue['fulltimeout'];
+	        }
 
         }
     }
-
-	/**
-	 * @param string $conditions
-	 */
-    private function splitConditions($conditions) {
-	    $conditions=$this->cleanConditions($conditions);
-    	$tmp=str_replace(' set ','||set ',$conditions); // the space it's because the command could be "set ..."
-	    $tmp=str_replace(' timeout ','||timeout ',$tmp);
-	    $tmp=str_replace(' fulltimeout ','||fulltimeout ',$tmp);
-	    $arr=explode('||',$tmp);
-	    foreach($arr as $item) {
-	    	$subArray=explode(' ',$item);
-	    	switch ($subArray[0]) {
-			    case 'when':
-			    	$this->logic=$subArray;
-			    	break;
-			    case 'set':
-				    //array_shift($subArray); // remove the first element.
-				    $this->set=$subArray;
-				    break;
-			    case 'timeout':
-				    $this->duration=trim($subArray[1]);
-				    break;
-			    case 'fulltimeout':
-				    $this->fullDuration=trim($subArray[1]);
-				    break;
-			    default:
-			    	trigger_error('malformed condition ['.$subArray[0].']');
-		    }
-	    }
-
-    }
-
-    private function cleanConditions($conditions) {
-	    $conditions=trim($conditions);
-	    $conditions=str_replace('"',"'",$conditions);
-	    $conditions=str_replace(["\t","\r\n","\n","  "]," ",$conditions);
-	    // we converted 4 spaces,3 spaces and 2 spaces into 1. Why?. let's say that there are 6 spaces, it removes all.
-	    $conditions=str_replace(["    ","   ","  "]," ",$conditions);
-	    return $conditions;
-    }
-
-
-
 	/**
 	 * @param StateMachineOne $smo
 	 * @param Job $job
@@ -116,58 +68,9 @@ class Transition
 	 * @throws \Exception
 	 */
     public function evalLogic(StateMachineOne $smo, Job $job) {
-        if (count($this->logic)<=1) return false; // the first command is "when"
-        if ($this->logic[1]=="wait") return false;
-        $arr=$this->logic;
-        $r = false;
-        $prev=false;
-        $c=count($arr);
-        if ($c % 4 !=0) {
-            trigger_error("Error. logic: incorrect number of operators. Tips: don't forget the spaces");
-        }
-        for($i=0;$i<$c;$i=$i+4) {
-            $union=$arr[$i]; // it could be and/or/end
-            $field0 = $job->strToValue( $arr[$i+1]);
-            $field1 = $job->strToValue($arr[$i+3]);
-            switch ($arr[$i+2]) {
-                case '=':
-                    $r = ($field0 == $field1);
-                    break;
-                case '<>':
-                    $r = ($field0 != $field1);
-                    break;
-                case '<':
-                    $r = ($field0 < $field1);
-                    break;
-                case '<=':
-                    $r = ($field0 <= $field1);
-                    break;
-                case '>':
-                    $r = ($field0 > $field1);
-                    break;
-                case '>=':
-                    $r = ($field0 >= $field1);
-                    break;
-                case 'contain':
-                    $r = (strpos($field0, $field1) !== false);
-                    break;
-                default:
-                    trigger_error("comparison {$arr[$i+2]} not defined for transaction.");
-            }
-            switch ($union) {
-                case 'and':
-                    $r=$prev && $r;
-                    break;
-                case 'or':
-                    $r=$prev || $r;
-                    break;
-                case 'when':
-                    break;
-                default:
-                    trigger_error("union {$union} not defined for transaction.");
-            }
-            $prev=$r;
-        }
+    	if (count($this->miniLang->when)<1) return false; // no logic set.
+	    $r=$this->miniLang->evalLogic($job,$job->fields);
+	    if ($r==='wait') return false; // wait
         if ($r) {
             return $this->doTransition($smo,$job);
         }
@@ -188,7 +91,8 @@ class Transition
 		    	if ($job->getActive()=="active" || $forced) { // we only changed if the job is active.
 
 				    $smo->changeState($job, $this->state1);
-				    $job->doSetValues($this->set);
+				    $this->miniLang->evalSet($job,$job->fields);
+				    
 				    if ($smo->isDbActive()) $smo->saveDBJob($job);
 				    $smo->addLog($job->idJob, "INFO", "state changed from "
 					    .$smo->getStates()[$this->state0]."({$this->state0}) to "
@@ -206,7 +110,7 @@ class Transition
 					    }
 					    $smo->changeState($job, $this->state1);
 					    $job->setActive("pause");
-					    $job->doSetValues($this->set);
+					    $this->miniLang->evalSet($job,$job->fields);
 					    if ($smo->isDbActive()) $smo->saveDBJob($job);
 					    $smo->addLog($job->idJob, "INFO", "state changed from "
 						    . $smo->getStates()[$this->state0] . "({$this->state0}) to "
@@ -222,7 +126,7 @@ class Transition
 			    if ($job->getActive()=="pause" || $job->getActive()=="active" || $forced) { // we only changed if the job is active or paused
 			    	$smo->changeState($job, $this->state1);
 				    $job->setActive("active");
-				    $job->doSetValues($this->set);
+				    $this->miniLang->evalSet($job,$job->fields);
 				    if ($smo->isDbActive()) $smo->saveDBJob($job);
 				    $smo->addLog($job->idJob, "INFO", "state changed from "
 					    .$smo->getStates()[$this->state0]."({$this->state0}) to "
@@ -234,7 +138,7 @@ class Transition
 			    if ($job->getActive()=="active" || $job->getActive()=="pause" || $forced) { // we only changed if the job is paused or active.
 				    $smo->changeState($job, $this->state1);
 				    $job->setActive("stop");
-				    $job->doSetValues($this->set);
+				    $this->miniLang->evalSet($job,$job->fields);
 				    if ($smo->isDbActive()) $smo->saveDBJob($job);
 				    $smo->addLog($job->idJob, "INFO", "state changed from "
 					    .$smo->getStates()[$this->state0]."({$this->state0}) to "
@@ -253,6 +157,7 @@ class Transition
     }
 
 	/**
+	 * It returns the full duration of the job.
 	 * @param Job $job
 	 * @return int
 	 */
@@ -261,7 +166,9 @@ class Transition
 		if (is_numeric($this->fullDuration)) {
 			return $this->fullDuration;
 		} else {
-			return $job->strToValue($this->fullDuration);
+			return $this->miniLang->getValue($this->fullDuration[0]
+				, $this->fullDuration[1], $this->fullDuration[2]
+				, $job, $job->fields);
 		}
 	}
 
@@ -275,8 +182,11 @@ class Transition
 		if (is_numeric($this->duration)) {
 			return $this->duration;
 		} else {
-			return $job->strToValue($this->duration);
-		}
+			return $this->miniLang->getValue($this->duration[0]
+				, $this->duration[1], $this->duration[2]
+				, $job, $job->fields);
+		} 
+		
 	}
 
 

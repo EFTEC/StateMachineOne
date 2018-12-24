@@ -43,6 +43,12 @@ class CompilationTest extends AbstractStateMachineOneTestCase {
 	    self::assertEquals('3',$job->fields['counter'],'counter must be 3');
 	    self::assertEquals('1',$job->state,'state must be 1');
 	    self::assertEquals('active',$job->getActive(),'active must be active');
+	    // testing events..
+	    $this->statemachineone->addEvent("testme","set field1='hello' , field2='world'");
+	    $this->statemachineone->callEvent("testme",$job);
+
+	    self::assertEquals('hello',$job->fields['field1'],'field1 must be "hello"');
+	    self::assertEquals('world',$job->fields['field2'],'field2 must be "world"');  
     }
 
 }

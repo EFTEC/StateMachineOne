@@ -9,7 +9,7 @@ use eftec\DaoOne;
  * Class StateMachineOne
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version 1.4 2018-12-16
+ * @version 1.5 2018-12-23
  * @link https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne {
@@ -29,9 +29,10 @@ class StateMachineOne {
     private $states=[];
     /** @var Transition[] */
     private $transitions=[];
-
+	/** @var MiniLang[] */
 	private $events=[];
-
+	/** @var string[] */
+	private $eventNames=[];
     /** @var bool If the database must be used. It is marked true every automatically when we set the database. */
     private $dbActive=false;
     private $dbServer="";
@@ -92,10 +93,17 @@ class StateMachineOne {
 	 * @param string $conditions Example: 'set field = field2 , field = 0 , field = function()
 	 */
     public function addEvent($name,$conditions) {
-    	$conditions=$this->cleanConditions($conditions);
-	    $this->events[$name]=explode(' ',$conditions);
+    	$tmp=new MiniLang(['wait','always'],['timeout','fulltimeout']);
+    	$tmp->separate($conditions);
+    	$this->eventNames[$name]=$conditions;
+	    $this->events[$name]=$tmp;
     }
 
+	/**
+	 * @param $name
+	 * @param Job $job
+	 * @throws \Exception
+	 */
     public function callEvent($name,$job=null) {
     	if (!isset($this->events[$name])) {
     		trigger_error('event [$name] not defined');
@@ -105,19 +113,12 @@ class StateMachineOne {
 	    } else {
     		$jobExec=$job;
 	    }
-    	$jobExec->doSetValues($this->events[$name]);
+	    $this->events[$name]->evalSet($jobExec,$jobExec->fields);
     	$this->checkJob($jobExec);
     	if ($this->dbActive) $this->saveDBJob($jobExec);
     }
 
-	private function cleanConditions($conditions) {
-		$conditions=trim($conditions);
-		$conditions=str_replace('"',"'",$conditions);
-		$conditions=str_replace(["\t","\r\n","\n","  "]," ",$conditions);
-		// we converted 4 spaces,3 spaces and 2 spaces into 1. Why?. let's say that there are 6 spaces, it removes all.
-		$conditions=str_replace(["    ","   ","  "]," ",$conditions);
-		return $conditions;
-	}
+
 
 
 	/**
@@ -493,7 +494,7 @@ class StateMachineOne {
 				            $this->changed = true;
 			            }
 		            } else {
-			            if (count($trn->logic)) {
+			            if (count($trn->miniLang->when)) {
 				            // we check the transition based on table
 				            if ($trn->evalLogic($this, $job)) {
 				            	$this->changed=true;
@@ -658,46 +659,7 @@ class StateMachineOne {
             } else {
                 $arrCopy[]=$trans->state1;
             }
-            // checking if the fields exists
-	        for($e=0;$e<count($trans->logic);$e+=4) {
-	        	$logic=$trans->logic[$e+1];
-	        	if ($logic==='wait') break;
-		        $logic2=$trans->logic[$e+3];
-	        	if((ctype_alpha($logic[0]) && strpos($logic,'()')===false)) {
-	        		if(!array_key_exists($logic,$this->fieldDefault)) {
-				        $fail=true;
-				        $result=false;
-				        if($output) echo "ERROR: field [{$logic}] in transaction #{$trId} doesn't exist<br>";
-			        }
-		        }
-		        if((ctype_alpha($logic2[0]) && strpos($logic2,'()')===false)) {
-			        if(!array_key_exists($logic2,$this->fieldDefault)) {
-				        $fail=true;
-				        $result=false;
-				        if($output) echo "ERROR: second field [{$logic2}] in transaction #{$trId} doesn't exist<br>";
-			        }
-		        }
-	        }
-	        if ($trans->set!==null) {
-		        for ($e = 0; $e < count($trans->set); $e += 4) {
-			        $logic = $trans->set[$e + 1];
-			        $logic2 = $trans->set[$e + 3];
-			        if ((ctype_alpha($logic[0]) && strpos($logic, '()') === false)) {
-				        if (!array_key_exists($logic, $this->fieldDefault)) {
-					        $fail = true;
-					        $result = false;
-					        if ($output) echo "ERROR: field [{$logic}] in transaction #{$trId} doesn't exist<br>";
-				        }
-			        }
-			        if ((ctype_alpha($logic2[0]) && strpos($logic2, '()') === false)) {
-				        if (!array_key_exists($logic2, $this->fieldDefault)) {
-					        $fail = true;
-					        $result = false;
-					        if ($output) echo "ERROR: second field [{$logic2}] in transaction #{$trId} doesn't exist<br>";
-				        }
-			        }
-		        }
-	        }
+            
             if (!$fail) {
 	            if($output) echo "OK<br>";
             }
@@ -880,7 +842,7 @@ class StateMachineOne {
 		echo "<label class='col-sm-2 col-form-label'>Events</label>";
 		echo "<div class='col-sm-10'><span>";
 		foreach($this->events as $k=>$v) {
-			echo "<button class='btn btn-primary' name='frm_button_event' type='submit' value='$k' title='".implode(' ',$v)."'>$k</button>&nbsp;&nbsp;&nbsp;";
+			echo "<button class='btn btn-primary' name='frm_button_event' type='submit' value='$k' title='".$this->eventNames[$k]."' >$k</button>&nbsp;&nbsp;&nbsp;";
 		}
 		echo "</span></br>";
 		echo "</div></div>";

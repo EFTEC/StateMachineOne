@@ -227,6 +227,8 @@ The transition happens when this condition meets. For example:
 > when field = 0  // it happens when the field is zero.   
 > when $var = 'hi' // it happens when the global variable is 'hi'   
 > when fn() = 44 // the transition is triggered when the function fn() returns 44  
+> when timeout // it waits until the timeout. it is the same than "when 1=2"
+> when always // its always true. It is the same than "when 1=1"
 
 It compares a constant. The binary operator for comparison are
 * = Equals
@@ -321,7 +323,10 @@ This library has a build-in GUI for testing.
 
 ## Version
 
-* 1.4 2018-12-12
+* 1.5 2018-12-23 Xmas update (btw porca miseria).     
+* * Now the language is parsed differently.  The space is not mandatory anymore.   
+* * "when timeout" is not deprecated. Now it is called as "when always"    
+* 1.4 2018-12-12 
 * * Some fixes.  
 * 1.3 2018-12-11 
 * * Added addEvent() and callEvent()   

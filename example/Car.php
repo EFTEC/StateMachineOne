@@ -23,7 +23,7 @@ define('PARKED',1);
 define('IDLING',2);
 define('DRIVING',3);
 
-$smachine->setDefaultInitState(INITIAL_STATE);
+$smachine->setDefaultInitState(PARKED);
 
 $smachine->setStates([
 	PARKED=>'Parked',
@@ -39,8 +39,8 @@ $smachine->fieldDefault=[
 	,'speed'=>0];
 
 // database configuration
-$smachine->tableJobs="buymilk_jobs";
-$smachine->tableJobLogs="buymilk_logs"; // it is optional
+$smachine->tableJobs="car_jobs";
+$smachine->tableJobLogs="car_logs"; // it is optional
 $smachine->setDB('localhost',"root","abc.123","statemachinedb");
 $smachine->createDbTable(false); // you don't need to create this table every time.
 
