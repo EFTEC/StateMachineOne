@@ -3,13 +3,14 @@ namespace eftec\statemachineone;
 
 use DateTime;
 use eftec\DaoOne;
+use eftec\minilang\MiniLang;
 
 
 /**
  * Class StateMachineOne
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version 1.5 2018-12-23
+ * @version 1.6 2018-12-26
  * @link https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne {
@@ -494,7 +495,7 @@ class StateMachineOne {
 				            $this->changed = true;
 			            }
 		            } else {
-			            if (count($trn->miniLang->when)) {
+			            if (count($trn->miniLang->logic)) {
 				            // we check the transition based on table
 				            if ($trn->evalLogic($this, $job)) {
 				            	$this->changed=true;

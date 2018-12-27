@@ -131,7 +131,7 @@ It must include all the possible situation. The real world is not as easy as: se
 <?php
 use eftec\statemachineone\StateMachineOne;
 
-include "../vendor/autoload.php";
+include "vendor/autoload.php";
 
 define("STATE_PICK",1);
 define("STATE_CANCEL",2);
@@ -322,6 +322,7 @@ This library has a build-in GUI for testing.
 
 ## Version
 
+* 1.6 2018-12-26 Now MiniLang is a separate dependency.   
 * 1.5 2018-12-23 Xmas update (btw porca miseria).     
 * * Now the language is parsed differently.  The space is not mandatory anymore.   
 * * "when timeout" is not deprecated. Now it is called as "when always"    

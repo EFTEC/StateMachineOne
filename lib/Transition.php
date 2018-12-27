@@ -3,11 +3,13 @@
 namespace eftec\statemachineone;
 
 
+use eftec\minilang\MiniLang;
+
 /**
  * Class Transition
  * @package eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version 1.3 2018-12-11
+ * @version 1.4 2018-12-26
  * @link https://github.com/EFTEC/StateMachineOne
  */
 class Transition
@@ -68,7 +70,7 @@ class Transition
 	 * @throws \Exception
 	 */
     public function evalLogic(StateMachineOne $smo, Job $job) {
-    	if (count($this->miniLang->when)<1) return false; // no logic set.
+    	if (count($this->miniLang->logic)<1) return false; // no logic set.
 	    $r=$this->miniLang->evalLogic($job,$job->fields);
 	    if ($r==='wait') return false; // wait
         if ($r) {
