@@ -15,7 +15,7 @@ use eftec\minilang\MiniLang;
  */
 class StateMachineOne {
 
-	public $VERSION='1.4';
+	public $VERSION='1.6';
 
 	private $debug=false;
 	/** @var bool  */
