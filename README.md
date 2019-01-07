@@ -276,7 +276,7 @@ It sets a field of the job.
 * The first value could be a function.
 > set myfunc() = 20  
 > > Where the function (global) must be defined as myfunc(Job $job,$input) {}
-* The firsr value could be a field or a (global) variable
+* The first value could be a field or a (global) variable
 > set field=20  
 > set $variable=20  
 
