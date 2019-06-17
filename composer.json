@@ -1,7 +1,7 @@
 {
     "name": "eftec/statemachineone",
     "description": "A state Machine library for business processes",
-    "version": "1.6",
+    "version": "1.7",
     "type": "library",
     "keywords": [
         "php"
@@ -22,9 +22,10 @@
     "require": {
         "php": ">=5.6",
         "composer/installers": "^1",
-        "eftec/daoone": "^3.21",
-        "eftec/minilang": "^1.14",
-        "ext-ctype": "*"
+        "eftec/pdoone": "^1.5",
+        "eftec/minilang": "^2.3",
+        "ext-ctype": "*",
+        "ext-json": "*"
     },
     "require-dev": {
       "phpunit/phpunit": "^5.7 || ^6.5"

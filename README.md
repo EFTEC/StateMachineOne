@@ -164,19 +164,22 @@ $smachine->fieldDefault=[
 	,'signeddeliver'=>-1
 	,'abort'=>-1
 	,'instock'=>-1
-	,'picked'=>-1];
-$smachine->setDB('localhost',"root","abc.123","statemachinedb");
+	,'picked'=>-1
+	,'message'=>''];
+$smachine->setDB('mysql','localhost',"root","abc.123","statemachinedb");
 $smachine->createDbTable(false); // you don't need to create this table every time.
 
 $smachine->loadDBAllJob(); // we load all jobs, including finished ones.
 
 // business rules
+$smachine->addTransition(STATE_PICK,STATE_PICK
+	,'when instock = 0 set message="without stock"','stay'); // it stays in the same state
 $smachine->addTransition(STATE_PICK,STATE_CANCEL
-	,'when instock = 0 set abort = 1','stop');
+	,'when instock = 0 set abort = 1','stop'); // ends the process
 $smachine->addTransition(STATE_PICK,STATE_TRANSPORT
-	,'when instock = 1','change');
+	,'when instock = 1','change'); // changes transition
 $smachine->addTransition(STATE_TRANSPORT,STATE_ABORTTRANSPORT
-	,'when abort = 1','stop');
+	,'when abort = 1','stop'); // ends the process
 $smachine->addTransition(STATE_TRANSPORT,STATE_DELIVERED
 	,'when addressnotfound = 0 and customerpresent = 1 and signeddeliver = 1 timeout 3600','stop'); // 1 hour max.
 $smachine->addTransition(STATE_TRANSPORT,STATE_HELP
@@ -208,11 +211,12 @@ The transition is written as follow:
 * initial state
 * end state
 * Transition language
-* outcome, it could be **change** (default value),**stop**,**pause** and **continue**
+* outcome, it could be **change** (default value),**stop**,**pause**, **continue** and **stay**
 * * **change** means the state will change from **initial state** to **end state** if it meets the condition (or timeout).  It will only change if the state is active.  
 * * **stop** means the state will change and the job will stop (end of the job)  
 * * **pause** it means the state will change and the job will pause.  A job paused can't change of state, even if it meets the condition.  
-* * **continue** it means the state will change and the job will continue from pause.  
+* * **continue** it means the state will change and the job will continue from pause.
+* * **stay** it means the state will not change (but it executes any other instruction).  
 
 ## The transition language is written with the next syntax.
 > _when_ **var1** = **var2** and **var3** = **var4** or **var4** = **var5**
@@ -322,6 +326,7 @@ This library has a build-in GUI for testing.
 
 ## Version
 
+* 1.7 2019-06-16 Lots of changes.
 * 1.6 2018-12-26 Now MiniLang is a separate dependency.   
 * 1.5 2018-12-23 Xmas update (btw porca miseria).     
 * * Now the language is parsed differently.  The space is not mandatory anymore.   

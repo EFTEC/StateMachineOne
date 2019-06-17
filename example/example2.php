@@ -27,7 +27,7 @@ $smachine->fieldDefault=[
 	,'abort'=>null
 	,'instock'=>null
 	,'picked'=>null];
-$smachine->setDB('localhost',"root","abc.123","statemachinedb");
+$smachine->setdb('mysql','localhost',"root","abc.123","statemachinedb");
 $smachine->createDbTable(true); // you don't need to create this table every time.
 
 $smachine->setStopTrigger(function($smo,$job) {echo "Trigger: job is stopping<br>"; return true;});

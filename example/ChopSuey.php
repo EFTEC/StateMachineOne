@@ -47,7 +47,7 @@ $smachine->fieldDefault=[
 	,'abort'=>-1
 	,'instock'=>-1
 	,'picked'=>-1];
-$smachine->setDB('localhost',"root","abc.123","statemachinedb");
+$smachine->setDB('mysql','localhost',"root","abc.123","statemachinedb");
 $smachine->createDbTable(false); // you don't need to create this table every time.
 
 $smachine->loadDBAllJob(); // we load all jobs, including finished ones.

@@ -46,7 +46,7 @@ $smachine->fieldDefault=[
 // database configuration
 $smachine->tableJobs="buymilk_jobs";
 $smachine->tableJobLogs="buymilk_logs"; // it is optional
-$smachine->setDB('localhost',"root","abc.123","statemachinedb");
+$smachine->setdb('mysql','localhost',"root","abc.123","statemachinedb");
 $smachine->createDbTable(false); // you don't need to create this table every time.
 
 $smachine->loadDBAllJob(); // we load all jobs, including finished ones.

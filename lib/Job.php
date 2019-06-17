@@ -6,7 +6,7 @@ namespace eftec\statemachineone;
  * Class Job
  * @package eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version 1.3 2018-12-11
+ * @version 1.7 2019-06-16
  * @link https://github.com/EFTEC/StateMachineOne
  */
 class Job {
@@ -24,6 +24,8 @@ class Job {
     var $state;
     /** @var array */
     var $fields;
+    /** @var array */
+    var $flags;
     /**
      * none= the job doesn't exist or it's deleted.
      * inactive= the job exists but it hasn't started
@@ -49,14 +51,37 @@ class Job {
 	}
 	
 	/**
-     * StateMachineJob constructor.
+     * Job constructor.
      */
     public function __construct()
     {
         $this->log=[];
+        $this->flags=[];
     }
 
-
+    public function setFlag($msg,$whereId=0,$level=0) {
+        $this->flags[$whereId]=[$level,$msg]; 
+    }
+    public function setFlagMin($msg,$whereId=0,$level=0) {
+        if(isset($this->flags[$whereId])) {
+            $curLevel=$this->flags[$whereId][0];
+            if($level<=$curLevel) {
+                $this->flags[$whereId][$level]=$msg;
+            }
+        } else {
+            $this->setFlag($msg,$whereId,$level);
+        }
+    }
+    public function setFlagMax($msg,$whereId=0,$level=0) {
+        if(isset($this->flags[$whereId])) {
+            $curLevel=$this->flags[$whereId][0];
+            if($level>=$curLevel) {
+                $this->flags[$whereId][$level]=$msg;
+            }
+        } else {
+            $this->setFlag($msg,$whereId,$level);
+        }
+    }
     /**
      * @param int $dateInit
      * @return Job
@@ -106,6 +131,10 @@ class Job {
         return $this;
     }
 
+    public function getCurrentState()
+    {
+        return $this->state;
+    }
     /**
      * @param array $fields
      * @return Job
@@ -184,4 +213,4 @@ class Job {
 
 
 
-} // end StateMachineJob
+} // end Job

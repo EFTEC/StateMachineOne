@@ -4,7 +4,9 @@ namespace eftec\tests;
 
 
 
-class CompilationTest extends AbstractStateMachineOneTestCase {
+use eftec\statemachineone\Flag;
+
+class StateMachineTest extends AbstractStateMachineOneTestCase {
     /**
      * @throws \Exception
      */
@@ -37,7 +39,7 @@ class CompilationTest extends AbstractStateMachineOneTestCase {
 	    //$this->statemachineone->checkAllJobs();
 	    $job=$this->statemachineone->getLastJob();
 
-
+        // testing event
 	    self::assertEquals('1',$job->fields['field1'],'field1 must be 1');
 	    self::assertEquals('2',$job->fields['field2'],'field2 must be 2');
 	    self::assertEquals('3',$job->fields['counter'],'counter must be 3');
@@ -50,5 +52,44 @@ class CompilationTest extends AbstractStateMachineOneTestCase {
 	    self::assertEquals('hello',$job->fields['field1'],'field1 must be "hello"');
 	    self::assertEquals('world',$job->fields['field2'],'field2 must be "world"');  
     }
+    /**
+     * @throws \Exception
+     */
+    public function test2() {
+        $this->statemachineone->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
+        $this->statemachineone->setDefaultInitState(10);
+        $this->statemachineone->fieldDefault=['field1'=>1,'field2'=>0,'counter'=>0];
+        $this->statemachineone->addTransition(10,20,'when field1 = 1 set field2=200','stay');
 
+        $this->statemachineone->createJob($this->statemachineone->fieldDefault);
+        $this->statemachineone->checkAllJobs();
+        $job=$this->statemachineone->getLastJob();
+        // let's check consistency
+        self::assertEquals(true,$this->statemachineone->checkConsistency(false),'consistency must be true');
+        
+        self::assertEquals('200',$job->fields['field2'],'field2 must be 200');
+        self::assertEquals('STATE1',$this->statemachineone->getJobStateName($job),'current state must be STATE1');
+        self::assertEquals('active',$job->getActive(),'active must be stop');
+
+    }
+    /**
+     * @throws \Exception
+     */
+    public function test3() {
+        $this->statemachineone->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
+        $this->statemachineone->setDefaultInitState(10);
+        $this->statemachineone->fieldDefault=['field1'=>1,'field2'=>new Flag(),'counter'=>0];
+        $this->statemachineone->addTransition(10,20,'when field1 = 1 set field2.setflag("msg",2)','stay');
+
+        $this->statemachineone->createJob($this->statemachineone->fieldDefault);
+        $this->statemachineone->checkAllJobs();
+        $job=$this->statemachineone->getLastJob();
+        // let's check consistency
+        self::assertEquals(true,$this->statemachineone->checkConsistency(false),'consistency must be true');
+
+        self::assertEquals('msg;;2;;1',$job->fields['field2']->toString(),'field2 must be a flag');
+        self::assertEquals('STATE1',$this->statemachineone->getJobStateName($job),'current state must be STATE1');
+        self::assertEquals('active',$job->getActive(),'active must be stop');
+
+    }
 }

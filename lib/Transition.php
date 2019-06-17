@@ -32,16 +32,24 @@ class Transition
     var $result="";
     /** @var MiniLang */
     var $miniLang;
+    /** @var StateMachineOne */
+    var $caller;
+    
+    /** @var Job */
+    var $currentJob;
 
     /**
      * Transition constructor.
+     *
+     * @param StateMachineOne $caller
      * @param string $state0
      * @param string $state1
-     * @param mixed $conditions
+     * @param mixed  $conditions
      * @param string $result
      */
-    public function __construct($state0, $state1,  $conditions,$result="")
+    public function __construct($caller,$state0, $state1,  $conditions,$result="")
     {
+        $this->caller=$caller;
         $this->state0 = $state0;
         $this->state1 = $state1;
         $this->result=$result;
@@ -51,57 +59,74 @@ class Transition
             $this->function = $conditions;
         }
         if (is_string($conditions))  {
-        	$this->miniLang=new MiniLang(['wait','always'],['timeout','fulltimeout']);
+            
+        	
         	$this->txtCondition=$conditions;
-	        $this->miniLang->separate($conditions);
-	        if (isset($this->miniLang->areaValue['timeout'])) {
-		        $this->duration = $this->miniLang->areaValue['timeout'];
+	        $this->caller->miniLang->separate($conditions);
+	        if (isset($this->caller->miniLang->areaValue['timeout'])) {
+		        $this->duration = $this->caller->miniLang->areaValue['timeout'];
 	        }
-	        if (isset($this->miniLang->areaValue['fulltimeout'])) {
-		        $this->fullDuration = $this->miniLang->areaValue['fulltimeout'];
+	        if (isset($this->caller->miniLang->areaValue['fulltimeout'])) {
+		        $this->fullDuration = $this->caller->miniLang->areaValue['fulltimeout'];
 	        }
 
         }
     }
-	/**
-	 * @param StateMachineOne $smo
-	 * @param Job $job
-	 * @return bool
-	 * @throws \Exception
-	 */
-    public function evalLogic(StateMachineOne $smo, Job $job) {
-    	if (count($this->miniLang->logic)<1) return false; // no logic set.
-	    $r=$this->miniLang->evalLogic($job,$job->fields);
+   
+
+    /**
+     * @param StateMachineOne $smo
+     * @param Job             $job
+     * @param int             $numLogic
+     *
+     * @return bool
+     */
+    public function evalLogic(StateMachineOne $smo, Job $job,$numLogic) {
+	    $r=$this->caller->miniLang->evalLogic($numLogic);
 	    if ($r==='wait') return false; // wait
         if ($r) {
-            return $this->doTransition($smo,$job);
+            $r2=$this->doTransition($smo,$job,false,$numLogic);
+            return $r2;
         }
         return false;
     }
 
-	/**
-	 * It does the transition unless it is stopped or the active status is not compatible.
-	 * @param StateMachineOne $smo
-	 * @param Job $job
-	 * @param bool $forced If true then the transition is done whatever the active status (unless it is stop)
-	 * @return bool True if the transition is done, otherwise false.
-	 */
-    public function doTransition($smo,$job,$forced=false) {
+    /**
+     * It does the transition unless it is stopped or the active status is not compatible.
+     *
+     * @param StateMachineOne $smo
+     * @param Job             $job
+     * @param bool            $forced If true then the transition is done whatever the active status (unless it is stop)
+     * @param int             $numTransaction
+     *
+     * @return bool True if the transition is done, otherwise false.
+     */
+    public function doTransition($smo,$job,$forced=false,$numTransaction=0) {
 	    if ($job->getActive()=="stop") return false;
+	    $this->currentJob=$job;
 	    switch ($this->result) {
 		    case "change":
 		    	if ($job->getActive()=="active" || $forced) { // we only changed if the job is active.
-
+                    
 				    $smo->changeState($job, $this->state1);
-				    $this->miniLang->evalSet($job,$job->fields);
-				    
+				    $this->caller->miniLang->evalSet($numTransaction);
 				    if ($smo->isDbActive()) $smo->saveDBJob($job);
-				    $smo->addLog($job->idJob, "INFO", "state changed from "
+				    $smo->addLog($job->idJob, "INFO", "state <b>changed</b> from "
 					    .$smo->getStates()[$this->state0]."({$this->state0}) to "
 					    .$smo->getStates()[$this->state1]."({$this->state1}) {$this->result}");
 				    return true;
 			    }
 			    break;
+            case "stay":
+                if ($job->getActive()=="active" || $forced) { // we keep the current state
+                    //$smo->changeState($job, $this->state1);
+                    $this->caller->miniLang->evalSet($numTransaction);
+                    if ($smo->isDbActive()) $smo->saveDBJob($job);
+                    $smo->addLog($job->idJob, "INFO", "state <b>stay</b> in "
+                        .$smo->getStates()[$this->state0]."({$this->state0}) {$this->result}");
+                    return true;
+                }
+                break;		    	
 		    case "pause":
 			    if ($job->getActive()=="active" || $job->getActive()=="pause" || $forced) { // we only changed if the job is paused or active.
 				    if ($smo->pauseTriggerWhen==='instead') {
@@ -112,9 +137,9 @@ class Transition
 					    }
 					    $smo->changeState($job, $this->state1);
 					    $job->setActive("pause");
-					    $this->miniLang->evalSet($job,$job->fields);
+					    $this->caller->miniLang->evalSet($numTransaction);
 					    if ($smo->isDbActive()) $smo->saveDBJob($job);
-					    $smo->addLog($job->idJob, "INFO", "state changed from "
+					    $smo->addLog($job->idJob, "INFO", "state <b>changed</b> from "
 						    . $smo->getStates()[$this->state0] . "({$this->state0}) to "
 						    . $smo->getStates()[$this->state1] . "({$this->state1}) {$this->result}");
 					    if ($smo->pauseTriggerWhen === 'after') {
@@ -128,9 +153,9 @@ class Transition
 			    if ($job->getActive()=="pause" || $job->getActive()=="active" || $forced) { // we only changed if the job is active or paused
 			    	$smo->changeState($job, $this->state1);
 				    $job->setActive("active");
-				    $this->miniLang->evalSet($job,$job->fields);
+				    $this->caller->miniLang->evalSet($numTransaction);
 				    if ($smo->isDbActive()) $smo->saveDBJob($job);
-				    $smo->addLog($job->idJob, "INFO", "state changed from "
+				    $smo->addLog($job->idJob, "INFO", "state <b>continue</b> from "
 					    .$smo->getStates()[$this->state0]."({$this->state0}) to "
 					    .$smo->getStates()[$this->state1]."({$this->state1}) {$this->result}");
 				    return true;
@@ -140,9 +165,10 @@ class Transition
 			    if ($job->getActive()=="active" || $job->getActive()=="pause" || $forced) { // we only changed if the job is paused or active.
 				    $smo->changeState($job, $this->state1);
 				    $job->setActive("stop");
-				    $this->miniLang->evalSet($job,$job->fields);
+				    
+				    $this->caller->miniLang->evalSet($numTransaction);
 				    if ($smo->isDbActive()) $smo->saveDBJob($job);
-				    $smo->addLog($job->idJob, "INFO", "state changed from "
+				    $smo->addLog($job->idJob, "INFO", "state <b>stop</b> from "
 					    .$smo->getStates()[$this->state0]."({$this->state0}) to "
 					    .$smo->getStates()[$this->state1]."({$this->state1}) {$this->result}");
 				    $smo->callStopTrigger($job);
@@ -168,7 +194,7 @@ class Transition
 		if (is_numeric($this->fullDuration)) {
 			return $this->fullDuration;
 		} else {
-			return $this->miniLang->getValue($this->fullDuration[0]
+			return $this->caller->miniLang->getValue($this->fullDuration[0]
 				, $this->fullDuration[1], $this->fullDuration[2]
 				, $job, $job->fields);
 		}
@@ -184,7 +210,7 @@ class Transition
 		if (is_numeric($this->duration)) {
 			return $this->duration;
 		} else {
-			return $this->miniLang->getValue($this->duration[0]
+			return $this->caller->miniLang->getValue($this->duration[0]
 				, $this->duration[1], $this->duration[2]
 				, $job, $job->fields);
 		} 
