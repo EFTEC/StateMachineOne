@@ -326,6 +326,7 @@ This library has a build-in GUI for testing.
 
 ## Version
 
+* 1.8 2019-07-29 Some cleaups and methods setPdoOne() and getPdoOne();
 * 1.7 2019-06-16 Lots of changes.
 * 1.6 2018-12-26 Now MiniLang is a separate dependency.   
 * 1.5 2018-12-23 Xmas update (btw porca miseria).     

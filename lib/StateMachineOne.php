@@ -1,22 +1,25 @@
-<?php
+<?php /** @noinspection PhpUnusedParameterInspection */
+
+/** @noinspection SqlDialectInspection */
+
 namespace eftec\statemachineone;
 
 use DateTime;
 use eftec\PdoOne;
 use eftec\minilang\MiniLang;
-
+use Exception;
 
 /**
  * Class StateMachineOne
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version 1.7 2019-06-16
+ * @version 1.8 2019-07-29
  * @license LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)          
  * @link https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne {
 
-	public $VERSION='1.7';
+	public $VERSION='1.8';
 
 	private $debug=false;
 	private $debugAsArray=false;
@@ -121,7 +124,7 @@ class StateMachineOne {
      * It calls an event previously defined by addEvent()
 	 * @param $name
 	 * @param Job $job
-	 * @throws \Exception
+	 * @throws Exception
      * @see \eftec\statemachineone\StateMachineOne::addEvent
 	 */
     public function callEvent($name,$job=null) {
@@ -184,27 +187,46 @@ class StateMachineOne {
     }
 
     /**
-     * It sets the database
+     * It reuses a connection to the database (if we have one and we want to reuse it).
+     * @see \eftec\statemachineone\StateMachineOne::setDB
+     * @param PdoOne $pdoOne
+     */
+    public function setPdoOne($pdoOne) {
+        $this->pdoOne=$pdoOne;
+        $this->dbActive=true;
+        $this->dbType=$pdoOne->databaseType;
+        $this->dbSchema=$pdoOne->db;   
+    }
+
+    /**
+     * @return PdoOne
+     */
+    public function getPdoOne() {
+        return $this->pdoOne;
+    }
+    /**
+     * It sets a new connection to the database.
      *
-     * @param string $type=['mysql','sqlsrv'][$i]
+     * @param string $type   =['mysql','sqlsrv'][$i]
      * @param string $server server ip, example "localhost"
      * @param string $user   user of the database, example "root"
      * @param string $pwd    password of the database, example "123456"
-     * @param string $db     database(schema), example "sakila"
+     * @param string $schema database(schema), example "sakila"
+     * @see \eftec\statemachineone\StateMachineOne::setPdoOne
      *
      * @return bool true if the database is open
      */
-    public function setDB($type,$server, $user, $pwd, $db) {
+    public function setDB($type,$server, $user, $pwd, $schema) {
         $this->dbActive=true;
         $this->dbType=$type;
         $this->dbServer=$server;
         $this->dbUser=$user;
         $this->dbPassword=$pwd;
-        $this->dbSchema=$db;
+        $this->dbSchema=$schema;
         try {
             $this->getDB();
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             if ($this->debug) {
                 if($this->debugAsArray) {
                     $this->debugArray[]=$e->getMessage();
@@ -219,7 +241,7 @@ class StateMachineOne {
     /**
      * It returns the current connection. If there is not a connection then it generates a new one.
      * @return PdoOne
-     * @throws \Exception
+     * @throws Exception
      */
     public function getDB() {
         if ($this->pdoOne==null) {
@@ -232,7 +254,7 @@ class StateMachineOne {
     /**
      * Loads a job from the database
      * @param $idJob
-     * @throws \Exception
+     * @throws Exception
      */
     public function loadDBJob($idJob) {
         $row=$this->getDB()->select("*")->from($this->tableJobs)->where("idactive<>0 and idjob=?",[$idJob])->first();
@@ -241,7 +263,7 @@ class StateMachineOne {
 
     /**
      * It loads all jobs from the database with all active state but none(0) and stopped(4).
-     * @throws \Exception
+     * @throws Exception
      */
     public function loadDBActiveJobs() {
         $rows=$this->getDB()->select("*")->from($this->tableJobs)->where("idactive not in (0,4)")->order('dateinit')->toList();
@@ -252,7 +274,7 @@ class StateMachineOne {
     }
 	/**
 	 * It loads all jobs from the database regardless its active state.
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	public function loadDBAllJob() {
 		$rows=$this->getDB()->select("*")->from($this->tableJobs)->order('dateinit')->toList();
@@ -323,25 +345,25 @@ class StateMachineOne {
 
 	/**
 	 * (optional), it creates a database table, including indexes.
+     * Right now it only works with 'mysql'
 	 * @param bool $drop if true, then the table will be dropped.
-	 * @throws \Exception
+	 * @throws Exception
 	 */
     public function createDbTable($drop=false) {
 
+        if ($this->dbType=='mysql') {
+            if ($drop) {
+                $sql = 'DROP TABLE IF EXISTS `' . $this->tableJobs . '`';
+                $this->getDB()->runRawQuery($sql);
+                $sql = 'DROP TABLE IF EXISTS `' . $this->tableJobLogs . '`';
+                $this->getDB()->runRawQuery($sql);
+            }
+            $exist = $this->getDB()->select(1)->from('information_schema.tables')
+                ->where('table_schema=?', [$this->dbSchema])
+                ->where('table_name=? ', [$this->tableJobs])
+                ->limit('1')->firstScalar();
 
-        if ($drop) {
-            $sql='DROP TABLE IF EXISTS `'.$this->tableJobs.'`';
-            $this->getDB()->runRawQuery($sql);
-	        $sql='DROP TABLE IF EXISTS `'.$this->tableJobLogs.'`';
-	        $this->getDB()->runRawQuery($sql);
-        }
-	    $exist=$this->getDB()->select(1)->from('information_schema.tables')
-		    ->where('table_schema=?',[$this->dbSchema])
-		    ->where('table_name=? ',[$this->tableJobs])
-		    ->limit('1')->firstScalar();
-
-
-	    $sql="CREATE TABLE IF NOT EXISTS `".$this->tableJobs."` (
+            $sql = "CREATE TABLE IF NOT EXISTS `" . $this->tableJobs . "` (
                   `idjob` INT NOT NULL AUTO_INCREMENT,
                   `idactive` int,
                   `idstate` int,
@@ -349,32 +371,32 @@ class StateMachineOne {
                   `datelastchange` timestamp,
                   `dateexpired` timestamp,
                   `dateend` timestamp,";
-        foreach($this->fieldDefault as $k=>$v) {
-        	$sql.=$this->createColTable($k,$v);
-        }
-        $sql.="PRIMARY KEY (`idjob`));";
-        $this->getDB()->runRawQuery($sql);
-	    if ($exist!=1) {
-	        // We created index.
-	        $sql="ALTER TABLE `".$this->tableJobs."`
-				ADD INDEX `".$this->tableJobs."_key1` (`idactive` ASC),
-				ADD INDEX `".$this->tableJobs."_key2` (`idstate` ASC),
-				ADD INDEX `".$this->tableJobs."_key3` (`dateinit` ASC)";
-		    $this->getDB()->runRawQuery($sql);
-	        if ($this->tableJobLogs) {
-		        $sql = "CREATE TABLE IF NOT EXISTS `" . $this->tableJobLogs . "` (
+            foreach ($this->fieldDefault as $k => $v) {
+                $sql .= $this->createColTable($k, $v);
+            }
+            $sql .= "PRIMARY KEY (`idjob`));";
+            $this->getDB()->runRawQuery($sql);
+            if ($exist != 1) {
+                // We created index.
+                $sql = "ALTER TABLE `" . $this->tableJobs . "`
+				ADD INDEX `" . $this->tableJobs . "_key1` (`idactive` ASC),
+				ADD INDEX `" . $this->tableJobs . "_key2` (`idstate` ASC),
+				ADD INDEX `" . $this->tableJobs . "_key3` (`dateinit` ASC)";
+                $this->getDB()->runRawQuery($sql);
+                if ($this->tableJobLogs) {
+                    $sql = "CREATE TABLE IF NOT EXISTS `" . $this->tableJobLogs . "` (
 	                  `idjoblog` INT NOT NULL AUTO_INCREMENT,
 	                  `idjob` int,
 	                  `type` varchar(50),
 	                  `description` varchar(2000),
 	                  `date` timestamp,
 	                  PRIMARY KEY (`idjoblog`));";
-		        $this->getDB()->runRawQuery($sql);
+                    $this->getDB()->runRawQuery($sql);
+                }
             }
         }
     }
     private function createColTable($k,$v) {
-    	$sql="";
 	    switch (1==1) {
 		    case is_string($v):
 			    $sql = " `$k` varchar(250),";
@@ -403,7 +425,7 @@ class StateMachineOne {
 
         try {
         if ($job->isNew) {
-            $r = $this->getDB()
+            $this->getDB()
                 ->from($this->tableJobs);
             $arr=$this->jobToArray($job);
             foreach($arr as $k=>$item) {
@@ -426,7 +448,7 @@ class StateMachineOne {
             //$this->jobQueue[$job->idJob]=$job;
             return $job->idJob;
         }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->addLog($job->idJob,"ERROR","Saving the job ".$e->getMessage());
         }
         return 0;
@@ -449,7 +471,7 @@ class StateMachineOne {
 			$this->getDB()->set('date=?',date("Y-m-d H:i:s",$arr['date']));
 			$this->getDB()->insert();
 			return true;
-		} catch (\Exception $e) {
+		} catch (Exception $e) {
 			echo "error ".$e->getMessage();
 			return false;
 			//$this->addLog(0,"ERROR","Saving the joblog ".$e->getMessage());
@@ -532,7 +554,7 @@ class StateMachineOne {
      * It checks a specific job and proceed to change state.
      * We check a job and we change the state
      * @param Job $job
-     * @throws \Exception
+     * @throws Exception
      */
     public function checkJob($job) {
         if ($job->dateInit<=time() && $job->getActive()=='inactive') {
@@ -559,8 +581,7 @@ class StateMachineOne {
                             $this->miniLang->setDict($job->fields);
 				            if ($trn->evalLogic($this, $job,$numTransition)) {
 				            	$this->changed=true;
-				            } else {
-                            }
+				            }
 			            } else if (is_callable($trn->function)) {
 				            // we check the transition based on function
 				            if (call_user_func($trn->function, $this, $job)) {
@@ -589,7 +610,7 @@ class StateMachineOne {
 				    if ($job->getActive() != "none" && $job->getActive() != "stop") {
 					    try {
 						    $this->checkJob($job);
-					    } catch (\Exception $e) {
+					    } catch (Exception $e) {
 						    $this->addLog($idx, "ERROR", "State error " . $e->getMessage());
 						    return false;
 					    }
@@ -642,8 +663,12 @@ class StateMachineOne {
 	 */
     private function dateToString($time=null) {
     	if ($time==='now') {
-		    $d = new DateTime($time);
-	    } else {
+            try {
+                $d = new DateTime($time);
+            } catch (Exception $e) {
+                $d = new DateTime();
+            }
+        } else {
 		    $d= DateTime::createFromFormat('U.u', $time);
 	    }
 	    return $d->format("Y-m-d H:i:s.u");
@@ -687,7 +712,7 @@ class StateMachineOne {
 
 	/**
 	 * @param Job $job
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	public function deleteJobDB(Job $job) {
     	$this->getDB()
@@ -785,7 +810,7 @@ class StateMachineOne {
 					try {
 						$this->deleteJobDB($job);
 						$msg="Job deleted";
-					} catch (\Exception $e) {
+					} catch (Exception $e) {
 						$msg="Error deleting the job ".$e->getMessage();
 					}
 					$this->removeJob($job);
@@ -827,9 +852,9 @@ class StateMachineOne {
 
 		echo "<!doctype html>";
 		echo "<html lang='en'>";
-		echo "<head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>";
+		echo "<head><title>StateMachineOne Version ".$this->VERSION."</title>";
+		echo "<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>";
 		echo '<link rel="stylesheet" href="http://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">';
-		echo "<title>StateMachineOne Version ".$this->VERSION."</title>";
 		echo "<style>html { font-size: 14px; }</style>";
 		echo "</head><body>";
 
