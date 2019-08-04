@@ -72,6 +72,23 @@ class Transition
 
         }
     }
+    public static function __set_state($array) {
+        $obj=new Transition(null,$array['state0'],$array['state1'],$array['txtCondition']);
+        //$obj->
+        /*
+         'state0' => 0,
+                'state1' => 1,
+                'function' => NULL,
+                'duration' => 2000000,
+                'fullDuration' => 2000000,
+                'txtCondition' => 'when start = 0 set start=1',
+                'conditions' => NULL,
+                'result' => 'change',
+                'miniLang' => NULL,
+                'caller' => NULL,
+                'currentJob' => NULL,
+         */
+    }
    
 
     /**
@@ -87,6 +104,8 @@ class Transition
         if ($r) {
             $r2=$this->doTransition($smo,$job,false,$numLogic);
             return $r2;
+        } else {
+            $this->caller->miniLang->evalSet($numLogic,'else');
         }
         return false;
     }

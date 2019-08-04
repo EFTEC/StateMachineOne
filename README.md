@@ -230,7 +230,6 @@ The transition happens when this condition meets. For example:
 > when field=0  // it happens when the field is zero.   
 > when $var='hi' // it happens when the global variable is 'hi'   
 > when fn()=44 // the transition is triggered when the function fn() returns 44  
-> when timeout // it waits until the timeout. it is the same than "when 1=2". The transition is never executed (never until timeout)
 > when always // its always true. It is the same than "when 1=1". The transition is always executed
 
 It compares a constant. The binary operator for comparison are
@@ -324,9 +323,23 @@ This library has a build-in GUI for testing.
 [Job](Job.md) It is the model class for the job  
 [Transition](Transition.md) It is the model class for the transitions.  
 
+## License
+
+Dual license (LGPL 3.0 and Commercial). See LICENSE file.
+
 ## Version
 
-* 1.8 2019-07-29 Some cleaups and methods setPdoOne() and getPdoOne();
+* 1.10 2019-08-04
+* * Updated to "eftec/minilang": "^2.7"
+* * Solved a bug in callEvent() does not fail if there is not a job.
+* * Added the method cacheMachine() to cache the results.
+* * Code Formatted to PSR-2
+* 1.9 2019-08-03 
+* * Some fixes. Now the UI doesn't show events that "stay" in the same state. 
+* * Now it uses eftec/minilang 2.6 that permits the use of "else"
+* * The UI is more reduced. 
+* * Method createColsTable() added.        
+* 1.8 2019-07-29 Some cleanups and methods setPdoOne() and getPdoOne();
 * 1.7 2019-06-16 Lots of changes.
 * 1.6 2018-12-26 Now MiniLang is a separate dependency.   
 * 1.5 2018-12-23 Xmas update (btw porca miseria).     
