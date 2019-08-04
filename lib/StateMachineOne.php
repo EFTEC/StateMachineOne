@@ -21,7 +21,7 @@ use Exception;
 class StateMachineOne
 {
 
-    public $VERSION = '1.10';
+    public $VERSION = '1.11';
 
     private $debug = false;
     private $debugAsArray = false;
