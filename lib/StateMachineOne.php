@@ -14,7 +14,7 @@ use Exception;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  1.10 2019-08-04
+ * @version  1.11 2019-08-04
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
@@ -497,7 +497,6 @@ class StateMachineOne
      */
     public function saveDBJob($job)
     {
-
         try {
             if ($job->isNew) {
                 $this->getDB()
@@ -520,6 +519,7 @@ class StateMachineOne
                     }
                     $this->getDB()->where('idjob=?', $job->idJob);
                     $this->getDB()->update();
+                    
                     $job->isUpdate = false;
                     //$this->jobQueue[$job->idJob]=$job;
                     return $job->idJob;
@@ -696,7 +696,6 @@ class StateMachineOne
                             }
                         }
                     }
-
                 }
             }
         }
@@ -711,10 +710,10 @@ class StateMachineOne
      */
     public function checkAllJobs($numIteractions = 3)
     {
-        for ($iteraction = 0; $iteraction < $numIteractions; $iteraction++) {
-            $this->changed = false;
-            foreach ($this->jobQueue as $idx => &$job) {
-                if (get_class($job) == "eftec\statemachineone\Job") { // why?, because we use foreach
+        $this->changed = false;
+        foreach ($this->jobQueue as $idx => &$job) {
+            if (get_class($job) == "eftec\statemachineone\Job") { // why?, because we use foreach
+                for ($iteraction = 0; $iteraction < $numIteractions; $iteraction++) {
                     if ($job->getActive() != "none" && $job->getActive() != "stop") {
                         try {
                             $this->checkJob($job);
@@ -724,7 +723,9 @@ class StateMachineOne
                         }
                     }
                 }
+                $this->saveDBJob($job);
             }
+           
             if (!$this->changed) {
                 break;
             } // we don't test it again if we changed of state.
@@ -947,6 +948,9 @@ cin;
         }
         $phpCode='$machine->transitions=unserialize( \''.$this->serializeEscape($transitions).'\');';
         //$phpCode=str_replace("  ","\t",$phpCode);
+        foreach($transitions as &$trans) {
+            $trans->caller=$this;
+        }        
         return $phpCode;
     }
     private function cacheEvents() {
@@ -959,6 +963,9 @@ cin;
         $phpCode='$machine->events=unserialize( \''.$this->serializeEscape($events).'\');';
         $phpCode.="\n  \$machine->eventNames=unserialize( '".$this->serializeEscape($this->eventNames).'\');';
         //$phpCode=str_replace("  ","\t",$phpCode);
+        foreach($events as &$event) {
+            $event->setCaller($this);
+        }        
         return $phpCode;
     }
     //</editor-fold>
@@ -990,8 +997,12 @@ cin;
             }
         }
         if ($buttonEvent) {
-            $this->callEvent($buttonEvent);
+            $this->callEvent($buttonEvent,$job);
             $msg = "Event $buttonEvent called";
+            $job->isUpdate=true;
+            $this->saveDBJob($job);
+            $fetchField=null;
+            
         }
 
         switch ($button) {

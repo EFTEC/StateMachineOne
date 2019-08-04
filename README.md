@@ -329,6 +329,7 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
 
+* 1.11 2019-08-04 Some fixes.
 * 1.10 2019-08-04
 * * Updated to "eftec/minilang": "^2.7"
 * * Solved a bug in callEvent() does not fail if there is not a job.

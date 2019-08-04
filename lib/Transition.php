@@ -59,8 +59,6 @@ class Transition
             $this->function = $conditions;
         }
         if (is_string($conditions))  {
-            
-        	
         	$this->txtCondition=$conditions;
 	        $this->caller->miniLang->separate($conditions);
 	        if (isset($this->caller->miniLang->areaValue['timeout'])) {
@@ -69,26 +67,9 @@ class Transition
 	        if (isset($this->caller->miniLang->areaValue['fulltimeout'])) {
 		        $this->fullDuration = $this->caller->miniLang->areaValue['fulltimeout'];
 	        }
-
         }
     }
-    public static function __set_state($array) {
-        $obj=new Transition(null,$array['state0'],$array['state1'],$array['txtCondition']);
-        //$obj->
-        /*
-         'state0' => 0,
-                'state1' => 1,
-                'function' => NULL,
-                'duration' => 2000000,
-                'fullDuration' => 2000000,
-                'txtCondition' => 'when start = 0 set start=1',
-                'conditions' => NULL,
-                'result' => 'change',
-                'miniLang' => NULL,
-                'caller' => NULL,
-                'currentJob' => NULL,
-         */
-    }
+    
    
 
     /**
@@ -99,6 +80,7 @@ class Transition
      * @return bool
      */
     public function evalLogic(StateMachineOne $smo, Job $job,$numLogic) {
+        
 	    $r=$this->caller->miniLang->evalLogic($numLogic);
 	    if ($r==='wait') return false; // wait
         if ($r) {
@@ -129,7 +111,7 @@ class Transition
                     
 				    $smo->changeState($job, $this->state1);
 				    $this->caller->miniLang->evalSet($numTransaction);
-				    if ($smo->isDbActive()) $smo->saveDBJob($job);
+				    //if ($smo->isDbActive()) $smo->saveDBJob($job);
 				    $smo->addLog($job->idJob, "INFO", "state <b>changed</b> from "
 					    .$smo->getStates()[$this->state0]."({$this->state0}) to "
 					    .$smo->getStates()[$this->state1]."({$this->state1}) {$this->result}");
@@ -140,9 +122,9 @@ class Transition
                 if ($job->getActive()=="active" || $forced) { // we keep the current state
                     //$smo->changeState($job, $this->state1);
                     $this->caller->miniLang->evalSet($numTransaction);
-                    if ($smo->isDbActive()) $smo->saveDBJob($job);
-                    $smo->addLog($job->idJob, "INFO", "state <b>stay</b> in "
-                        .$smo->getStates()[$this->state0]."({$this->state0}) {$this->result}");
+                    //if ($smo->isDbActive()) $smo->saveDBJob($job);
+                    //$smo->addLog($job->idJob, "INFO", "state <b>stay</b> in "
+                    //    .$smo->getStates()[$this->state0]."({$this->state0}) {$this->result}");
                     return true;
                 }
                 break;		    	
@@ -157,7 +139,7 @@ class Transition
 					    $smo->changeState($job, $this->state1);
 					    $job->setActive("pause");
 					    $this->caller->miniLang->evalSet($numTransaction);
-					    if ($smo->isDbActive()) $smo->saveDBJob($job);
+					    //if ($smo->isDbActive()) $smo->saveDBJob($job);
 					    $smo->addLog($job->idJob, "INFO", "state <b>changed</b> from "
 						    . $smo->getStates()[$this->state0] . "({$this->state0}) to "
 						    . $smo->getStates()[$this->state1] . "({$this->state1}) {$this->result}");
@@ -173,7 +155,7 @@ class Transition
 			    	$smo->changeState($job, $this->state1);
 				    $job->setActive("active");
 				    $this->caller->miniLang->evalSet($numTransaction);
-				    if ($smo->isDbActive()) $smo->saveDBJob($job);
+				    //if ($smo->isDbActive()) $smo->saveDBJob($job);
 				    $smo->addLog($job->idJob, "INFO", "state <b>continue</b> from "
 					    .$smo->getStates()[$this->state0]."({$this->state0}) to "
 					    .$smo->getStates()[$this->state1]."({$this->state1}) {$this->result}");
@@ -186,7 +168,7 @@ class Transition
 				    $job->setActive("stop");
 				    
 				    $this->caller->miniLang->evalSet($numTransaction);
-				    if ($smo->isDbActive()) $smo->saveDBJob($job);
+				    //if ($smo->isDbActive()) $smo->saveDBJob($job);
 				    $smo->addLog($job->idJob, "INFO", "state <b>stop</b> from "
 					    .$smo->getStates()[$this->state0]."({$this->state0}) to "
 					    .$smo->getStates()[$this->state1]."({$this->state1}) {$this->result}");
