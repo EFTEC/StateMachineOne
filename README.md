@@ -55,6 +55,7 @@ Also, every transition could have a timeout. If the timeout is reached then the 
 * * **pause**  The transition changes of state and the job is paused. It is only possible to do the transition if the job has the **active state** = active.
 * * **continue**  The transition changes of state and the job resumes of the pause. It is only possible to do the transition if the job has the **active state** = pause or active
 * * **stop** The transition changes of state and the job is stopped. It is only possible to do the transition if the job has the **active state** = active or pause.
+* * **stay** The transition does not change of state but it does the operations defined by the set.   
 * **Active:** Every job has an **active state**. There are 4: none,stop,active,inactive,pause. It is different from the states.
 So, for example, a job could have the **state**: INPROGRESS and the **active state**: PAUSE.   
 * * **none** = the job doesn't exist. It can't change of state, neither it is loaded (from the database) by default
@@ -243,6 +244,8 @@ It compares a constant. The binary operator for comparison are
 Values of the field could be as the next ones:
 * **field** = it is a field of the job.
 > when field = field2  // when field (of the job) is equals to field2
+* **_idjob** = it is the number of the current job. It is calculated every time the job is evaluated
+> set id=_idjob
 * **$var** = it is a global variable (php)
 * **777** = it is a numeric constant
 > when field = 777 // when field is equals to 777
@@ -328,6 +331,24 @@ This library has a build-in GUI for testing.
 Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
+
+* 2.1 2019-08-28
+* * Updated eftec/minilang to 2.9. 
+* * It allows to store arrays in each field
+* * If the job's field is an object or array, then it is store in a MEDIUMTEXT FIELD (serialized)
+* * method Flags::flagexist()
+* * method StateMachineOne::removetransition()
+
+* 2.0 2019-08-24 
+* * Changed the flags. The definition of push is flipped. After push('msg','id'..) now push('id','msg'..)
+* * Added method to set the time.
+
+* 1.12 2019-08-16
+* * Updated MiniLang
+* * Added method viewJson()
+* * Now event doesn't crash if the job is null.
+* * CreateColTable() (private method) is removed.
+* * Flag() now has expiration (optional)
 
 * 1.11 2019-08-04 Some fixes.
 * 1.10 2019-08-04

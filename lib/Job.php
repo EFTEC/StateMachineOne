@@ -12,20 +12,23 @@ namespace eftec\statemachineone;
 class Job {
 	/** @var int number or position of the job on the queue */
     var $idJob=0;
-    /** @var int */
+    /** @var int initial date (timestamp) */
     var $dateInit;
-	/** @var int */
+	/** @var int date of the last change (timestamp)*/
 	var $dateLastChange;
-    /** @var int */
+    /** @var int date of end (timestamp) */
     var $dateEnd;
-    /** @var int */
+    /** @var int date of expiration (timestamp) */
     var $dateExpired;
-    /** @var mixed */
+    /** @var mixed  */
     var $state;
-    /** @var array */
+    /** @var array fields or values per job */
     var $fields;
+    /** @var array indicates the flow of states */
+    var $stateFlow=[];
+
     /** @var array */
-    var $flags;
+    var $transitions=[];
     /**
      * none= the job doesn't exist or it's deleted.
      * inactive= the job exists but it hasn't started
@@ -35,11 +38,11 @@ class Job {
      * @var string ['none','inactive','active','pause','stop'][$i]
      */
     private $active='none';
-
+    /** @var bool If the job is new or not. It is used to store into the database (insert) */
     var $isNew=false;
+    /** @var bool If the job is updated. It is used to store into the database (update) */
     var $isUpdate=false;
-
-
+    
     /** @var array */
     var $log;
     
@@ -56,32 +59,10 @@ class Job {
     public function __construct()
     {
         $this->log=[];
-        $this->flags=[];
+        $this->transitions=[];
     }
 
-    public function setFlag($msg,$whereId=0,$level=0) {
-        $this->flags[$whereId]=[$level,$msg]; 
-    }
-    public function setFlagMin($msg,$whereId=0,$level=0) {
-        if(isset($this->flags[$whereId])) {
-            $curLevel=$this->flags[$whereId][0];
-            if($level<=$curLevel) {
-                $this->flags[$whereId][$level]=$msg;
-            }
-        } else {
-            $this->setFlag($msg,$whereId,$level);
-        }
-    }
-    public function setFlagMax($msg,$whereId=0,$level=0) {
-        if(isset($this->flags[$whereId])) {
-            $curLevel=$this->flags[$whereId][0];
-            if($level>=$curLevel) {
-                $this->flags[$whereId][$level]=$msg;
-            }
-        } else {
-            $this->setFlag($msg,$whereId,$level);
-        }
-    }
+
     /**
      * @param int $dateInit
      * @return Job
@@ -139,11 +120,24 @@ class Job {
      * @param array $fields
      * @return Job
      */
-    public function setFields(array $fields)
+    public function setFields($fields)
     {
         $this->fields = $fields;
+        $this->setParentFields();
         return $this;
     }
+
+    /**
+     * It refresh the fields. If the fields are implementation of StateSerializable, then it sets the parent.
+     */
+    public function setParentFields() {
+        foreach($this->fields as &$item) {
+            if ($item instanceof StateSerializable) {
+                $item->setParent($this);
+            }
+        }
+    }
+
 
     /**
      * @param string $active= ['none','inactive','active','pause','stop'][$i]

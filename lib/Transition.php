@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpUnused */
 
 namespace eftec\statemachineone;
 
@@ -28,7 +28,7 @@ class Transition
     var $txtCondition;
     /** @var callable|mixed  */
     var $conditions=null;
-    /** @var string=['change','pause','continue','stop'][$i]  */
+    /** @var string=['change','pause','continue','stop','stay','stayonce'][$i]  */
     var $result="";
     /** @var MiniLang */
     var $miniLang;
@@ -60,7 +60,7 @@ class Transition
         }
         if (is_string($conditions))  {
         	$this->txtCondition=$conditions;
-	        $this->caller->miniLang->separate($conditions);
+	        $this->caller->miniLang->separate($conditions); // this process could be a bit expensive.
 	        if (isset($this->caller->miniLang->areaValue['timeout'])) {
 		        $this->duration = $this->caller->miniLang->areaValue['timeout'];
 	        }
@@ -75,19 +75,22 @@ class Transition
     /**
      * @param StateMachineOne $smo
      * @param Job             $job
-     * @param int             $numLogic
+     * @param int             $idTransition number of the transition.
      *
      * @return bool
      */
-    public function evalLogic(StateMachineOne $smo, Job $job,$numLogic) {
+    public function evalLogic(StateMachineOne $smo, Job $job,$idTransition) {
         
-	    $r=$this->caller->miniLang->evalLogic($numLogic);
+	    $r=$this->caller->miniLang->evalLogic($idTransition);
 	    if ($r==='wait') return false; // wait
+        if ($this->result==='stayonce' && isset($job->transitions[$idTransition])) {
+            return false; // transition was already done.
+        }
         if ($r) {
-            $r2=$this->doTransition($smo,$job,false,$numLogic);
+            $r2=$this->doTransition($smo,$job,false,$idTransition);
             return $r2;
         } else {
-            $this->caller->miniLang->evalSet($numLogic,'else');
+            $this->caller->miniLang->evalSet($idTransition,'else');
         }
         return false;
     }
@@ -105,6 +108,7 @@ class Transition
     public function doTransition($smo,$job,$forced=false,$numTransaction=0) {
 	    if ($job->getActive()=="stop") return false;
 	    $this->currentJob=$job;
+        $job->transitions[$numTransaction]=1;
 	    switch ($this->result) {
 		    case "change":
 		    	if ($job->getActive()=="active" || $forced) { // we only changed if the job is active.
@@ -112,7 +116,7 @@ class Transition
 				    $smo->changeState($job, $this->state1);
 				    $this->caller->miniLang->evalSet($numTransaction);
 				    //if ($smo->isDbActive()) $smo->saveDBJob($job);
-				    $smo->addLog($job->idJob, "INFO", "state <b>changed</b> from "
+				    $smo->addLog($job, "INFO",'TRANSITION',"state <b>changed</b> from "
 					    .$smo->getStates()[$this->state0]."({$this->state0}) to "
 					    .$smo->getStates()[$this->state1]."({$this->state1}) {$this->result}");
 				    return true;
@@ -123,7 +127,7 @@ class Transition
                     //$smo->changeState($job, $this->state1);
                     $this->caller->miniLang->evalSet($numTransaction);
                     //if ($smo->isDbActive()) $smo->saveDBJob($job);
-                    //$smo->addLog($job->idJob, "INFO", "state <b>stay</b> in "
+                    //$smo->addLog($job, "INFO", "state <b>stay</b> in "
                     //    .$smo->getStates()[$this->state0]."({$this->state0}) {$this->result}");
                     return true;
                 }
@@ -140,7 +144,7 @@ class Transition
 					    $job->setActive("pause");
 					    $this->caller->miniLang->evalSet($numTransaction);
 					    //if ($smo->isDbActive()) $smo->saveDBJob($job);
-					    $smo->addLog($job->idJob, "INFO", "state <b>changed</b> from "
+					    $smo->addLog($job, "INFO",'TRANSITION',"state <b>changed</b> from "
 						    . $smo->getStates()[$this->state0] . "({$this->state0}) to "
 						    . $smo->getStates()[$this->state1] . "({$this->state1}) {$this->result}");
 					    if ($smo->pauseTriggerWhen === 'after') {
@@ -156,7 +160,7 @@ class Transition
 				    $job->setActive("active");
 				    $this->caller->miniLang->evalSet($numTransaction);
 				    //if ($smo->isDbActive()) $smo->saveDBJob($job);
-				    $smo->addLog($job->idJob, "INFO", "state <b>continue</b> from "
+				    $smo->addLog($job, "INFO",'TRANSITION',"state <b>continue</b> from "
 					    .$smo->getStates()[$this->state0]."({$this->state0}) to "
 					    .$smo->getStates()[$this->state1]."({$this->state1}) {$this->result}");
 				    return true;
@@ -169,7 +173,7 @@ class Transition
 				    
 				    $this->caller->miniLang->evalSet($numTransaction);
 				    //if ($smo->isDbActive()) $smo->saveDBJob($job);
-				    $smo->addLog($job->idJob, "INFO", "state <b>stop</b> from "
+				    $smo->addLog($job, "INFO",'TRANSITION',"state <b>stop</b> from "
 					    .$smo->getStates()[$this->state0]."({$this->state0}) to "
 					    .$smo->getStates()[$this->state1]."({$this->state1}) {$this->result}");
 				    $smo->callStopTrigger($job);

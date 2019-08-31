@@ -48,11 +48,14 @@ $smachine->setStates(
 $dummy='hello';
 
 function dummy($job) {
-	return 'hello';
+    echo "<hr>";
+    var_dump($job);
+    echo "<hr>";
+	return 'hello calling dummy';
 }
 
 $smachine->addTransition(STATE_PICK,STATE_CANCEL,'when instock = 0',"stop");
-$smachine->addTransition(STATE_PICK,STATE_TRANSPORT,'when picked = 1',"change");
+$smachine->addTransition(STATE_PICK,STATE_TRANSPORT,'when picked = 1 set a1=dummy(_idjob)',"change");
 $smachine->addTransition(STATE_TRANSPORT,STATE_TODELIVER,'when addressnotfound = 0',"change");
 $smachine->addTransition(STATE_TRANSPORT,STATE_HELP,'when addressnotfound = 1',"change");
 $smachine->addTransition(STATE_HELP,STATE_ABORTED,'when addressnotfound = 9999 timeout 1',"stop"); // we wait 2 seconds, then we give it up

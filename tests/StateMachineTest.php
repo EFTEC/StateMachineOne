@@ -4,7 +4,8 @@ namespace eftec\tests;
 
 
 
-use eftec\statemachineone\Flag;
+use eftec\statemachineone\Flags;
+use eftec\statemachineone\StateMachineOne;
 
 class StateMachineTest extends AbstractStateMachineOneTestCase {
     /**
@@ -13,10 +14,11 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
     public function test1() {
 	    $this->statemachineone->setStates([1,2,3]);
 	    $this->statemachineone->setDefaultInitState(1);
-	    $this->statemachineone->fieldDefault=['field1'=>1,'field2'=>0,'counter'=>0];
+	    $this->statemachineone->fieldDefault=['field1'=>1,'field2'=>0,'field3'=>0,'field4'=>123,'counter'=>0];
 	    $this->statemachineone->addTransition(1,2,'when field1 = 1 set counter + 1 timeout 100 fulltimeout 200','change');
+        $this->statemachineone->addTransition(2,2,'when field2 = 0 set field3 = -1','stay');
+        $this->statemachineone->addTransition(2,2,'when field2 = 0 set field4 + field1-field3','stay'); // field4=field4(123)+field1(1)-field3(-1)
 	    $this->statemachineone->addTransition(2,3,'when field2 = 0 set field1 = 2 , counter + 1','stop');
-
 	    $this->statemachineone->createJob($this->statemachineone->fieldDefault);
 	    $this->statemachineone->checkAllJobs();
 	    $job=$this->statemachineone->getLastJob();
@@ -29,6 +31,8 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
 	    // testing the result fields
 	    self::assertEquals('2',$job->fields['field1'],'field1 must be 2');
 	    self::assertEquals('0',$job->fields['field2'],'field0 must be 0');
+        self::assertEquals('-1',$job->fields['field3'],'field3 must be -1');
+        self::assertEquals('125',$job->fields['field4'],'field4 must be 125');
 	    self::assertEquals('2',$job->fields['counter'],'counter must be 2');
 	    self::assertEquals('3',$job->state,'state must be 3');
 	    self::assertEquals('stop',$job->getActive(),'active must be stop');
@@ -78,8 +82,32 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
     public function test3() {
         $this->statemachineone->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
         $this->statemachineone->setDefaultInitState(10);
-        $this->statemachineone->fieldDefault=['field1'=>1,'field2'=>new Flag(),'counter'=>0];
-        $this->statemachineone->addTransition(10,20,'when field1 = 1 set field2.setflag("msg",2)','stay');
+        $this->statemachineone->fieldDefault=['field1'=>1,'field2'=>new Flags(),'counter'=>0];
+        $this->statemachineone->addTransition(10,20,'when field1 = 1 set field2.push("msg",2)','stay');
+
+        $this->statemachineone->createJob($this->statemachineone->fieldDefault);
+        $this->statemachineone->checkAllJobs();
+        $job=$this->statemachineone->getLastJob();
+        // let's check consistency
+        self::assertEquals(true,$this->statemachineone->checkConsistency(false),'consistency must be true');
+        /** @see \eftec\statemachineone\Flags::toString */
+        self::assertEquals('a:1:{s:3:"msg";s:1:"2";};;a:1:{s:3:"msg";i:0;};;a:1:{s:3:"msg";i:-1;};;a:1:{s:3:"msg";i:0;};;1',$job->fields['field2']->toString(),'field2 must be a flag');
+        /** @see \eftec\statemachineone\Flags::getFlag */
+        self::assertEquals(['flag' => '2','id' => 0,'level' => 0,'time' => -1],$job->fields['field2']->getFlag('msg'),'field2.msg must returns a flag');
+        self::assertEquals('STATE1',$this->statemachineone->getJobStateName($job),'current state must be STATE1');
+        self::assertEquals('active',$job->getActive(),'active must be stop');
+
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testSC() {
+        $this->statemachineone->setStates([10=>"STATE1"]);
+        $this->statemachineone->setDefaultInitState(10);
+        $this->statemachineone->fieldDefault=['field1'=>1,'field2'=>new Flags(),'counter'=>0];
+        /** @see \eftec\tests\ServiceClass::ping we are calling this method */
+        $this->statemachineone->addTransition(10,10,'when field1 = 1 set field2=ping("hello")','stop');
 
         $this->statemachineone->createJob($this->statemachineone->fieldDefault);
         $this->statemachineone->checkAllJobs();
@@ -87,9 +115,33 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
         // let's check consistency
         self::assertEquals(true,$this->statemachineone->checkConsistency(false),'consistency must be true');
 
-        self::assertEquals('msg;;2;;1',$job->fields['field2']->toString(),'field2 must be a flag');
-        self::assertEquals('STATE1',$this->statemachineone->getJobStateName($job),'current state must be STATE1');
-        self::assertEquals('active',$job->getActive(),'active must be stop');
-
+        self::assertEquals('pong hello',$job->fields['field2'],'field2 must returns pong hello');
+    }
+    /**
+     * @throws \Exception
+     */
+    public function testMultipleJobs() {
+        $this->statemachineone->setStates([10=>"STATE_START",20=>'STATE_END']);
+        $this->statemachineone->setDefaultInitState(10);
+        $this->statemachineone->fieldDefault=['field1'=>123,'field2'=>-1,'counter'=>0];
+        /** @see \eftec\tests\ServiceClass::ping we are calling this method */
+        $this->statemachineone->addTransition(10,20,'when true() set field2=field1','change');
+        $this->statemachineone->addTransition(20,20,'when true()','stop');
+        $this->statemachineone->createJob($this->statemachineone->fieldDefault);
+        $state2=$this->statemachineone->fieldDefault;
+        $state2['field1']=456;
+        $this->statemachineone->createJob($state2);
+        $this->statemachineone->checkAllJobs();
+  
+        //var_dump($this->statemachineone->getJobQueue());
+        
+        $job=$this->statemachineone->getJob(1);
+        // let's check consistency
+        self::assertEquals(123,$job->fields['field2'],'field2 must returns 123');
+        self::assertEquals([[10,20],[20,20]],$job->stateFlow,'stateFlow must returns the flow');
+        $job=$this->statemachineone->getJob(2);
+        // let's check consistency
+        self::assertEquals(456,$job->fields['field2'],'field2 must returns 456 for the second job');
+        self::assertEquals([[10,20],[20,20]],$job->stateFlow,'stateFlow must returns the flow');
     }
 }
