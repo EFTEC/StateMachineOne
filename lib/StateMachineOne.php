@@ -36,7 +36,10 @@ class StateMachineOne
     private $jobQueue;
     /** @var int */
     private $defaultInitState = 0;
-
+    /**
+     * @var array Possible states. It must be an associative array.<br>
+     * <p>$statemachine->states=['State1'=>'name of the state','State2'=>'another name'];</p>
+     */
     public $states = [];
     /** @var Transition[] */
     public $transitions = [];
