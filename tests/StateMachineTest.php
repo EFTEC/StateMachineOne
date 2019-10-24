@@ -82,8 +82,8 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
      */
     public function test2doc() {
         $tmpstate=new StateMachineOne(null);
-        $tmpstate->setDocDB('tmpdoc');
-        
+        $tmpstate->setDocDB(dirname(__FILE__). '/tmpdoc');
+        //$tmpstate->getDocOne()->collection(dirname(__FILE__). '/tmpdoc',true);
         $tmpstate->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
         $tmpstate->setDefaultInitState(10);
         $tmpstate->fieldDefault=['field1'=>1,'field2'=>0,'counter'=>0];
