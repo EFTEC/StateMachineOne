@@ -76,6 +76,33 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
         self::assertEquals('active',$job->getActive(),'active must be stop');
 
     }
+
+    /**
+     * @throws \Exception
+     */
+    public function test2doc() {
+        $tmpstate=new StateMachineOne(null);
+        $tmpstate->setDocDB('tmpdoc');
+        
+        $tmpstate->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
+        $tmpstate->setDefaultInitState(10);
+        $tmpstate->fieldDefault=['field1'=>1,'field2'=>0,'counter'=>0];
+        $tmpstate->addTransition(10,20,'when field1 = 1 set field2=200','stay');
+
+        $tmpstate->createJob($tmpstate->fieldDefault);
+        $tmpstate->checkAllJobs();
+        $tmpstate->saveDBAllJob();
+        $tmpstate->setJobQueue([]); // we deleted all the jobs
+        $tmpstate->loadDBAllJob();
+        $job=$tmpstate->getLastJob();
+        // let's check consistency
+        self::assertEquals(true,$tmpstate->checkConsistency(false),'consistency must be true');
+
+        self::assertEquals('200',$job->fields['field2'],'field2 must be 200');
+        self::assertEquals('STATE1',$tmpstate->getJobStateName($job),'current state must be STATE1');
+        self::assertEquals('active',$job->getActive(),'active must be stop');
+
+    }
     /**
      * @throws \Exception
      */

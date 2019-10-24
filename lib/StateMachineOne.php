@@ -6,6 +6,7 @@
 namespace eftec\statemachineone;
 
 use DateTime;
+use eftec\DocumentStoreOne\DocumentStoreOne;
 use eftec\PdoOne;
 use eftec\minilang\MiniLang;
 use Exception;
@@ -15,14 +16,17 @@ use Exception;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.1 2019-08-24
+ * @version  2.2 2019-10-22
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne
 {
 
-    public $VERSION = '2.1';
+    public $VERSION = '2.2';
+    const NODB=0;
+    const PDODB=1;
+    const DOCDB=2;
 
     private $debug = false;
     private $debugAsArray = false;
@@ -47,8 +51,9 @@ class StateMachineOne
     public $events = [];
     /** @var string[] */
     public $eventNames = [];
-    /** @var bool If the database is active. It is marked true every automatically when we set the database. */
-    private $dbActive = false;
+    /** @var int=[self::NODB,self::PDODB,self::DOCDB][$i] If the database is active. It is marked true every automatically when we set the database. */
+    private $dbActive = 0; // none
+
     private $dbType = "";
     private $dbServer = "";
     private $dbUser = "";
@@ -56,6 +61,8 @@ class StateMachineOne
     private $dbSchema = "";
     /** @var PdoOne */
     private $pdoOne = null;
+    /** @var DocumentStoreOne */
+    private $docOne=null;
     /** @var string The name of the table to store the jobs */
     var $tableJobs = "stm_jobs";
     /** @var string The name of the table to store the logs per job. If it's empty then it is not used */
@@ -170,7 +177,7 @@ class StateMachineOne
         $this->events[$name]->setDict($jobExec->fields);
         $this->events[$name]->evalSet(0);
         $this->checkJob($jobExec);
-        if ($this->dbActive) {
+        if ($this->dbActive!=self::NODB) {
             $this->saveDBJob($jobExec);
         }
     }
@@ -229,10 +236,24 @@ class StateMachineOne
     public function setPdoOne($pdoOne)
     {
         $this->pdoOne = $pdoOne;
-        $this->dbActive = true;
+        $this->dbActive = self::PDODB;
         $this->dbType = $pdoOne->databaseType;
         $this->dbSchema = $pdoOne->db;
     }
+
+    /**
+     * It sets a DocumentStoreOne object (for reusability)<br>
+     * $docOne is marked as autoserialize=true (using php strategy)
+     * 
+     * @param DocumentStoreOne $docOne
+     */
+    public function setDocOne($docOne)
+    {
+        $this->docOne = $docOne;
+        $this->docOne->autoSerialize(true,'php');
+        $this->dbActive = self::DOCDB;
+    }
+    
 
     /**
      * @return PdoOne
@@ -241,7 +262,31 @@ class StateMachineOne
     {
         return $this->pdoOne;
     }
-
+    /**
+     * @return DocumentStoreOne
+     */
+    public function getDocOne()
+    {
+        return $this->docOne;
+    }
+    /**
+     * DocumentStoreOne constructor.
+     *
+     * @param string $database   root folder of the database
+     * @param string $collection collection (subfolder) of the database. If the collection is empty then it uses the root folder.
+     * @param string $strategy   =['auto','folder','apcu','memcached','redis'][$i] The strategy is only used to lock/unlock purposes.
+     * @param string $server     Used for 'memcached' (localhost:11211) and 'redis' (localhost:6379)
+     * @param string $keyEncryption=['','md5','sha1','sha256','sha512'][$i] it uses to encrypt the name of the keys (filename)
+     *
+     * @throws Exception
+     * @example $flatcon=new DocumentStoreOne(dirname(__FILE__)."/base",'collectionFolder');
+     */    
+    public function setDocDB($database, $collection = '', $strategy = 'auto',
+        $server = "",  $keyEncryption = '') {
+        $this->dbActive=self::DOCDB;
+        $this->docOne=new DocumentStoreOne($database,$collection,$strategy,$server,true,$keyEncryption);
+        $this->docOne->autoSerialize(true,'php');
+    }
     /**
      * It sets a new connection to the database.
      *
@@ -257,7 +302,7 @@ class StateMachineOne
      */
     public function setDB($type, $server, $user, $pwd, $schema)
     {
-        $this->dbActive = true;
+        $this->dbActive = self::PDODB;
         $this->dbType = $type;
         $this->dbServer = $server;
         $this->dbUser = $user;
@@ -303,8 +348,17 @@ class StateMachineOne
      */
     public function loadDBJob($idJob)
     {
-        $row = $this->getDB()->select("*")->from($this->tableJobs)->where("idactive<>0 and idjob=?", [$idJob])->first();
-        $this->jobQueue[$row['idjob']] = $this->arrayToJob($row);
+        switch ($this->dbActive) {
+            case self::PDODB:
+                $row = $this->getDB()->select("*")->from($this->tableJobs)->where("idactive<>0 and idjob=?", [$idJob])
+                    ->first();
+                $this->jobQueue[$row['idjob']] = $this->arrayToJob($row);
+                break;
+            case self::DOCDB:
+                $row=$this->docOne->get($idJob);
+                $this->jobQueue[$row['idjob']] = $this->arrayToJob($row);
+                break;
+        }
     }
 
     /**
@@ -314,11 +368,31 @@ class StateMachineOne
      */
     public function loadDBActiveJobs()
     {
-        $rows = $this->getDB()->select("*")->from($this->tableJobs)->where("idactive not in (0,4)")->order('dateinit')
-            ->toList();
-        $this->jobQueue = [];
-        foreach ($rows as $row) {
-            $this->jobQueue[$row['idjob']] = $this->arrayToJob($row);
+        switch ($this->dbActive) {
+            case self::PDODB:
+                $rows = $this->getDB()->select("*")->from($this->tableJobs)->where("idactive not in (0,4)")
+                    ->order('dateinit')
+                    ->toList();
+                $this->jobQueue = [];
+                foreach ($rows as $row) {
+                    $this->jobQueue[$row['idjob']] = $this->arrayToJob($row);
+                }
+                break;
+            case self::DOCDB:
+                $this->jobQueue = [];
+                $listId=$this->docOne->select('job*');
+                if($listId) {
+                    foreach ($listId as $idJob) {  // id already has json prefix
+                        $id=substr($idJob,3);
+                        /** @var Job $job */
+                        $job = $this->docOne->get('job'.$id);
+                        if ($job->getActiveNumber() != 0 && $job->getActiveNumber() != 4) {
+                            $this->jobQueue[$id] = $job;
+                        }
+                    }
+                }
+
+                break;
         }
     }
 
@@ -329,10 +403,25 @@ class StateMachineOne
      */
     public function loadDBAllJob()
     {
-        $rows = $this->getDB()->select("*")->from($this->tableJobs)->order('dateinit')->toList();
-        $this->jobQueue = [];
-        foreach ($rows as $row) {
-            $this->jobQueue[$row['idjob']] = $this->arrayToJob($row);
+        switch ($this->dbActive) {
+            case self::PDODB:
+                $rows = $this->getDB()->select("*")->from($this->tableJobs)->order('dateinit')->toList();
+                $this->jobQueue = [];
+                foreach ($rows as $row) {
+                    $this->jobQueue[$row['idjob']] = $this->arrayToJob($row);
+                }
+                break;
+            case self::DOCDB:
+                $this->jobQueue = [];
+                $listId = $this->docOne->select('job*');
+                if ($listId) {
+                    foreach ($listId as $idJob) { // id already has json prefix
+                        $id=substr($idJob,3); // we remove the "job"
+                        $job=$this->arrayToJob($this->docOne->get('job'.$id));
+                        $this->jobQueue[$id] = $job;
+                    }
+                }
+                break;
         }
     }
 
@@ -420,46 +509,46 @@ class StateMachineOne
      *
      * @throws Exception
      */
-    public function createDbTable($drop = false)
-    {
+    public function createDbTable($drop = false) {
+        switch ($this->dbActive) {
+            case self::PDODB:
+                if ($this->dbType == 'mysql') {
+                    if ($drop) {
+                        $sql = 'DROP TABLE IF EXISTS `' . $this->tableJobs . '`';
+                        $this->getDB()->runRawQuery($sql);
+                        $sql = 'DROP TABLE IF EXISTS `' . $this->tableJobLogs . '`';
+                        $this->getDB()->runRawQuery($sql);
+                    }
 
-        if ($this->dbType == 'mysql') {
-            if ($drop) {
-                $sql = 'DROP TABLE IF EXISTS `' . $this->tableJobs . '`';
-                $this->getDB()->runRawQuery($sql);
-                $sql = 'DROP TABLE IF EXISTS `' . $this->tableJobLogs . '`';
-                $this->getDB()->runRawQuery($sql);
-            }
+                    $exist = $this->getDB()->tableExist($this->tableJobs);
 
-            $exist = $this->getDB()->tableExist($this->tableJobs);
+                    if ($exist === false || $drop) {
+                        $tabledef = [
+                            'idjob' => 'INT NOT NULL AUTO_INCREMENT'
+                            ,
+                            'idactive' => 'int'
+                            ,
+                            'idstate' => 'int'
+                            ,
+                            'dateinit' => 'timestamp'
+                            ,
+                            'datelastchange' => 'timestamp'
+                            ,
+                            'dateexpired' => 'timestamp'
+                            ,
+                            'dateend' => 'timestamp'
+                        ];
+                        $this->createColsTable($tabledef, $this->fieldDefault);
+                        $this->getDB()->createTable($this->tableJobs, $tabledef, 'idjob');
 
-            if ($exist === false || $drop) {
-                $tabledef = [
-                    'idjob' => 'INT NOT NULL AUTO_INCREMENT'
-                    ,
-                    'idactive' => 'int'
-                    ,
-                    'idstate' => 'int'
-                    ,
-                    'dateinit' => 'timestamp'
-                    ,
-                    'datelastchange' => 'timestamp'
-                    ,
-                    'dateexpired' => 'timestamp'
-                    ,
-                    'dateend' => 'timestamp'
-                ];
-                $this->createColsTable($tabledef, $this->fieldDefault);
-                $this->getDB()->createTable($this->tableJobs, $tabledef, 'idjob');
-
-                // We created index.
-                $sql = "ALTER TABLE `" . $this->tableJobs . "`
+                        // We created index.
+                        $sql = "ALTER TABLE `" . $this->tableJobs . "`
                 ADD INDEX `" . $this->tableJobs . "_key1` (`idactive` ASC),
                 ADD INDEX `" . $this->tableJobs . "_key2` (`idstate` ASC),
                 ADD INDEX `" . $this->tableJobs . "_key3` (`dateinit` ASC)";
-                $this->getDB()->runRawQuery($sql);
-                if ($this->tableJobLogs) {
-                    $sql = "CREATE TABLE IF NOT EXISTS `" . $this->tableJobLogs . "` (
+                        $this->getDB()->runRawQuery($sql);
+                        if ($this->tableJobLogs) {
+                            $sql = "CREATE TABLE IF NOT EXISTS `" . $this->tableJobLogs . "` (
                   `idjoblog` INT NOT NULL AUTO_INCREMENT,
                   `idjob` int,
                   `idrel` varchar(200),
@@ -467,26 +556,19 @@ class StateMachineOne
                   `description` varchar(2000),
                   `date` timestamp,
                   PRIMARY KEY (`idjoblog`));";
-                    $this->getDB()->runRawQuery($sql);
+                            $this->getDB()->runRawQuery($sql);
+                        }
+
+                    }
                 }
-
-            }
-
-            /*$sql = "CREATE TABLE IF NOT EXISTS `" . $this->tableJobs . "` (
-                  `idjob` INT NOT NULL AUTO_INCREMENT,
-                  `idactive` int,
-                  `idstate` int,
-                  `dateinit` timestamp,
-                  `datelastchange` timestamp,
-                  `dateexpired` timestamp,
-                  `dateend` timestamp,";
-     
-            $sql .= "PRIMARY KEY (`idjob`));";
-            $this->getDB()->runRawQuery($sql);
-            */
-
+                break;
+            case self::DOCDB:
+                $this->docOne->createCollection($this->tableJobs);
+                $this->docOne->createCollection($this->tableJobLogs);
+                break;
         }
     }
+       
 
     /**
      * @param array $defTable
@@ -495,7 +577,7 @@ class StateMachineOne
      */
     private function createColsTable(&$defTable, $fields)
     {
-
+        $defTable['text_job'] = 'MEDIUMTEXT';
         foreach ($fields as $k => $v) {
             switch (1 == 1) {
                 case is_string($v):
@@ -511,7 +593,7 @@ class StateMachineOne
                     break;
                 case is_array($v):
                 case is_object($v):
-                    $defTable['text_job'] = 'MEDIUMTEXT';
+                    //$defTable['text_job'] = 'MEDIUMTEXT';
                     break;
                 default: // null
                     $defTable[$k] = 'varchar(250)';
@@ -530,38 +612,44 @@ class StateMachineOne
      */
     public function saveDBJob($job)
     {
-        if ($this->dbActive === false) {
-            return 0;
-        }
-        try {
-            if ($job->isNew) {
-                $this->getDB()
-                    ->from($this->tableJobs);
-                $arr = $this->jobToArray($job);
-                foreach ($arr as $k => $item) {
-                    $this->getDB()->set("`$k`=?", $item);
-                }
-                $job->idJob = $this->getDB()->insert();
-                $job->isNew = false;
-                //$this->jobQueue[$job->idJob]=$job;
-                return $job->idJob;
-            } else {
-                if ($job->isUpdate) {
-                    $this->getDB()
-                        ->from($this->tableJobs);
-                    $arr = $this->jobToArray($job);
-                    foreach ($arr as $k => $item) {
-                        $this->getDB()->set("`$k`=?", $item);
+        switch ($this->dbActive) {
+            case self::PDODB:
+                try {
+                    if ($job->isNew) {
+                        $this->getDB()
+                            ->from($this->tableJobs);
+                        $arr = $this->jobToArray($job);
+                        foreach ($arr as $k => $item) {
+                            $this->getDB()->set("`$k`=?", $item);
+                        }
+                        $job->idJob = $this->getDB()->insert();
+                        $job->isNew = false;
+                        //$this->jobQueue[$job->idJob]=$job;
+                        return $job->idJob;
+                    } else {
+                        if ($job->isUpdate) {
+                            $this->getDB()
+                                ->from($this->tableJobs);
+                            $arr = $this->jobToArray($job);
+                            foreach ($arr as $k => $item) {
+                                $this->getDB()->set("`$k`=?", $item);
+                            }
+                            $this->getDB()->where('idjob=?', $job->idJob);
+                            $this->getDB()->update();
+                            $job->isUpdate = false;
+                            //$this->jobQueue[$job->idJob]=$job;
+                            return $job->idJob;
+                        }
                     }
-                    $this->getDB()->where('idjob=?', $job->idJob);
-                    $this->getDB()->update();
-                    $job->isUpdate = false;
-                    //$this->jobQueue[$job->idJob]=$job;
-                    return $job->idJob;
+                } catch (Exception $e) {
+                    $this->addLog($job, "ERROR", 'SAVEJOB', "save|" . $e->getMessage());
                 }
-            }
-        } catch (Exception $e) {
-            $this->addLog($job, "ERROR",'SAVEJOB',"Saving the job " . $e->getMessage());
+                return 0;
+                break;
+            case self::DOCDB:
+                $this->docOne->insertOrUpdate('job'.$job->idJob, $this->jobToArray($job));
+                return $job->idJob;
+                break;
         }
         return 0;
     }
@@ -585,29 +673,44 @@ class StateMachineOne
      */
     public function saveDBJobLog($job, $arr)
     {
-        if (!$this->tableJobLogs) {
-            return true;
-        } // it doesn't save if the table is not set.
-        if (is_callable([$this, 'customSaveDBJobLog'], true) && $this->customSaveDBJobLog!=null) {
-            return call_user_func($this->customSaveDBJobLog, $job, $arr);
-            //$this->customSaveDBJobLog($job,$arr);
-        }
-        try {
+        switch ($this->dbActive) {
+            case self::PDODB:
+                if (!$this->tableJobLogs) {
+                    return true;
+                } // it doesn't save if the table is not set.
+                if (is_callable([$this, 'customSaveDBJobLog'], true) && $this->customSaveDBJobLog != null) {
+                    return call_user_func($this->customSaveDBJobLog, $job, $arr);
+                    //$this->customSaveDBJobLog($job,$arr);
+                }
+                try {
 
-            $this->getDB()
-                ->from($this->tableJobLogs);
-            $this->getDB()->set('idjob=?', $job->idJob);
-            $this->getDB()->set('idrel=?', $arr['idrel']);
-            $this->getDB()->set('type=?', $arr['type']);
-            $this->getDB()->set('description=?', $arr['description']);
-            $this->getDB()->set('date=?', date("Y-m-d H:i:s", $arr['date']));
-            $this->getDB()->insert();
-            return true;
-        } catch (Exception $e) {
-            echo "error " . $e->getMessage();
-            return false;
-            //$this->addLog(0,"ERROR","Saving the joblog ".$e->getMessage());
+                    $this->getDB()
+                        ->from($this->tableJobLogs);
+                    $this->getDB()->set('idjob=?', $job->idJob);
+                    $this->getDB()->set('idrel=?', $arr['idrel']);
+                    $this->getDB()->set('type=?', $arr['type']);
+                    $this->getDB()->set('description=?', $arr['description']);
+                    $this->getDB()->set('date=?', date("Y-m-d H:i:s", $arr['date']));
+                    $this->getDB()->insert();
+                    return true;
+                } catch (Exception $e) {
+                    echo "error " . $e->getMessage();
+                    return false;
+                    //$this->addLog(0,"ERROR","Saving the joblog ".$e->getMessage());
+                }
+                break;
+            case self::DOCDB:
+                $log=$this->docOne->get($this->tableJobLogs);
+                if($log===false) {
+                    $log=[];
+                }
+                $log[]=['idjob'=>$job->idJob,'idrel'=>$arr['idrel'],'type'=>$arr['type']
+                    ,'description'=>$arr['description'],'date'=>date("Y-m-d H:i:s", $arr['date'])];
+   
+                $this->docOne->insertOrUpdate($this->tableJobLogs,$log);
+                break;
         }
+        
 
     }
 
@@ -660,20 +763,28 @@ class StateMachineOne
             ->setActive($active)
             ->setIsNew(true)
             ->setIsUpdate(false);
-        if (!$this->dbActive) {
-            $idJob = call_user_func($this->getNumberTrigger, $this);
-            $job->idJob = $idJob;
-        } else {
-            $this->saveDBJob($job);
+        switch ($this->dbActive) {
+            case self::PDODB:
+                $this->saveDBJob($job);
+                break;
+            case self::DOCDB:
+                $idJob=$job->idJob=$this->docOne->getNextSequence('seq_'.$this->tableJobs);
+                $job->idJob = $idJob;
+                break;
+            default:
+                $idJob = call_user_func($this->getNumberTrigger, $this);
+                $job->idJob = $idJob;
         }
+        
         if ($dateStart <= $this->getTime() || $active == 'active') {
             // it start.
             $this->callStartTrigger($job);
             $job->setActive($active);
-            if ($this->dbActive) {
+            if ($this->dbActive!=self::NODB) {
                 $this->saveDBJob($job);
             }
         }
+
         $this->jobQueue[$job->idJob] = $job; // we store the job created in the list of jobs
         return $job;
     }
@@ -687,6 +798,7 @@ class StateMachineOne
      */
     public function getJob($idJob)
     {
+        
         return !isset($this->jobQueue[$idJob]) ? null : $this->jobQueue[$idJob];
     }
 
@@ -776,17 +888,16 @@ class StateMachineOne
                         try {
                             $this->checkJob($job);
                         } catch (Exception $e) {
-                            $this->addLog($job, "ERROR",'CHECK',"State error " . $e->getMessage());
+                            $this->addLog($job, "ERROR",'CHECK',"state|" . $e->getMessage());
                             return false;
                         }
                     }
                 }
                 $this->saveDBJob($job);
             }
-
-            if (!$this->changed) {
+            /*if (!$this->changed) {
                 break;
-            } // we don't test it again if we changed of state.
+            }*/
         }
         return true;
     }
@@ -822,7 +933,7 @@ class StateMachineOne
             $job->dateLastChange = $this->getTime();
             return true;
         } else {
-            $this->addLog($job, 'ERROR','CHANGESTATE',"Change state #{$job->idJob} from {$job->state }->{$newState} failed");
+            $this->addLog($job, 'ERROR','CHANGESTATE',"change|{$job->idJob}|{$job->state }|{$newState}");
             return false;
         }
     }
@@ -870,7 +981,7 @@ class StateMachineOne
                 echo($msg);
             }
         }
-        if ($this->dbActive) {
+        if ($this->dbActive!=self::NODB) {
             $arr['description'] = strip_tags($arr['description']);
             $this->saveDBJobLog($job, $arr);
         }
@@ -890,6 +1001,7 @@ class StateMachineOne
         }
         $id = $job->idJob;
         $job = null;
+        
         $this->jobQueue[$id] = null;
         unset($this->jobQueue[$id]);
     }
@@ -899,12 +1011,19 @@ class StateMachineOne
      *
      * @throws Exception
      */
-    public function deleteJobDB(Job $job)
+    public function deleteJobDB($job)
     {
-        $this->getDB()
-            ->from($this->tableJobs)
-            ->where('idjob=?', [$job->idJob])
-            ->delete();
+        switch ($this->dbActive) {
+            case self::PDODB:
+                $this->getDB()
+                    ->from($this->tableJobs)
+                    ->where('idjob=?', [$job->idJob])
+                    ->delete();
+                break;
+            case self::DOCDB:
+                $this->docOne->delete('job'.$job->idJob);
+                break;                
+        }
     }
 
     /**
@@ -1076,9 +1195,19 @@ cin;
      */
     public function fetchUI()
     {
-        $job = $this->getLastJob();
+        
 
         // fetch values
+        $lastjob=@$_REQUEST['frm_curjob'];
+        if(!$lastjob) {
+            $job = $this->getLastJob();
+        } else {
+            $job=$this->getJob($lastjob);
+            if(!$job) {
+                $job = $this->getLastJob();
+            }
+        }
+        
         $button = @$_REQUEST['frm_button'];
         $buttonEvent = @$_REQUEST['frm_button_event'];
         $new_state = @$_REQUEST['frm_new_state'];
@@ -1131,8 +1260,9 @@ cin;
                         $msg = "Job deleted";
                     } catch (Exception $e) {
                         $msg = "Error deleting the job " . $e->getMessage();
-                    }
+                    };
                     $this->removeJob($job);
+                  
                 }
 
                 break;
@@ -1175,8 +1305,25 @@ cin;
      */
     public function viewUI($job = null, $msg = "")
     {
-        $job = ($job === null) ? $this->getLastJob() : $job;
+        if (($job === null)) {
+            $lastjob=@$_REQUEST['frm_curjob'];
+            if(!$lastjob) {
+                $job = $this->getLastJob();
+            } else {
+                $job=$this->getJob($lastjob); // we read the job by id
+                if(!$job) {
+                    $job = $this->getLastJob(); // if we are unable to read the job (it was deleted), then we read the last 
+                }
+            }
+        } 
         $idJob = ($job === null) ? "??" : $job->idJob;
+        $jobCombobox="<select name='frm_curjob' class='form-control'>\n";
+        $jobCombobox.="<option value='$idJob'>--Last Job ($idJob)--</option>\n";
+        foreach($this->getJobQueue() as $tmpJ) {
+            $jobCombobox.="<option value={$tmpJ->idJob} ".($lastjob==$tmpJ->idJob ?'selected':'' )." >{$tmpJ->idJob}</option>\n";
+        }
+        $jobCombobox.='</select>';
+       
 
         echo "<!doctype html>";
         echo "<html lang='en'>";
@@ -1188,11 +1335,12 @@ cin;
 
         echo "<div class='container-fluid'><div class='row'><div class='col'><br>";
         echo '<div class="card">';
-        echo '<h5 class="card-header bg-primary text-white">';
-        echo 'StateMachineOne Version ' . $this->VERSION . ' Job #' . $idJob . ' Jobs in queue: '
-            . count($this->getJobQueue()) . '</h5>';
-        echo '<div class="card-body">';
         echo "<form method='post'>";
+        echo '<h5 class="card-header bg-primary text-white">';
+        echo 'StateMachineOne Version ' . $this->VERSION . ' Job #' . $idJob . ' Jobs in queue: '.
+            ' ('.count($this->getJobQueue()).') </h5>';
+        echo '<div class="card-body">';
+        
 
         if ($msg != "") {
             echo '<div class="alert alert-primary" role="alert">' . $msg . '</div>';
@@ -1208,7 +1356,7 @@ cin;
         echo "<div class='row'><div class='col-6'><!-- primera seccion -->";
         echo "<div class='form-group row'>";
         echo "<label class='col-sm-4 col-form-label'>Job #</label>";
-        echo "<div class='col-sm-5'><span>" . $job->idJob . "</span></br>";
+        echo "<div class='col-sm-5'><span>$jobCombobox</span></br>";
         echo "</div></div>";
 
         echo "<div class='form-group row'>";
@@ -1348,9 +1496,9 @@ cin;
             echo "</div>";
         }
 
-        echo "</form>";
+        
         echo "</div>";
-
+        echo "</form>";
         echo "</div></div>"; //card
         echo "</div><!-- col --></div><!-- row --><br>";
         echo '<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>';
@@ -1386,7 +1534,7 @@ cin;
     /**
      * Returns true if the database is active
      *
-     * @return bool
+     * @return int (self::NODB =0, self::PDODB=1, self::DOCDB=2)
      */
     public function isDbActive()
     {
@@ -1396,10 +1544,11 @@ cin;
     /**
      * It sets the database as active. When we call setDb() then it is set as true automatically.
      *
-     * @param bool $dbActive
+     * @param int $dbActive=[self::NODB,self::PDODB,self::DOCDB][$i]
      */
     public function setDbActive($dbActive)
     {
+        $this->dbActive=($this->dbActive===true)?self::PDODB : $this->dbActive ;
         $this->dbActive = $dbActive;
     }
 

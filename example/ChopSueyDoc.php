@@ -26,7 +26,7 @@ define("EVENT_FLIPABORT",'FLIP ABORT'); // it could be a number too
 
 $smachine=new StateMachineOne(null);
 $smachine->setDebug(true);
-
+$smachine->setDebugAsArray(true);
 $smachine->tableJobs="chopsuey_jobs";
 $smachine->tableJobLogs="chopsuey_logs";
 
@@ -48,14 +48,30 @@ $smachine->fieldDefault=[
 	,'abort'=>-1
 	,'instock'=>-1
 	,'picked'=>-1];
-$smachine->setDB('mysql','localhost',"root","abc.123","statemachinedb");
-$smachine->getPdoOne()->logLevel=2;
-if (!$smachine->getPdoOne()->tableExist($smachine->tableJobs)) {
-    $smachine->createDbTable(true); // you don't need to create this table every time.
-}
+$smachine->setDocDB('exampledb',"chopsuey",'auto',null);
 
+$smachine->tableJobs="chopsuey_jobs";
+$smachine->tableJobLogs="chopsuey_logs";
+
+$smachine->createDbTable(false); // you don't need to create this table every time.
 
 $smachine->loadDBAllJob(); // we load all jobs, including finished ones.
+
+/*
+$job=$smachine->createJob($smachine->fieldDefault);
+$smachine->saveDBJob($job);
+
+$smachine->loadDBJob($job->idJob);
+
+$job2=$smachine->getJob($job->idJob);
+
+var_dump($job2);
+
+$smachine->loadDBAllJob();
+var_dump($smachine->getJobQueue());
+die(1);
+*/
+// we load all jobs, including finished ones.
 //$smachine->loadDBActiveJobs(); // use this in production!.
 
 

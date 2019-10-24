@@ -51,18 +51,18 @@ The target of this library is to ease the process to create a state machine for 
 * **State:** it's the current condition of the job.  
 * **Transition:** it's the change from one **state** to another. The transition is conditioned to a set of values, time or a function.  
 Also, every transition could have a timeout. If the timeout is reached then the transition is done, no matter the values or the conditions (even if it has the **active** state paused).  The transition could have 3 outcomes:
-* * **change** The transition changes of state and the job is keep active. It is only possible to do the transition if the job has the ****active state**** = active.
-* * **pause**  The transition changes of state and the job is paused. It is only possible to do the transition if the job has the **active state** = active.
-* * **continue**  The transition changes of state and the job resumes of the pause. It is only possible to do the transition if the job has the **active state** = pause or active
-* * **stop** The transition changes of state and the job is stopped. It is only possible to do the transition if the job has the **active state** = active or pause.
-* * **stay** The transition does not change of state but it does the operations defined by the set.   
+    * **change** The transition changes of state and the job is keep active. It is only possible to do the transition if the job has the ****active state**** = active.
+    * **pause**  The transition changes of state and the job is paused. It is only possible to do the transition if the job has the **active state** = active.
+    * **continue**  The transition changes of state and the job resumes of the pause. It is only possible to do the transition if the job has the **active state** = pause or active
+    * **stop** The transition changes of state and the job is stopped. It is only possible to do the transition if the job has the **active state** = active or pause.
+    * **stay** The transition does not change of state but it does the operations defined by the set.   
 * **Active:** Every job has an **active state**. There are 4: none,stop,active,inactive,pause. It is different from the states.
 So, for example, a job could have the **state**: INPROGRESS and the **active state**: PAUSE.   
-* * **none** = the job doesn't exist. It can't change of state, neither it is loaded (from the database) by default
-* * **stop** = the job has stopped (finished), it could be a successful, aborted or canceled. It can't change of state neither it is loaded by default.   
-* * **pause** = the job is on hold, it will not change of state (unless it is forced) but it could be continued. 
-* * **active** = the job is running normally, it could change of state.
-* * **inactive** = the job is scheduled to run at some date.  it couldn't change of state unless it is activated (by schedule) 
+    * **none** = the job doesn't exist. It can't change of state, neither it is loaded (from the database) by default
+    * **stop** = the job has stopped (finished), it could be a successful, aborted or canceled. It can't change of state neither it is loaded by default.   
+    * **pause** = the job is on hold, it will not change of state (unless it is forced) but it could be continued. 
+    * **active** = the job is running normally, it could change of state.
+    * **inactive** = the job is scheduled to run at some date.  it couldn't change of state unless it is activated (by schedule) 
 * **Refs:** Every job has some related fields.  For example, if the job is about an invoice, then refs must be the number of the invoice. The State Machine doesn't use any refs, but it keeps the values for integration with other systems.
 * **Fields:** Every job has some fields or values, it could trigger a transition.
 
@@ -213,11 +213,11 @@ The transition is written as follow:
 * end state
 * Transition language
 * outcome, it could be **change** (default value),**stop**,**pause**, **continue** and **stay**
-* * **change** means the state will change from **initial state** to **end state** if it meets the condition (or timeout).  It will only change if the state is active.  
-* * **stop** means the state will change and the job will stop (end of the job)  
-* * **pause** it means the state will change and the job will pause.  A job paused can't change of state, even if it meets the condition.  
-* * **continue** it means the state will change and the job will continue from pause.
-* * **stay** it means the state will not change (but it executes any other instruction).  
+    * **change** means the state will change from **initial state** to **end state** if it meets the condition (or timeout).  It will only change if the state is active.  
+    * **stop** means the state will change and the job will stop (end of the job)  
+    * **pause** it means the state will change and the job will pause.  A job paused can't change of state, even if it meets the condition.  
+    * **continue** it means the state will change and the job will continue from pause.
+    * **stay** it means the state will not change (but it executes any other instruction).  
 
 ## The transition language is written with the next syntax.
 > _when_ **var1** = **var2** and **var3** = **var4** or **var4** = **var5**
@@ -332,48 +332,57 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
 
+* 2.2 2019-10-22
+    * Updated eftec/MiniLang (dependency) from 2.9 => 2.12
+    * Updated eftec/pdoone (dependency) from 1.11 => 1.12
+    * Added dependency/documentstoreone (dependency) to 1.11 (it allows to use the filesystem as database)
+    * New methods setDocOne(), getDocOne()
+    * Now the library allows to use pdo (mysql database) or a file system (documentOne) for the persistence.
+    * Fixed a problem with the UI (it only executed the last job)
+    * Added changes to the UI. Now, it is possible to view and change the current job.
+    * Fixed a problem with the creation of table. Now the column TEXT_JOB is always created.
 * 2.1 2019-08-28
-* * Updated eftec/minilang to 2.9. 
-* * It allows to store arrays in each field
-* * If the job's field is an object or array, then it is store in a MEDIUMTEXT FIELD (serialized)
-* * method Flags::flagexist()
-* * method StateMachineOne::removetransition()
+    * Updated eftec/minilang to 2.9. 
+    * It allows to store arrays in each field
+    * If the job's field is an object or array, then it is store in a MEDIUMTEXT FIELD (serialized)
+    * method Flags::flagexist()
+    * method StateMachineOne::removetransition()
 
 * 2.0 2019-08-24 
-* * Changed the flags. The definition of push is flipped. After push('msg','id'..) now push('id','msg'..)
-* * Added method to set the time.
+    * Changed the flags. The definition of push is flipped. After push('msg','id'..) now push('id','msg'..)
+    * Added method to set the time.
 
 * 1.12 2019-08-16
-* * Updated MiniLang
-* * Added method viewJson()
-* * Now event doesn't crash if the job is null.
-* * CreateColTable() (private method) is removed.
-* * Flag() now has expiration (optional)
+    * Updated MiniLang
+    * Added method viewJson()
+    * Now event doesn't crash if the job is null.
+    * CreateColTable() (private method) is removed.
+    * Flag() now has expiration (optional)
 
 * 1.11 2019-08-04 Some fixes.
 * 1.10 2019-08-04
-* * Updated to "eftec/minilang": "^2.7"
-* * Solved a bug in callEvent() does not fail if there is not a job.
-* * Added the method cacheMachine() to cache the results.
-* * Code Formatted to PSR-2
+    * Updated to "eftec/minilang": "^2.7"
+    * Solved a bug in callEvent() does not fail if there is not a job.
+    * Added the method cacheMachine() to cache the results.
+    * Code Formatted to PSR-2
 * 1.9 2019-08-03 
-* * Some fixes. Now the UI doesn't show events that "stay" in the same state. 
-* * Now it uses eftec/minilang 2.6 that permits the use of "else"
-* * The UI is more reduced. 
-* * Method createColsTable() added.        
+    * Some fixes. Now the UI doesn't show events that "stay" in the same state. 
+    * Now it uses eftec/minilang 2.6 that permits the use of "else"
+    * The UI is more reduced. 
+    * Method createColsTable() added.        
 * 1.8 2019-07-29 Some cleanups and methods setPdoOne() and getPdoOne();
 * 1.7 2019-06-16 Lots of changes.
 * 1.6 2018-12-26 Now MiniLang is a separate dependency.   
 * 1.5 2018-12-23 Xmas update (btw porca miseria).     
-* * Now the language is parsed differently.  The space is not mandatory anymore.   
-* * "when timeout" is not deprecated. Now it is called as "when always"    
+    * Now the language is parsed differently.  The space is not mandatory anymore.   
+    * "when timeout" is not deprecated. Now it is called as "when always"    
 * 1.4 2018-12-12 
-* * Some fixes.  
+    * Some fixes.  
 * 1.3 2018-12-11 
-* * Added addEvent() and callEvent()   
-* * Added timeout and fulltimeout to the transition language  
-* * Now transitions doesn't require the timeout.  
-* * idRef are not longer used.    
+    * Added addEvent() and callEvent()   
+    * Added timeout and fulltimeout to the transition language  
+    * Now transitions doesn't require the timeout.  
+    * idRef are not longer used.    
 * 1.2 2018-12-09 Updated dependency  
 * 1.1 2018-12-09 Some corrections.  
 * 1.0 2018-12-08 First (non beta) version.

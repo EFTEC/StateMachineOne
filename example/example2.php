@@ -15,7 +15,7 @@ define("STATE_HELP",6);
 define("STATE_DELIVERED",7);
 define("STATE_ABORTED",8);
 
-$smachine=new StateMachineOne();
+$smachine=new StateMachineOne(null);
 $smachine->setDebug(true);
 $smachine->tableJobs="deliver_product";
 $smachine->tableJobLogs="deliver_product_log";

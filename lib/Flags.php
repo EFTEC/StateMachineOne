@@ -137,7 +137,7 @@ class Flags implements StateSerializable
         $this->level[$idUnique] = $level;
         $this->changed = true;
         if ($this->parentJob && $this->caller) {
-            $this->caller->addLog($this->parentJob, $this->name,'PULL', $idUnique.'-'.$idRel.' flag cambiado: ' . $msg);
+            $this->caller->addLog($this->parentJob, $this->name,'PULL', 'flag|changed|' . $idUnique.'|'.$idRel.'|'.$msg);
         }
         return $this;
     }

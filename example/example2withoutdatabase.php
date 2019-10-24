@@ -15,7 +15,7 @@ define("STATE_HELP",6);
 define("STATE_DELIVERED",7);
 define("STATE_ABORTED",8);
 
-$smachine=new StateMachineOne();
+$smachine=new StateMachineOne(null);
 $smachine->setDebug(true);
 $smachine->setDefaultInitState(STATE_PICK);
 $smachine->fieldDefault=[
