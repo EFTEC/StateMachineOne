@@ -23,8 +23,21 @@ define("STATE_ABORTED",8);
 
 define("EVENT_ABORT",'ABORT'); // it could be a number too
 define("EVENT_FLIPABORT",'FLIP ABORT'); // it could be a number too
+define("EVENT_CUSTOMER_PRESENT",'CUSTOMER PRESENT'); // it could be a number too
+define("EVENT_CUSTOMER_ABSENT",'CUSTOMER ABSENT'); // it could be a number too
+define("EVENT_ADDRESS_FOUND",'ADDRESS FOUND'); // it could be a number too
+define("EVENT_ADDRESS_NOT_FOUND",'ADDRESS NOT FOUND'); // it could be a number too
+define("EVENT_CUSTOM_METHOD",'CUSTOM METHOD'); // it could be a number too
 
-$smachine=new StateMachineOne(null);
+class ServiceClass {
+    public function customMethod($instock) {
+        return $instock+1;
+    }
+}
+$obj=new ServiceClass();
+
+
+$smachine=new StateMachineOne($obj);
 $smachine->setDebug(true);
 
 $smachine->tableJobs="chopsuey_jobs";
@@ -77,6 +90,11 @@ $smachine->addTransition(STATE_HELP,STATE_DELIVERED
 
 $smachine->addEvent(EVENT_ABORT,'set abort = 1');
 $smachine->addEvent(EVENT_FLIPABORT,'set abort=flip()');
+$smachine->addEvent(EVENT_CUSTOMER_PRESENT,'set customerpresent = 1');
+$smachine->addEvent(EVENT_CUSTOMER_ABSENT,'set customerpresent = 0');
+$smachine->addEvent(EVENT_ADDRESS_FOUND,'set addressnotfound = 0');
+$smachine->addEvent(EVENT_ADDRESS_NOT_FOUND,'set addressnotfound =1');
+$smachine->addEvent(EVENT_CUSTOM_METHOD,'set instock=customMethod(instock)');
 // $smachine->callEvent(EVENT_ABORT);
 
 $msg=$smachine->fetchUI();

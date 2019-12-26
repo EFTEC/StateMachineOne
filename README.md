@@ -332,6 +332,9 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
 
+* 2.4 2019-12-26
+    * Service Object now works on events.
+    * Updated library eftec/PdoOne to 1.15
 * 2.3 2019-12-26
     * Method Createdbtable() now sets a valid default value
     * Some cleanups.

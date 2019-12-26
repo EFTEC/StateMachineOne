@@ -16,7 +16,7 @@ use Exception;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.3 2019-12-26
+ * @version  2.4 2019-12-26
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
@@ -79,6 +79,8 @@ class StateMachineOne
 
     /** @var MiniLang */
     public $miniLang = null;
+    /** @var null|object It is the service class (optional)  */
+    private $serviceObject=null;
 
     // callbacks
     /** @var callable it's called when we change state (by default it returns true) */
@@ -146,7 +148,7 @@ class StateMachineOne
     public function addEvent($name, $conditions)
     {
         // each event is a self mini lang.
-        $eventMiniLang = new MiniLang($this, $this->states, ['wait', 'always'], ['timeout', 'fulltimeout']);
+        $eventMiniLang = new MiniLang($this, $this->states, ['wait', 'always'], ['timeout', 'fulltimeout'],$this->serviceObject);
         $eventMiniLang->separate($conditions);
         $this->eventNames[$name] = $conditions;
         $this->events[$name] = $eventMiniLang;
@@ -223,6 +225,7 @@ class StateMachineOne
             return $smo->counter;
         };
         $dict = []; // we set the values as empty. The values are loaded per job basis.
+        $this->serviceObject=$serviceObject;
         $this->miniLang = new MiniLang($this, $dict, ['wait', 'always'], ['timeout', 'fulltimeout'], $serviceObject);
     }
 
