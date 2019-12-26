@@ -11,7 +11,7 @@ use eftec\statemachineone\Transition;
 // we use autoload's composer, so we call it here.
 include "../vendor/autoload.php";
 
-$smachine=new StateMachineOne();
+$smachine=new StateMachineOne(null);
 $smachine->setDebug(true);
 
 
@@ -47,7 +47,9 @@ $smachine->fieldDefault=[
 $smachine->tableJobs="buymilk_jobs";
 $smachine->tableJobLogs="buymilk_logs"; // it is optional
 $smachine->setdb('mysql','localhost',"root","abc.123","statemachinedb");
+
 $smachine->createDbTable(false); // you don't need to create this table every time.
+
 
 $smachine->loadDBAllJob(); // we load all jobs, including finished ones.
 //$smachine->loadDBActiveJobs(); // use this in production, we don't need stopped job every time.

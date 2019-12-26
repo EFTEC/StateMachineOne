@@ -332,9 +332,14 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
 
+* 2.3 2019-12-26
+    * Method Createdbtable() now sets a valid default value
+    * Some cleanups.
+    * Bootstrap updated to 4.4.1. Also it is using https instead of http
 * 2.2 2019-10-22
     * Updated eftec/MiniLang (dependency) from 2.9 => 2.12
-    * Updated eftec/pdoone (dependency) from 1.11 => 1.12
+    * Updated eftec/pdoone (depe
+    ndency) from 1.11 => 1.12
     * Added dependency/documentstoreone (dependency) to 1.11 (it allows to use the filesystem as database)
     * New methods setDocOne(), getDocOne()
     * Now the library allows to use pdo (mysql database) or a file system (documentOne) for the persistence.

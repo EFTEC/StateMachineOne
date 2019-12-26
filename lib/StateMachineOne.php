@@ -16,7 +16,7 @@ use Exception;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.2 2019-10-22
+ * @version  2.3 2019-12-26
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
@@ -385,7 +385,7 @@ class StateMachineOne
                     foreach ($listId as $idJob) {  // id already has json prefix
                         $id=substr($idJob,3);
                         /** @var Job $job */
-                        $job = $this->docOne->get('job'.$id);
+                        $job =$this->arrayToJob( $this->docOne->get('job'.$id));
                         if ($job->getActiveNumber() != 0 && $job->getActiveNumber() != 4) {
                             $this->jobQueue[$id] = $job;
                         }
@@ -490,7 +490,6 @@ class StateMachineOne
             } else {
                 if ($v instanceof StateSerializable) {
                     /** @see \eftec\statemachineone\Flags::toString */
-                    /** @noinspection PhpUndefinedMethodInspection */
                     $text[$k] = $job->fields[$k]->toString();
                 }
             }
@@ -530,13 +529,13 @@ class StateMachineOne
                             ,
                             'idstate' => 'int'
                             ,
-                            'dateinit' => 'timestamp'
+                            'dateinit' => 'timestamp DEFAULT \'1970-01-01 00:00:01\''
                             ,
-                            'datelastchange' => 'timestamp'
+                            'datelastchange' => 'timestamp DEFAULT \'1970-01-01 00:00:01\''
                             ,
-                            'dateexpired' => 'timestamp'
+                            'dateexpired' => 'timestamp DEFAULT \'1970-01-01 00:00:01\''
                             ,
-                            'dateend' => 'timestamp'
+                            'dateend' => 'timestamp DEFAULT \'1970-01-01 00:00:01\''
                         ];
                         $this->createColsTable($tabledef, $this->fieldDefault);
                         $this->getDB()->createTable($this->tableJobs, $tabledef, 'idjob');
@@ -554,7 +553,7 @@ class StateMachineOne
                   `idrel` varchar(200),
                   `type` varchar(50),
                   `description` varchar(2000),
-                  `date` timestamp,
+                  `date` timestamp DEFAULT '1970-01-01 00:00:01',
                   PRIMARY KEY (`idjoblog`));";
                             $this->getDB()->runRawQuery($sql);
                         }
@@ -563,8 +562,8 @@ class StateMachineOne
                 }
                 break;
             case self::DOCDB:
-                $this->docOne->createCollection($this->tableJobs);
-                $this->docOne->createCollection($this->tableJobLogs);
+                //$this->docOne->createCollection($this->tableJobs);
+                //$this->docOne->createCollection($this->tableJobLogs);
                 break;
         }
     }
@@ -579,7 +578,7 @@ class StateMachineOne
     {
         $defTable['text_job'] = 'MEDIUMTEXT';
         foreach ($fields as $k => $v) {
-            switch (1 == 1) {
+            switch (true) {
                 case is_string($v):
                     $defTable[$k] = 'varchar(250)';
                     break;
@@ -700,20 +699,36 @@ class StateMachineOne
                 }
                 break;
             case self::DOCDB:
-                $log=$this->docOne->get($this->tableJobLogs);
-                if($log===false) {
-                    $log=[];
-                }
-                $log[]=['idjob'=>$job->idJob,'idrel'=>$arr['idrel'],'type'=>$arr['type']
+                // it stores the log as csv
+                $log=['idjob'=>$job->idJob,'idrel'=>$arr['idrel'],'type'=>$arr['type']
                     ,'description'=>$arr['description'],'date'=>date("Y-m-d H:i:s", $arr['date'])];
-   
-                $this->docOne->insertOrUpdate($this->tableJobLogs,$log);
+                $this->docOne->appendValue($this->tableJobLogs,$this->csvStr($log));
                 break;
         }
-        
-
+        return false;
     }
 
+    /**
+     * It converts a simple array (not nested) into a csv.
+     * 
+     * @param array $arrayValue
+     *
+     * @return bool|string
+     */
+    private function csvStr($arrayValue)
+    {
+        $f = fopen('php://memory', 'r+');
+
+        if (fputcsv($f, $arrayValue) === false) {
+            @fclose($f);
+            return false;
+        }
+        rewind($f);
+        $csv_line = stream_get_contents($f);
+        @fclose($f);
+        return $csv_line;
+    }
+    
     /**
      * It saves all jobs in the database that are marked as new or updated.
      *
@@ -1090,7 +1105,7 @@ class StateMachineOne
     //<editor-fold desc="Cache">
     public function cacheMachine($fnName = 'myMachine')
     {
-        $phpCode = <<<cin
+        return <<<cin
 /**
  * @param \eftec\statemachineone\StateMachineOne \$machine
  */
@@ -1111,7 +1126,6 @@ function $fnName(\$machine) {
     \$machine->miniLang->setCaller(\$machine);    
 }
 cin;
-        return $phpCode;
     }
 
     private function serializeEscape($object)
@@ -1122,10 +1136,9 @@ cin;
 
     private function cacheMiniLang()
     {
-        $phpCode = '$machine->miniLang=unserialize( \'' . str_replace('\'', "\\'", $this->miniLang->serialize())
-            . '\');';
         //$phpCode=str_replace("  ","\t",$phpCode);
-        return $phpCode;
+        return '$machine->miniLang=unserialize( \'' . str_replace('\'', "\\'", $this->miniLang->serialize())
+            . '\');';
     }
 
     private function cacheTransitions()
@@ -1260,7 +1273,7 @@ cin;
                         $msg = "Job deleted";
                     } catch (Exception $e) {
                         $msg = "Error deleting the job " . $e->getMessage();
-                    };
+                    }
                     $this->removeJob($job);
                   
                 }
@@ -1305,6 +1318,7 @@ cin;
      */
     public function viewUI($job = null, $msg = "")
     {
+        $lastjob='';
         if (($job === null)) {
             $lastjob=@$_REQUEST['frm_curjob'];
             if(!$lastjob) {
@@ -1329,7 +1343,7 @@ cin;
         echo "<html lang='en'>";
         echo "<head><title>StateMachineOne Version " . $this->VERSION . "</title>";
         echo "<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>";
-        echo '<link rel="stylesheet" href="http://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">';
+        echo '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">';
         echo "<style>html { font-size: 14px; }</style>";
         echo "</head><body>";
 
@@ -1422,8 +1436,8 @@ cin;
         echo "<div class='form-group'>";
         echo "<button class='btn btn-primary' name='frm_button' type='submit' value='refresh'>Refresh</button>&nbsp;&nbsp;&nbsp;";
         echo "<button class='btn btn-primary' name='frm_button' type='submit' value='setfield'>Set field values</button>&nbsp;&nbsp;&nbsp;";
-        echo "<button class='btn btn-success' name='frm_button' type='submit' value='create'>Create a new Job </button>&nbsp;&nbsp;&nbsp;";
-        echo "<button class='btn btn-success' name='frm_button' type='submit' value='createnew'>Create a new Job (new data)</button>&nbsp;&nbsp;&nbsp;";
+        echo "<button class='btn btn-success' name='frm_button' type='submit' value='create'>Create a new Job (current data) </button>&nbsp;&nbsp;&nbsp;";
+        echo "<button class='btn btn-success' name='frm_button' type='submit' value='createnew'>Create a new Job (default data)</button>&nbsp;&nbsp;&nbsp;";
 
         echo "<button class='btn btn-warning' name='frm_button' type='submit' value='check'>Check consistency</button>&nbsp;&nbsp;&nbsp;";
         echo "<button class='btn btn-danger' name='frm_button' type='submit' value='delete'>Delete this job</button>&nbsp;&nbsp;&nbsp;";
@@ -1501,11 +1515,13 @@ cin;
         echo "</form>";
         echo "</div></div>"; //card
         echo "</div><!-- col --></div><!-- row --><br>";
-        echo '<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>';
-        echo '<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>';
-        echo '<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>';
+        echo '<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>';
+        echo '<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>';
+        echo '<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>';
         echo "</body></html>";
     }
+    
+    
 
     //</editor-fold>
 
