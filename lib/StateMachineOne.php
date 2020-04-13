@@ -16,14 +16,14 @@ use Exception;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.4 2019-12-26
+ * @version  2.5 2020-04-13
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne
 {
 
-    public $VERSION = '2.2';
+    public $VERSION = '2.5';
     const NODB=0;
     const PDODB=1;
     const DOCDB=2;
@@ -972,6 +972,7 @@ class StateMachineOne
                 $d = $tmp->setTimestamp($this->getTime());
             }
         } else {
+            // note: it failed with 7.2.17 ???
             $d = DateTime::createFromFormat('U.u', $time);
         }
         return $d->format("Y-m-d H:i:s.u");
@@ -1437,10 +1438,10 @@ cin;
         echo "</div>";
 
         echo "<div class='form-group'>";
-        echo "<button class='btn btn-primary' name='frm_button' type='submit' value='refresh'>Refresh</button>&nbsp;&nbsp;&nbsp;";
-        echo "<button class='btn btn-primary' name='frm_button' type='submit' value='setfield'>Set field values</button>&nbsp;&nbsp;&nbsp;";
-        echo "<button class='btn btn-success' name='frm_button' type='submit' value='create'>Create a new Job (current data) </button>&nbsp;&nbsp;&nbsp;";
-        echo "<button class='btn btn-success' name='frm_button' type='submit' value='createnew'>Create a new Job (default data)</button>&nbsp;&nbsp;&nbsp;";
+        echo "<button class='btn btn-primary' name='frm_button' type='submit' title='Refresh the current screen' value='refresh'>Refresh</button>&nbsp;&nbsp;&nbsp;";
+        echo "<button class='btn btn-primary' name='frm_button' type='submit' title='It sets the job using the current fields' value='setfield'>Set field values</button>&nbsp;&nbsp;&nbsp;";
+        echo "<button class='btn btn-success' name='frm_button' type='submit' title='Create a new job using the information in the current screen' value='create'>Create a new Job (current data) </button>&nbsp;&nbsp;&nbsp;";
+        echo "<button class='btn btn-success' name='frm_button' type='submit' title='Create a new job using the default information'  value='createnew'>Create a new Job (default data)</button>&nbsp;&nbsp;&nbsp;";
 
         echo "<button class='btn btn-warning' name='frm_button' type='submit' value='check'>Check consistency</button>&nbsp;&nbsp;&nbsp;";
         echo "<button class='btn btn-danger' name='frm_button' type='submit' value='delete'>Delete this job</button>&nbsp;&nbsp;&nbsp;";
