@@ -332,6 +332,9 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
 
+* 2.6 2020-04-23
+    * Slimming down the installation. Now "Docs" is not included in the installation  
+    
 * 2.5 2020-04-13  
     * updating dependency eftec/pdoone 1.15 to 1.32.1  
     * updating dependency etec/minilang 2.14 to 2.15  

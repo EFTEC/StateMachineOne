@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpUnused */
 
 namespace eftec\statemachineone;
 
@@ -6,10 +6,10 @@ namespace eftec\statemachineone;
 class Pending implements StateSerializable
 {
     /** @var array=[\eftec\statemachineone\Pending::factoryScheduleItem()]  */
-    var $schedule;
+    public $schedule;
     
-    var $cyclical=false;
-    var $cyclicalInterval=0;
+    public $cyclical=false;
+    public $cyclicalInterval=0;
 
     /**
      * @param int  $time

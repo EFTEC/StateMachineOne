@@ -1,4 +1,7 @@
-<?php
+<?php /** @noinspection PhpUnused */
+
+/** @noinspection PhpUnusedParameterInspection */
+
 namespace eftec\statemachineone;
 
 
@@ -11,24 +14,24 @@ namespace eftec\statemachineone;
  */
 class Job {
 	/** @var int number or position of the job on the queue */
-    var $idJob=0;
+    public $idJob=0;
     /** @var int initial date (timestamp) */
-    var $dateInit;
+    public $dateInit;
 	/** @var int date of the last change (timestamp)*/
-	var $dateLastChange;
+	public $dateLastChange;
     /** @var int date of end (timestamp) */
-    var $dateEnd;
+    public $dateEnd;
     /** @var int date of expiration (timestamp) */
-    var $dateExpired;
+    public $dateExpired;
     /** @var mixed  */
-    var $state;
+    public $state;
     /** @var array fields or values per job */
-    var $fields;
+    public $fields;
     /** @var array indicates the flow of states */
-    var $stateFlow=[];
+    public $stateFlow=[];
 
     /** @var array */
-    var $transitions=[];
+    public $transitions=[];
     /**
      * none= the job doesn't exist or it's deleted.
      * inactive= the job exists but it hasn't started
@@ -39,12 +42,12 @@ class Job {
      */
     private $active='none';
     /** @var bool If the job is new or not. It is used to store into the database (insert) */
-    var $isNew=false;
+    public $isNew=false;
     /** @var bool If the job is updated. It is used to store into the database (update) */
-    var $isUpdate=false;
+    public $isUpdate=false;
     
     /** @var array */
-    var $log;
+    public $log;
     
 	public function wait($param=null) {
 		return false;
@@ -131,7 +134,7 @@ class Job {
      * It refresh the fields. If the fields are implementation of StateSerializable, then it sets the parent.
      */
     public function setParentFields() {
-        foreach($this->fields as &$item) {
+        foreach($this->fields as $item) {
             if ($item instanceof StateSerializable) {
                 $item->setParent($this);
             }
@@ -151,7 +154,6 @@ class Job {
     public function setActiveNumber($activeNum)
     {
         switch ($activeNum) {
-            case 0: $this->active='none'; break;
             case 1: $this->active='inactive'; break;
             case 2: $this->active='active'; break;
             case 3: $this->active='pause'; break;
@@ -180,7 +182,7 @@ class Job {
             case 'stop':
                 return 4;
             default:
-                trigger_error("type active not defined");
+                trigger_error('type active not defined');
                 return -1;
         }
     }

@@ -1,4 +1,9 @@
-<?php
+<?php /** @noinspection UnusedConstructorDependenciesInspection */
+/** @noinspection JsonEncodingApiUsageInspection */
+/** @noinspection TypeUnsafeArraySearchInspection */
+/** @noinspection TypeUnsafeComparisonInspection */
+/** @noinspection NestedTernaryOperatorInspection */
+/** @noinspection PhpPrivateFieldCanBeLocalVariableInspection */
 /** @noinspection PhpUnused */
 /** @noinspection PhpUnusedParameterInspection */
 /** @noinspection SqlDialectInspection */
@@ -16,14 +21,14 @@ use Exception;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.5 2020-04-13
+ * @version  2.6 2020-04-23
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne
 {
 
-    public $VERSION = '2.5';
+    public $VERSION = '2.6';
     const NODB=0;
     const PDODB=1;
     const DOCDB=2;
@@ -35,7 +40,7 @@ class StateMachineOne
     /** @var bool */
     private $autoGarbage = false;
 
-    private $counter = 0;
+    private $counter;
     /** @var Job[] */
     private $jobQueue;
     /** @var int */
@@ -54,33 +59,33 @@ class StateMachineOne
     /** @var int=[self::NODB,self::PDODB,self::DOCDB][$i] If the database is active. It is marked true every automatically when we set the database. */
     private $dbActive = 0; // none
 
-    private $dbType = "";
-    private $dbServer = "";
-    private $dbUser = "";
-    private $dbPassword = "";
-    private $dbSchema = "";
+    private $dbType = '';
+    private $dbServer = '';
+    private $dbUser = '';
+    private $dbPassword = '';
+    private $dbSchema = '';
     /** @var PdoOne */
-    private $pdoOne = null;
+    private $pdoOne;
     /** @var DocumentStoreOne */
-    private $docOne=null;
+    private $docOne;
     /** @var string The name of the table to store the jobs */
-    var $tableJobs = "stm_jobs";
+    public $tableJobs = 'stm_jobs';
     /** @var string The name of the table to store the logs per job. If it's empty then it is not used */
-    var $tableJobLogs = "";
+    public $tableJobLogs = '';
     /** @var array The list of database columns used by the job */
-    var $columnJobs = ['idjob', 'idactive', 'idstate', 'dateinit', 'datelastchange', 'dateexpired', 'dateend'];
+    public $columnJobs = ['idjob', 'idactive', 'idstate', 'dateinit', 'datelastchange', 'dateexpired', 'dateend'];
     /** @var array The List of database columns used by the log of the job */
-    var $columnJobLogs = ['idjoblog', 'idjob', 'idrel', 'type', 'description', 'date'];
+    public $columnJobLogs = ['idjoblog', 'idjob', 'idrel', 'type', 'description', 'date'];
 
     /** @var array It indicates extra fields/states */
-    var $fieldDefault = [''];
+    public $fieldDefault = [''];
 
     private $changed = false;
 
     /** @var MiniLang */
-    public $miniLang = null;
+    public $miniLang;
     /** @var null|object It is the service class (optional)  */
-    private $serviceObject=null;
+    private $serviceObject;
 
     // callbacks
     /** @var callable it's called when we change state (by default it returns true) */
@@ -103,7 +108,7 @@ class StateMachineOne
     private $getNumberTrigger;
 
     /** @var callable|null */
-    public $customSaveDBJobLog = null;
+    public $customSaveDBJobLog;
 
     /**
      * Add a new transition. It is the definition of transition, indicating the from, where and conditions.
@@ -120,7 +125,7 @@ class StateMachineOne
      * @return int Returns the last id of the transaction.
      * @see \eftec\statemachineone\StateMachineOne::setStates
      */
-    public function addTransition($state0, $state1, $conditions, $result = "change")
+    public function addTransition($state0, $state1, $conditions, $result = 'change')
     {
         $this->transitions[] = new Transition($this, $state0, $state1, $conditions, $result);
         return count($this->transitions)-1;
@@ -206,19 +211,19 @@ class StateMachineOne
         $this->jobQueue = [];
         $this->counter = 0;
 
-        $this->changeStateTrigger = function (StateMachineOne $smo, Job $job, $newState) {
+        $this->changeStateTrigger = static function (StateMachineOne $smo, Job $job, $newState) {
             return true;
         };
-        $this->startTrigger = function (StateMachineOne $smo, Job $job) {
+        $this->startTrigger = static function (StateMachineOne $smo, Job $job) {
             return true;
         };
-        $this->pauseTrigger = function (StateMachineOne $smo, Job $job) {
+        $this->pauseTrigger = static function (StateMachineOne $smo, Job $job) {
             return true;
         };
-        $this->stopTrigger = function (StateMachineOne $smo, Job $job) {
+        $this->stopTrigger = static function (StateMachineOne $smo, Job $job) {
             return true;
         };
-        $this->getNumberTrigger = function (StateMachineOne $smo) {
+        $this->getNumberTrigger = static function (StateMachineOne $smo) {
 
             // you could use the database if you are pleased to.
             $smo->counter++;
@@ -285,7 +290,7 @@ class StateMachineOne
      * @example $flatcon=new DocumentStoreOne(dirname(__FILE__)."/base",'collectionFolder');
      */    
     public function setDocDB($database, $collection = '', $strategy = 'auto',
-        $server = "",  $keyEncryption = '') {
+        $server = '',  $keyEncryption = '') {
         $this->dbActive=self::DOCDB;
         $this->docOne=new DocumentStoreOne($database,$collection,$strategy,$server,true,$keyEncryption);
         $this->docOne->autoSerialize(true,'php');
@@ -334,7 +339,7 @@ class StateMachineOne
      */
     public function getDB()
     {
-        if ($this->pdoOne == null) {
+        if ($this->pdoOne === null) {
             $this->pdoOne = new PdoOne($this->dbType, $this->dbServer, $this->dbUser, $this->dbPassword,
                 $this->dbSchema);
             $this->pdoOne->open();
@@ -353,7 +358,7 @@ class StateMachineOne
     {
         switch ($this->dbActive) {
             case self::PDODB:
-                $row = $this->getDB()->select("*")->from($this->tableJobs)->where("idactive<>0 and idjob=?", [$idJob])
+                $row = $this->getDB()->select('*')->from($this->tableJobs)->where('idactive<>0 and idjob=?', [$idJob])
                     ->first();
                 $this->jobQueue[$row['idjob']] = $this->arrayToJob($row);
                 break;
@@ -373,7 +378,7 @@ class StateMachineOne
     {
         switch ($this->dbActive) {
             case self::PDODB:
-                $rows = $this->getDB()->select("*")->from($this->tableJobs)->where("idactive not in (0,4)")
+                $rows = $this->getDB()->select('*')->from($this->tableJobs)->where('idactive not in (0,4)')
                     ->order('dateinit')
                     ->toList();
                 $this->jobQueue = [];
@@ -387,9 +392,9 @@ class StateMachineOne
                 if($listId) {
                     foreach ($listId as $idJob) {  // id already has json prefix
                         $id=substr($idJob,3);
-                        /** @var Job $job */
                         $job =$this->arrayToJob( $this->docOne->get('job'.$id));
-                        if ($job->getActiveNumber() != 0 && $job->getActiveNumber() != 4) {
+                        $gan=$job->getActiveNumber();
+                        if ($gan !== 0 && $gan !== 4) {
                             $this->jobQueue[$id] = $job;
                         }
                     }
@@ -408,7 +413,7 @@ class StateMachineOne
     {
         switch ($this->dbActive) {
             case self::PDODB:
-                $rows = $this->getDB()->select("*")->from($this->tableJobs)->order('dateinit')->toList();
+                $rows = $this->getDB()->select('*')->from($this->tableJobs)->order('dateinit')->toList();
                 $this->jobQueue = [];
                 foreach ($rows as $row) {
                     $this->jobQueue[$row['idjob']] = $this->arrayToJob($row);
@@ -455,11 +460,9 @@ class StateMachineOne
                 } else {
                     $arr[$k] = $row[$k];    
                 }
-            } else {
-                if ($v instanceof StateSerializable) {
-                    $arr[$k] = clone $v;
-                    $arr[$k]->fromString($job, $text[$k]);
-                }
+            } elseif ($v instanceof StateSerializable) {
+                $arr[$k] = clone $v;
+                $arr[$k]->fromString($job, $text[$k]);
             }
         }
         $job->setFields($arr);
@@ -477,10 +480,10 @@ class StateMachineOne
         $arr['idjob'] = $job->idJob;
         $arr['idactive'] = $job->getActiveNumber();
         $arr['idstate'] = $job->state;
-        $arr['dateinit'] = date("Y-m-d H:i:s", $job->dateInit);
-        $arr['datelastchange'] = date("Y-m-d H:i:s", $job->dateLastChange);
-        $arr['dateexpired'] = date("Y-m-d H:i:s", $job->dateExpired);
-        $arr['dateend'] = date("Y-m-d H:i:s", $job->dateEnd);
+        $arr['dateinit'] = date('Y-m-d H:i:s', $job->dateInit);
+        $arr['datelastchange'] = date('Y-m-d H:i:s', $job->dateLastChange);
+        $arr['dateexpired'] = date('Y-m-d H:i:s', $job->dateExpired);
+        $arr['dateend'] = date('Y-m-d H:i:s', $job->dateEnd);
         // native fields (fields that aren't object or array)
         $text=[];
         foreach ($this->fieldDefault as $k => $v) {
@@ -490,11 +493,9 @@ class StateMachineOne
                 } else {
                     $arr[$k] = $job->fields[$k];    
                 }
-            } else {
-                if ($v instanceof StateSerializable) {
-                    /** @see \eftec\statemachineone\Flags::toString */
-                    $text[$k] = $job->fields[$k]->toString();
-                }
+            } elseif ($v instanceof StateSerializable) {
+                /** @see \eftec\statemachineone\Flags::toString */
+                $text[$k] = $job->fields[$k]->toString();
             }
         }
         // non native fields
@@ -514,7 +515,7 @@ class StateMachineOne
     public function createDbTable($drop = false) {
         switch ($this->dbActive) {
             case self::PDODB:
-                if ($this->dbType == 'mysql') {
+                if ($this->dbType === 'mysql') {
                     if ($drop) {
                         $sql = 'DROP TABLE IF EXISTS `' . $this->tableJobs . '`';
                         $this->getDB()->runRawQuery($sql);
@@ -544,13 +545,13 @@ class StateMachineOne
                         $this->getDB()->createTable($this->tableJobs, $tabledef, 'idjob');
 
                         // We created index.
-                        $sql = "ALTER TABLE `" . $this->tableJobs . "`
-                ADD INDEX `" . $this->tableJobs . "_key1` (`idactive` ASC),
-                ADD INDEX `" . $this->tableJobs . "_key2` (`idstate` ASC),
-                ADD INDEX `" . $this->tableJobs . "_key3` (`dateinit` ASC)";
+                        $sql = 'ALTER TABLE `' . $this->tableJobs . '`
+                ADD INDEX `' . $this->tableJobs . '_key1` (`idactive` ASC),
+                ADD INDEX `' . $this->tableJobs . '_key2` (`idstate` ASC),
+                ADD INDEX `' . $this->tableJobs . '_key3` (`dateinit` ASC)';
                         $this->getDB()->runRawQuery($sql);
                         if ($this->tableJobLogs) {
-                            $sql = "CREATE TABLE IF NOT EXISTS `" . $this->tableJobLogs . "` (
+                            $sql = 'CREATE TABLE IF NOT EXISTS `' . $this->tableJobLogs . "` (
                   `idjoblog` INT NOT NULL AUTO_INCREMENT,
                   `idjob` int,
                   `idrel` varchar(200),
@@ -586,7 +587,6 @@ class StateMachineOne
                     $defTable[$k] = 'varchar(250)';
                     break;
                 case is_float($v):
-                case is_double($v):
                     $defTable[$k] = 'decimal(10,2)';
                     break;
                 case is_numeric($v):
@@ -628,23 +628,23 @@ class StateMachineOne
                         $job->isNew = false;
                         //$this->jobQueue[$job->idJob]=$job;
                         return $job->idJob;
-                    } else {
-                        if ($job->isUpdate) {
-                            $this->getDB()
-                                ->from($this->tableJobs);
-                            $arr = $this->jobToArray($job);
-                            foreach ($arr as $k => $item) {
-                                $this->getDB()->set("`$k`=?", $item);
-                            }
-                            $this->getDB()->where('idjob=?', $job->idJob);
-                            $this->getDB()->update();
-                            $job->isUpdate = false;
-                            //$this->jobQueue[$job->idJob]=$job;
-                            return $job->idJob;
+                    }
+
+                    if ($job->isUpdate) {
+                        $this->getDB()
+                            ->from($this->tableJobs);
+                        $arr = $this->jobToArray($job);
+                        foreach ($arr as $k => $item) {
+                            $this->getDB()->set("`$k`=?", $item);
                         }
+                        $this->getDB()->where('idjob=?', $job->idJob);
+                        $this->getDB()->update();
+                        $job->isUpdate = false;
+                        //$this->jobQueue[$job->idJob]=$job;
+                        return $job->idJob;
                     }
                 } catch (Exception $e) {
-                    $this->addLog($job, "ERROR", 'SAVEJOB', "save|" . $e->getMessage());
+                    $this->addLog($job, 'ERROR', 'SAVEJOB', 'save|' . $e->getMessage());
                 }
                 return 0;
                 break;
@@ -680,7 +680,7 @@ class StateMachineOne
                 if (!$this->tableJobLogs) {
                     return true;
                 } // it doesn't save if the table is not set.
-                if (is_callable([$this, 'customSaveDBJobLog'], true) && $this->customSaveDBJobLog != null) {
+                if (is_callable([$this, 'customSaveDBJobLog'], true) && $this->customSaveDBJobLog !== null) {
                     return call_user_func($this->customSaveDBJobLog, $job, $arr);
                     //$this->customSaveDBJobLog($job,$arr);
                 }
@@ -692,11 +692,11 @@ class StateMachineOne
                     $this->getDB()->set('idrel=?', $arr['idrel']);
                     $this->getDB()->set('type=?', $arr['type']);
                     $this->getDB()->set('description=?', $arr['description']);
-                    $this->getDB()->set('date=?', date("Y-m-d H:i:s", $arr['date']));
+                    $this->getDB()->set('date=?', date('Y-m-d H:i:s', $arr['date']));
                     $this->getDB()->insert();
                     return true;
                 } catch (Exception $e) {
-                    echo "error " . $e->getMessage();
+                    echo 'error ' . $e->getMessage();
                     return false;
                     //$this->addLog(0,"ERROR","Saving the joblog ".$e->getMessage());
                 }
@@ -704,7 +704,7 @@ class StateMachineOne
             case self::DOCDB:
                 // it stores the log as csv
                 $log=['idjob'=>$job->idJob,'idrel'=>$arr['idrel'],'type'=>$arr['type']
-                    ,'description'=>$arr['description'],'date'=>date("Y-m-d H:i:s", $arr['date'])];
+                    ,'description'=>$arr['description'],'date'=>date('Y-m-d H:i:s', $arr['date'])];
                 $this->docOne->appendValue($this->tableJobLogs,$this->csvStr($log));
                 break;
         }
@@ -720,6 +720,7 @@ class StateMachineOne
      */
     private function csvStr($arrayValue)
     {
+        /** @noinspection FopenBinaryUnsafeUsageInspection */
         $f = fopen('php://memory', 'r+');
 
         if (fputcsv($f, $arrayValue) === false) {
@@ -794,11 +795,11 @@ class StateMachineOne
                 $job->idJob = $idJob;
         }
         
-        if ($dateStart <= $this->getTime() || $active == 'active') {
+        if ($active === 'active' || $dateStart <= $this->getTime()) {
             // it start.
             $this->callStartTrigger($job);
             $job->setActive($active);
-            if ($this->dbActive!=self::NODB) {
+            if ($this->dbActive!==self::NODB) {
                 $this->saveDBJob($job);
             }
         }
@@ -841,50 +842,44 @@ class StateMachineOne
      */
     public function checkJob($job)
     {
-        if ($job->dateInit <= $this->getTime() && $job->getActive() == 'inactive') {
+        if ($job->dateInit <= $this->getTime() && $job->getActive() === 'inactive') {
             // it starts the job.
             $this->callStartTrigger($job);
             $job->setActive('active');
             $job->setIsUpdate(true);
         }
         foreach ($this->transitions as $idTransition => $trn) {
-            if (isset($job)) { // the isset it is because the job could be deleted from the queue.
-                if ($trn->state0 == $job->state) { // if the state of the job is equals than the transition
-                    if ($this->getTime() - $job->dateLastChange >= $trn->getDuration($job)
-                        || $this->getTime() - $job->dateInit >= $trn->getFullDuration($job)
-                    ) {
-                        // timeout time is up, we will do the transition anyways
-                        $this->miniLang->setDict($job->fields);
-                        if ($trn->doTransition($this, $job, true, $idTransition)) {
-                            if ($trn->state0 != $trn->state1) {
-                                $job->stateFlow[] = [$trn->state0, $trn->state1];
+            // the isset it is because the job could be deleted from the queue.
+            if (isset($job) && $trn->state0 == $job->state) { // if the state of the job is equals than the transition
+                if ($this->getTime() - $job->dateLastChange >= $trn->getDuration($job)
+                    || $this->getTime() - $job->dateInit >= $trn->getFullDuration($job)
+                ) {
+                    // timeout time is up, we will do the transition anyways
+                    $this->miniLang->setDict($job->fields);
+                    if ($trn->doTransition($this, $job, true, $idTransition)) {
+                        if ($trn->state0 != $trn->state1) {
+                            $job->stateFlow[] = [$trn->state0, $trn->state1];
+                        }
+                        $this->changed = true;
+                    }
+                } elseif (count($this->miniLang->where[$idTransition])) {
+                    // we check the transition based on table
+                    $this->miniLang->setDict($job->fields);
+                    if ($trn->evalLogic($this, $job, $idTransition)) {
+                        if ($trn->result !== 'stay') {
+                            $job->stateFlow[$idTransition] = [$trn->state0, $trn->state1];
+                        }
+                        $this->changed = true;
+                    }
+                } elseif (is_callable($trn->function)) {
+                        // we check the transition based on function
+                        if (call_user_func($trn->function, $this, $job)) {
+                            if ($trn->result !== 'stay') {
+                                $job->stateFlow[$idTransition] = [$trn->state0, $trn->state1];
                             }
                             $this->changed = true;
                         }
-                    } else {
-
-                        if (count($this->miniLang->where[$idTransition])) {
-                            // we check the transition based on table
-                            $this->miniLang->setDict($job->fields);
-                            if ($trn->evalLogic($this, $job, $idTransition)) {
-                                if ($trn->result != 'stay') {
-                                    $job->stateFlow[$idTransition] = [$trn->state0, $trn->state1];
-                                }
-                                $this->changed = true;
-                            }
-                        } else {
-                            if (is_callable($trn->function)) {
-                                // we check the transition based on function
-                                if (call_user_func($trn->function, $this, $job)) {
-                                    if ($trn->result != 'stay') {
-                                        $job->stateFlow[$idTransition] = [$trn->state0, $trn->state1];
-                                    }
-                                    $this->changed = true;
-                                }
-                            }
-                        }
                     }
-                }
             }
         }
     }
@@ -899,14 +894,15 @@ class StateMachineOne
     public function checkAllJobs($numIteractions = 3)
     {
         $this->changed = false;
-        foreach ($this->jobQueue as $idx => &$job) {
-            if (get_class($job) == "eftec\statemachineone\Job") { // why?, because we use foreach
+        foreach ($this->jobQueue as $idx => $job) {
+            if ($job instanceof Job) { // why?, because we use foreach
                 for ($iteraction = 0; $iteraction < $numIteractions; $iteraction++) {
-                    if ($job->getActive() != "none" && $job->getActive() != "stop") {
+                    $ga=$job->getActive();
+                    if ($ga !== 'none' && $ga !== 'stop') {
                         try {
                             $this->checkJob($job);
                         } catch (Exception $e) {
-                            $this->addLog($job, "ERROR",'CHECK',"state|" . $e->getMessage());
+                            $this->addLog($job, 'ERROR','CHECK', 'state|' . $e->getMessage());
                             return false;
                         }
                     }
@@ -925,9 +921,10 @@ class StateMachineOne
      */
     public function garbageCollector()
     {
-        foreach ($this->jobQueue as $idx => &$job) {
-            if (get_class($job) == "eftec\statemachineone\Job") {
-                if ($job->getActive() == 'none' || $job->getActive() == 'stop') {
+        foreach ($this->jobQueue as $idx => $job) {
+            if ($job instanceof Job) {
+                $ga=$job->getActive();
+                if ($ga === 'none' || $ga === 'stop') {
                     $this->removeJob($job);
                 }
             }
@@ -950,12 +947,12 @@ class StateMachineOne
             $job->isUpdate = true;
             $job->dateLastChange = $this->getTime();
             return true;
-        } else {
-            $this->addLog($job, 'ERROR','CHANGESTATE',"change|{$job->idJob}|{$job->state }|{$newState}");
-            return false;
         }
+
+        $this->addLog($job, 'ERROR','CHANGESTATE',"change|{$job->idJob}|{$job->state }|{$newState}");
+        return false;
     }
-    /** @noinspection PhpDocMissingThrowsInspection */
+
     /**
      * @param int|null $time timestamp with microseconds
      *
@@ -975,7 +972,7 @@ class StateMachineOne
             // note: it failed with 7.2.17 ???
             $d = DateTime::createFromFormat('U.u', $time);
         }
-        return $d->format("Y-m-d H:i:s.u");
+        return $d->format('Y-m-d H:i:s.u');
     }
 
     /**
@@ -1000,7 +997,7 @@ class StateMachineOne
                 echo($msg);
             }
         }
-        if ($this->dbActive!=self::NODB) {
+        if ($this->dbActive!==self::NODB) {
             $arr['description'] = strip_tags($arr['description']);
             $this->saveDBJobLog($job, $arr);
         }
@@ -1009,7 +1006,7 @@ class StateMachineOne
     /**
      * It removes a jobs of the queue.
      *
-     * @param Job $job
+     * @param Job|null $job
      *
      * @test void removeJob(null)
      */
@@ -1059,7 +1056,7 @@ class StateMachineOne
         $arr = array_keys($this->states);
         $arrCopy = $arr;
         if ($output) {
-            echo "<hr>checking:<hr>";
+            echo '<hr>checking:<hr>';
         }
         $result = true;
         foreach ($this->transitions as $trId => $trans) {
@@ -1088,10 +1085,8 @@ class StateMachineOne
                 $arrCopy[] = $trans->state1;
             }
 
-            if (!$fail) {
-                if ($output) {
-                    echo "OK<br>";
-                }
+            if (!$fail && $output) {
+                echo 'OK<br>';
             }
         }
         foreach ($arr as $missing) {
@@ -1152,12 +1147,12 @@ cin;
         }
         $transitions = $this->transitions;
         // we removed the caller to avoid circular reference.
-        foreach ($transitions as &$trans) {
+        foreach ($transitions as $trans) {
             $trans->caller = null;
         }
         $phpCode = '$machine->transitions=unserialize( \'' . $this->serializeEscape($transitions) . '\');';
         //$phpCode=str_replace("  ","\t",$phpCode);
-        foreach ($transitions as &$trans) {
+        foreach ($transitions as $trans) {
             $trans->caller = $this;
         }
         return $phpCode;
@@ -1165,18 +1160,18 @@ cin;
 
     private function cacheEvents()
     {
-        if (count($this->events) == 0) {
+        if (count($this->events) === 0) {
             return '';
         }
         $events = $this->events;
         // we removed the caller to avoid circular reference.
-        foreach ($events as &$event) {
+        foreach ($events as $event) {
             $event->setCaller(null);
         }
         $phpCode = '$machine->events=unserialize( \'' . $this->serializeEscape($events) . '\');';
         $phpCode .= "\n  \$machine->eventNames=unserialize( '" . $this->serializeEscape($this->eventNames) . '\');';
         //$phpCode=str_replace("  ","\t",$phpCode);
-        foreach ($events as &$event) {
+        foreach ($events as $event) {
             $event->setCaller($this);
         }
         return $phpCode;
@@ -1195,10 +1190,10 @@ cin;
     public function getTime($microtime = false)
     {
         if (function_exists('universaltime')) {
-            return call_user_func('universaltime', $microtime);
-        } else {
-            return $microtime ? microtime(true) : time();
+            return universaltime($microtime);
         }
+
+        return $microtime ? microtime(true) : time();
     }
 
 
@@ -1228,19 +1223,20 @@ cin;
         $button = @$_REQUEST['frm_button'];
         $buttonEvent = @$_REQUEST['frm_button_event'];
         $new_state = @$_REQUEST['frm_new_state'];
-        $msg = "";
+        $msg = '';
         $fetchField = $this->fieldDefault;
         foreach ($this->fieldDefault as $colFields => $value) {
-            if (isset($_REQUEST['frm_' . $colFields])) {
+            $fieldName='frm_' . $colFields;
+            if (isset($_REQUEST[$fieldName])) {
                 if ($value instanceof StateSerializable) {
                     $fetchField[$colFields] = clone $value;
                     $fetchField[$colFields]->fromString($job, @$_REQUEST['frm_' . $colFields]);
                 } else {
                     $fetchField[$colFields] = @$_REQUEST['frm_' . $colFields];
                     if(is_array($value)) {
-                        $fetchField[$colFields] = ($fetchField[$colFields] === "") ? null : json_decode( $fetchField[$colFields]);
+                        $fetchField[$colFields] = ($fetchField[$colFields] === '') ? null : json_decode($fetchField[$colFields]);
                     } else {
-                        $fetchField[$colFields] = ($fetchField[$colFields] === "") ? null : $fetchField[$colFields];    
+                        $fetchField[$colFields] = ($fetchField[$colFields] === '') ? null : $fetchField[$colFields];    
                     }
                 }
 
@@ -1253,7 +1249,7 @@ cin;
                 $job->isUpdate = true;
                 $this->saveDBJob($job);
             } else {
-                $msg = "Job not created";
+                $msg = 'Job not created';
             }
             $fetchField = null;
         }
@@ -1261,11 +1257,11 @@ cin;
         switch ($button) {
             case 'create':
                 $this->createJob($fetchField);
-                $msg = "Job created with the information on screen";
+                $msg = 'Job created with the information on screen';
                 break;
             case 'createnew':
                 $this->createJob($this->fieldDefault);
-                $msg = "Job created with the default information";
+                $msg = 'Job created with the default information';
                 break;
             case 'delete':
                 if ($job != null) {
@@ -1274,9 +1270,9 @@ cin;
                     //$this->saveDBJob($job);
                     try {
                         $this->deleteJobDB($job);
-                        $msg = "Job deleted";
+                        $msg = 'Job deleted';
                     } catch (Exception $e) {
-                        $msg = "Error deleting the job " . $e->getMessage();
+                        $msg = 'Error deleting the job ' . $e->getMessage();
                     }
                     $this->removeJob($job);
                   
@@ -1285,18 +1281,19 @@ cin;
                 break;
             case 'change':
                 $this->changeState($job, $new_state);
-                if ($job->getActive() == "none" || $job->getActive() == "stop") {
+                $ga=$job->getActive();
+                if ($ga === 'none' || $ga === 'stop') {
                     $job->setActive('active'); // we change the state to active.
                 }
                 $this->saveDBJob($job);
-                $msg = "State changed";
+                $msg = 'State changed';
                 break;
             case 'setfield':
                 if ($job !== null) {
                     $job->fields = $fetchField;
                     $job->isUpdate = true;
                     $this->saveDBJob($job);
-                    $msg = "Job updated";
+                    $msg = 'Job updated';
 
                 }
                 break;
@@ -1320,7 +1317,7 @@ cin;
      * @param Job    $job
      * @param string $msg
      */
-    public function viewUI($job = null, $msg = "")
+    public function viewUI($job = null, $msg = '')
     {
         $lastjob='';
         if (($job === null)) {
@@ -1334,7 +1331,7 @@ cin;
                 }
             }
         } 
-        $idJob = ($job === null) ? "??" : $job->idJob;
+        $idJob = ($job === null) ? '??' : $job->idJob;
         $jobCombobox="<select name='frm_curjob' class='form-control'>\n";
         $jobCombobox.="<option value='$idJob'>--Last Job ($idJob)--</option>\n";
         foreach($this->getJobQueue() as $tmpJ) {
@@ -1343,13 +1340,13 @@ cin;
         $jobCombobox.='</select>';
        
 
-        echo "<!doctype html>";
+        echo '<!doctype html>';
         echo "<html lang='en'>";
-        echo "<head><title>StateMachineOne Version " . $this->VERSION . "</title>";
+        echo '<head><title>StateMachineOne Version ' . $this->VERSION . '</title>';
         echo "<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>";
         echo '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">';
-        echo "<style>html { font-size: 14px; }</style>";
-        echo "</head><body>";
+        echo '<style>html { font-size: 14px; }</style>';
+        echo '</head><body>';
 
         echo "<div class='container-fluid'><div class='row'><div class='col'><br>";
         echo '<div class="card">';
@@ -1360,12 +1357,12 @@ cin;
         echo '<div class="card-body">';
         
 
-        if ($msg != "") {
+        if ($msg != '') {
             echo '<div class="alert alert-primary" role="alert">' . $msg . '</div>';
         }
 
         if ($job === null) {
-            echo "<h2>There is not a job active</h2><br>";
+            echo '<h2>There is not a job active</h2><br>';
             $job = new Job();
             $job->fields = $this->fieldDefault;
 
@@ -1375,53 +1372,53 @@ cin;
         echo "<div class='form-group row'>";
         echo "<label class='col-sm-4 col-form-label'>Job #</label>";
         echo "<div class='col-sm-5'><span>$jobCombobox</span></br>";
-        echo "</div></div>";
+        echo '</div></div>';
 
         echo "<div class='form-group row'>";
         echo "<label class='col-sm-4 col-form-label'>Current State</label>";
-        echo "<div class='col-sm-5'><span class='badge badge-primary'>" . @$this->getStates()[$job->state] . " ("
-            . $job->state . ")</span></br>";
-        echo "</div></div>";
+        echo "<div class='col-sm-5'><span class='badge badge-primary'>" . @$this->getStates()[$job->state] . ' ('
+            . $job->state . ')</span></br>';
+        echo '</div></div>';
 
         $tr = [];
         foreach ($this->transitions as $tran) {
-            if ($tran->state0 == $job->state && $tran->result != 'stay') {
+            if ($tran->state0 == $job->state && $tran->result !== 'stay') {
                 $tr[] = "<span class='badge badge-primary' title='{$tran->txtCondition}'>"
-                    . @$this->getStates()[$tran->state1] . " (" . $tran->state1 . ")</span>";
+                    . @$this->getStates()[$tran->state1] . ' (' . $tran->state1 . ')</span>';
             }
         }
 
         echo "<div class='form-group row'>";
         echo "<label class='col-sm-4 col-form-label'>Possible next states</label>";
-        echo "<div class='col-sm-5'><span >" . implode(', ', $tr) . "</span></br>";
-        echo "</div></div>";
+        echo "<div class='col-sm-5'><span >" . implode(', ', $tr) . '</span></br>';
+        echo '</div></div>';
 
         echo "<div class='form-group row'>";
         echo "<label class='col-sm-4 col-form-label'>Current Active state</label>";
-        echo "<div class='col-sm-5'><span class='badge badge-primary'>" . $job->getActive() . " ("
-            . $job->getActiveNumber() . ")" . "</span></br>";
-        echo "</div></div>";
+        echo "<div class='col-sm-5'><span class='badge badge-primary'>" . $job->getActive() . ' ('
+            . $job->getActiveNumber() . ')' . '</span></br>';
+        echo '</div></div>';
 
         echo "<div class='form-group row'>";
         echo "<label class='col-sm-4 col-form-label'>Elapsed full (sec)</label>";
-        echo "<div class='col-sm-5'><span>" . gmdate("H:i:s", ($this->getTime() - $job->dateInit)) . "</span></br>";
-        echo "</div></div>";
+        echo "<div class='col-sm-5'><span>" . gmdate('H:i:s', ($this->getTime() - $job->dateInit)) . '</span></br>';
+        echo '</div></div>';
 
         echo "<div class='form-group row'>";
         echo "<label class='col-sm-4 col-form-label'>Elapsed last state (sec)</label>";
-        echo "<div class='col-sm-5'><span>" . gmdate("H:i:s", ($this->getTime() - $job->dateLastChange))
-            . "</span></br>";
-        echo "</div></div>";
+        echo "<div class='col-sm-5'><span>" . gmdate('H:i:s', ($this->getTime() - $job->dateLastChange))
+            . '</span></br>';
+        echo '</div></div>';
 
-        echo "<!-- fin primera seccion --></div>";
+        echo '<!-- fin primera seccion --></div>';
         echo "<div class='col-6'><!-- segunda seccion -->";
         if ($this->debugAsArray) {
             echo "<div class='form-group row'>";
             $log = implode('', $this->debugArray);
             echo "<div class='col-sm-12'>$log</div>";
-            echo "</div>";
+            echo '</div>';
         }
-        echo "<!-- fin segunda seccion --></div></div>";
+        echo '<!-- fin segunda seccion --></div></div>';
 
         echo "<div class='form-group row'>";
         echo "<label class='col-sm-2 col-form-label'>Change State</label>";
@@ -1433,9 +1430,9 @@ cin;
                 echo "<option value='$k'>$s</option>\n";
             }
         }
-        echo "</select></div>";
+        echo '</select></div>';
         echo "<div class='col-sm-2'><button class='btn btn-success' name='frm_button' type='submit' value='change'>Change State</button></div>";
-        echo "</div>";
+        echo '</div>';
 
         echo "<div class='form-group'>";
         echo "<button class='btn btn-primary' name='frm_button' type='submit' title='Refresh the current screen' value='refresh'>Refresh</button>&nbsp;&nbsp;&nbsp;";
@@ -1445,7 +1442,7 @@ cin;
 
         echo "<button class='btn btn-warning' name='frm_button' type='submit' value='check'>Check consistency</button>&nbsp;&nbsp;&nbsp;";
         echo "<button class='btn btn-danger' name='frm_button' type='submit' value='delete'>Delete this job</button>&nbsp;&nbsp;&nbsp;";
-        echo "</div>";
+        echo '</div>';
 
         echo "<div class='form-group row'>";
         echo "<label class='col-sm-2 col-form-label'>Events</label>";
@@ -1454,8 +1451,8 @@ cin;
             echo "<button class='btn btn-primary' name='frm_button_event' type='submit' value='$k' title='"
                 . $this->eventNames[$k] . "' >$k</button>&nbsp;&nbsp;&nbsp;";
         }
-        echo "</span></br>";
-        echo "</div></div>";
+        echo '</span></br>';
+        echo '</div></div>';
         echo "<div class='row'>";
         foreach ($this->fieldDefault as $colFields => $value) {
 
@@ -1469,37 +1466,35 @@ cin;
                         . htmlentities($job->fields[$colFields]->toString()) . "' />";
                     $level = $job->fields[$colFields]->getMinLevel();
 
-                    $css = ($level == 0) ? "alert-primary" : (($level == 1) ? "alert-warning" : "alert-danger");
+                    $css = ($level == 0) ? 'alert-primary' : (($level == 1) ? 'alert-warning' : 'alert-danger');
                     /** @see \eftec\statemachineone\Flags::getStack() */
                     $stack = $job->fields[$colFields]->getStack();
                     echo "<div class='alert $css'>";
                     foreach ($stack as $item) {
-                        echo htmlentities($item) . "<br>";
+                        echo htmlentities($item) . '<br>';
                     }
-                    echo "</div>";
+                    echo '</div>';
 
                 } else {
                     echo "<input class='form-control' autocomplete='off' 
                         type='text' name='frm_$colFields' 
                         value='" . htmlentities($job->fields[$colFields]->toString()) . "' /></br>";
                 }
-            } else {
-                if(is_array($value)) {
-                    echo "<input class='form-control' autocomplete='off' 
-                    type='text' name='frm_$colFields' 
-                    value='" . htmlentities(json_encode($job->fields[$colFields])) . "' /></br>";
+            } elseif(is_array($value)) {
+                echo "<input class='form-control' autocomplete='off' 
+                type='text' name='frm_$colFields' 
+                value='" . htmlentities(json_encode($job->fields[$colFields])) . "' /></br>";
 
-                } else {
-                    echo "<input class='form-control' autocomplete='off' 
-                    type='text' name='frm_$colFields' 
-                    value='" . htmlentities($job->fields[$colFields]) . "' /></br>";
-                }
+            } else {
+                echo "<input class='form-control' autocomplete='off' 
+                type='text' name='frm_$colFields' 
+                value='" . htmlentities($job->fields[$colFields]) . "' /></br>";
             }
-            echo "</div>";
+            echo '</div>';
             //echo "</div>";
         }
 
-        echo "</div>"; //row
+        echo '</div>'; //row
         if (count($job->stateFlow)) {
             echo "<div class='form-group row'>";
             echo "<label class='col-sm-2 col-form-label'>Transitions</label>";
@@ -1509,20 +1504,20 @@ cin;
                 $tr1 = $this->states[$trans[1]] . " ({$trans[1]}) ";
                 echo "{$tr0} -&gt; {$tr1}<br/>";
             }
-            echo "</div>";
+            echo '</div>';
 
-            echo "</div>";
+            echo '</div>';
         }
 
         
-        echo "</div>";
-        echo "</form>";
-        echo "</div></div>"; //card
-        echo "</div><!-- col --></div><!-- row --><br>";
+        echo '</div>';
+        echo '</form>';
+        echo '</div></div>'; //card
+        echo '</div><!-- col --></div><!-- row --><br>';
         echo '<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>';
         echo '<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>';
         echo '<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>';
-        echo "</body></html>";
+        echo '</body></html>';
     }
     
     
@@ -1569,7 +1564,7 @@ cin;
     public function setDbActive($dbActive)
     {
         $this->dbActive=($this->dbActive===true)?self::PDODB : $this->dbActive ;
-        $this->dbActive = $dbActive;
+        //$this->dbActive = $dbActive;
     }
 
     /**
@@ -1692,13 +1687,11 @@ cin;
     {
         if (!$generateId) {
             $this->states = $states;
+        } elseif ($this->isAssoc($states)) {
+            $this->states = $states;
         } else {
-            if ($this->isAssoc($states)) {
-                $this->states = $states;
-            } else {
-                // it converts into an associative array
-                $this->states = array_combine($states, $states);
-            }
+            // it converts into an associative array
+            $this->states = array_combine($states, $states);
         }
     }
 

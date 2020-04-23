@@ -1,4 +1,7 @@
-<?php /** @noinspection PhpUnused */
+<?php /** @noinspection PhpUnusedParameterInspection */
+/** @noinspection TypeUnsafeComparisonInspection */
+
+/** @noinspection PhpUnused */
 
 namespace eftec\statemachineone;
 
@@ -19,7 +22,7 @@ use Exception;
 class Flags implements StateSerializable
 {
     /** @var string It is the name (or id) of the container. */
-    private $name="";
+    private $name;
     /** @var array|null */
     private $stack = [];
     private $stackId = [];
@@ -28,11 +31,11 @@ class Flags implements StateSerializable
     /** @var int[] (time of expiration, if -1 then it does not expires) */
     private $timeExpire = [];    
     /** @var bool if true then the container has changed */
-    private $changed = false;
+    private $changed;
     /** @var null|StateMachineOne The statemachine caller. It is used for callbacks */
-    private $caller = null;
+    private $caller;
     /** @var Job|null The job related with the flag. It is used for callbacks */
-    public $parentJob=null;
+    public $parentJob;
 
     /**
      * Flags constructor.
@@ -44,10 +47,6 @@ class Flags implements StateSerializable
     public function __construct($name = null, $changed = true, $stateMachine = null)
     {
         $this->name = $name;
-        $this->stack = [];
-        $this->stackId = [];
-        $this->timeExpire = [];
-        $this->level = [];
         $this->changed = $changed;
         $this->caller = $stateMachine;
     }
@@ -117,15 +116,13 @@ class Flags implements StateSerializable
      *
      * @return $this
      */
-    public function push($idUnique = 0, $msg = "", $level = 0, $timeExpire = -1, $idRel = 0)
+    public function push($idUnique = 0, $msg = '', $level = 0, $timeExpire = -1, $idRel = 0)
     {
-        if (isset($this->stack[$idUnique])) {
-            if (@$this->stackId[$idUnique] == $idRel
-                && $this->stack[$idUnique] ==$msg
-            ) {
-                // it's the same state, we do nothing (the time could change)
-                return $this;
-            } 
+        if (isset($this->stack[$idUnique]) && @$this->stackId[$idUnique] == $idRel
+            && $this->stack[$idUnique] == $msg
+        ) {
+            // it's the same state, we do nothing (the time could change)
+            return $this;
         }
         @$this->stack[$idUnique] = $msg;
         @$this->stackId[$idUnique] = $idRel;
@@ -145,9 +142,9 @@ class Flags implements StateSerializable
     public function getTime($microtime=false) {
         if ($this->caller) {
             return $this->caller->getTime($microtime);
-        } else {
-            return $microtime?microtime(true):time();
         }
+
+        return $microtime?microtime(true):time();
     }
 
     /**
@@ -165,12 +162,10 @@ class Flags implements StateSerializable
      *
      * @return $this
      */
-    public function pull($idUnique = "",$msg = "", $level = 0, $idRel = 0)
+    public function pull($idUnique = '',$msg = '', $level = 0, $idRel = 0)
     {
         if (isset($this->stack[$idUnique])) {
-            unset($this->stack[$idUnique]);
-            unset($this->stackId[$idUnique]);
-            unset($this->timeExpire[$idUnique]);
+            unset($this->stack[$idUnique], $this->stackId[$idUnique], $this->timeExpire[$idUnique]);
             if ($this->parentJob) {
                 $this->caller->addLog($this->parentJob,$this->name,'PULL', $msg,$idRel);
             }
@@ -225,9 +220,9 @@ class Flags implements StateSerializable
                 ,'id'=>$this->stackId[$idUnique]
                 ,'level'=>$this->level[$idUnique]
                 ,'time'=>$this->timeExpire[$idUnique]];
-        } else {
-            return null;
         }
+
+        return null;
     }
     /**
      * It returns the min level of the whole container.
