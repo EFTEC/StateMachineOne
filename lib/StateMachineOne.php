@@ -21,7 +21,7 @@ use Exception;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.6 2020-04-23
+ * @version  2.7 2020-08-11
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
@@ -647,11 +647,9 @@ class StateMachineOne
                     $this->addLog($job, 'ERROR', 'SAVEJOB', 'save|' . $e->getMessage());
                 }
                 return 0;
-                break;
             case self::DOCDB:
                 $this->docOne->insertOrUpdate('job'.$job->idJob, $this->jobToArray($job));
                 return $job->idJob;
-                break;
         }
         return 0;
     }
@@ -700,7 +698,6 @@ class StateMachineOne
                     return false;
                     //$this->addLog(0,"ERROR","Saving the joblog ".$e->getMessage());
                 }
-                break;
             case self::DOCDB:
                 // it stores the log as csv
                 $log=['idjob'=>$job->idJob,'idrel'=>$arr['idrel'],'type'=>$arr['type']

@@ -61,7 +61,10 @@ $smachine->fieldDefault=[
 	,'abort'=>-1
 	,'instock'=>-1
 	,'picked'=>-1];
-$smachine->setDB('mysql','localhost',"root","abc.123","statemachinedb");
+$r=$smachine->setDB('mysql','localhost',"root","abc.123","statemachinedb");
+if(!$r) {
+    die("Unable to connect to database statemachinedb<br>");
+}
 $smachine->getPdoOne()->logLevel=2;
 if (!$smachine->getPdoOne()->tableExist($smachine->tableJobs)) {
     $smachine->createDbTable(true); // you don't need to create this table every time.

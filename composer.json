@@ -1,7 +1,7 @@
 {
     "name": "eftec/statemachineone",
     "description": "A state Machine library for business processes",
-    "version": "2.6",
+    "version": "2.7",
     "type": "library",
     "keywords": [
         "php"
@@ -21,8 +21,7 @@
     "license": "LGPL-3.0",
     "require": {
         "php": ">=5.6",
-        "composer/installers": "^1.9",
-        "eftec/pdoone": "^1.33",
+        "eftec/pdoone": "^1.33 || ^2.0",
         "eftec/minilang": "^2.15",
         "eftec/documentstoreone": "^1.12",
         "ext-ctype": "*",
