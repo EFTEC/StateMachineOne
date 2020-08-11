@@ -332,6 +332,7 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
 
+* 2.7 2020-08-11 a small update of dependecies.
 * 2.6 2020-04-23
     * Slimming down the installation. Now "Docs" is not included in the installation  
     
