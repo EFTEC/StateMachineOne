@@ -35,6 +35,14 @@ $smachine->setStates([
 	DRIVE_BACK_HOME=>'Drive back home.'
 ]);
 
+$smachine->fieldUI=[
+    'milk'=>'READWRITE'
+    ,'money'=>['nothing'=>0,'little'=>20,'lot'=>2000]
+    ,'price'=>'NUMERIC'
+    ,'stock_milk'=>['many'=>10,'none'=>0]
+    ,'store_open'=>'ONOFF'
+    ,'gas'=>'READWRITE'];
+
 $smachine->fieldDefault=[
 	'milk'=>0
 	,'money'=>9999

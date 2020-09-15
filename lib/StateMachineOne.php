@@ -21,14 +21,14 @@ use Exception;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.7 2020-08-11
+ * @version  2.8 2020-09-15
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne
 {
 
-    public $VERSION = '2.6';
+    public $VERSION = '2.8';
     const NODB=0;
     const PDODB=1;
     const DOCDB=2;
@@ -79,6 +79,24 @@ class StateMachineOne
 
     /** @var array It indicates extra fields/states */
     public $fieldDefault = [''];
+    /**
+     * @var array (optional) it is used to indicates how to display the values in the web-ui<br>
+     *            <b>Example:</b>
+     *            <pre>
+     *            $this->fieldUI=['col'=>'READWRITE'
+     *                            'col2'=>'WRITE'
+     *                            'col3'=['Type1'=>20,'Type2=>40]]
+     *                          ];
+     *            </pre>
+     *            <ul>
+     *            <li>READ :Read only values</li>
+     *            <li>READWRITE : Read and write value (default)</li>
+     *            <li>NUMERIC : Numeric value (integer or decimal)</li>
+     *            <li>ONOFF : ON(1) and OFF(0)</li>
+     *            <li>(array) : Dropdownlist using an associative array</li>
+     *            </ul>
+     */
+    public $fieldUI=[];
 
     private $changed = false;
 
@@ -133,17 +151,17 @@ class StateMachineOne
 
     /**
      * It removes a single transition
-     * 
+     *
      * @param $idTransition
      */
     public function removeTransition($idTransition) {
         array_splice($this->transitions, $idTransition, 1);
     }
-    
+
     public function removeTransitions($transitionStart,$length) {
         array_splice($this->transitions, $transitionStart, $length);
-    }    
-    
+    }
+
     /**
      * It adds an event with a name
      *
@@ -252,7 +270,7 @@ class StateMachineOne
     /**
      * It sets a DocumentStoreOne object (for reusability)<br>
      * $docOne is marked as autoserialize=true (using php strategy)
-     * 
+     *
      * @param DocumentStoreOne $docOne
      */
     public function setDocOne($docOne)
@@ -261,7 +279,7 @@ class StateMachineOne
         $this->docOne->autoSerialize(true,'php');
         $this->dbActive = self::DOCDB;
     }
-    
+
 
     /**
      * @return PdoOne
@@ -288,7 +306,7 @@ class StateMachineOne
      *
      * @throws Exception
      * @example $flatcon=new DocumentStoreOne(dirname(__FILE__)."/base",'collectionFolder');
-     */    
+     */
     public function setDocDB($database, $collection = '', $strategy = 'auto',
         $server = '',  $keyEncryption = '') {
         $this->dbActive=self::DOCDB;
@@ -458,7 +476,7 @@ class StateMachineOne
                 if(is_array($v)) {
                     $arr[$k] = $text[$k];
                 } else {
-                    $arr[$k] = $row[$k];    
+                    $arr[$k] = $row[$k];
                 }
             } elseif ($v instanceof StateSerializable) {
                 $arr[$k] = clone $v;
@@ -491,7 +509,7 @@ class StateMachineOne
                 if(is_array($v)) {
                     $text[$k] =$job->fields[$k];
                 } else {
-                    $arr[$k] = $job->fields[$k];    
+                    $arr[$k] = $job->fields[$k];
                 }
             } elseif ($v instanceof StateSerializable) {
                 /** @see \eftec\statemachineone\Flags::toString */
@@ -500,7 +518,7 @@ class StateMachineOne
         }
         // non native fields
         $arr['text_job']=json_encode($text);
-        
+
         return $arr;
     }
 
@@ -571,7 +589,7 @@ class StateMachineOne
                 break;
         }
     }
-       
+
 
     /**
      * @param array $defTable
@@ -602,7 +620,7 @@ class StateMachineOne
                     break;
             }
         }
-    
+
     }
 
     /**
@@ -701,7 +719,7 @@ class StateMachineOne
             case self::DOCDB:
                 // it stores the log as csv
                 $log=['idjob'=>$job->idJob,'idrel'=>$arr['idrel'],'type'=>$arr['type']
-                    ,'description'=>$arr['description'],'date'=>date('Y-m-d H:i:s', $arr['date'])];
+                      ,'description'=>$arr['description'],'date'=>date('Y-m-d H:i:s', $arr['date'])];
                 $this->docOne->appendValue($this->tableJobLogs,$this->csvStr($log));
                 break;
         }
@@ -710,7 +728,7 @@ class StateMachineOne
 
     /**
      * It converts a simple array (not nested) into a csv.
-     * 
+     *
      * @param array $arrayValue
      *
      * @return bool|string
@@ -729,7 +747,7 @@ class StateMachineOne
         @fclose($f);
         return $csv_line;
     }
-    
+
     /**
      * It saves all jobs in the database that are marked as new or updated.
      *
@@ -791,7 +809,7 @@ class StateMachineOne
                 $idJob = call_user_func($this->getNumberTrigger, $this);
                 $job->idJob = $idJob;
         }
-        
+
         if ($active === 'active' || $dateStart <= $this->getTime()) {
             // it start.
             $this->callStartTrigger($job);
@@ -814,7 +832,7 @@ class StateMachineOne
      */
     public function getJob($idJob)
     {
-        
+
         return !isset($this->jobQueue[$idJob]) ? null : $this->jobQueue[$idJob];
     }
 
@@ -869,14 +887,14 @@ class StateMachineOne
                         $this->changed = true;
                     }
                 } elseif (is_callable($trn->function)) {
-                        // we check the transition based on function
-                        if (call_user_func($trn->function, $this, $job)) {
-                            if ($trn->result !== 'stay') {
-                                $job->stateFlow[$idTransition] = [$trn->state0, $trn->state1];
-                            }
-                            $this->changed = true;
+                    // we check the transition based on function
+                    if (call_user_func($trn->function, $this, $job)) {
+                        if ($trn->result !== 'stay') {
+                            $job->stateFlow[$idTransition] = [$trn->state0, $trn->state1];
                         }
+                        $this->changed = true;
                     }
+                }
             }
         }
     }
@@ -985,6 +1003,9 @@ class StateMachineOne
     {
         $idJob = $job->idJob;
         $arr = ['type' => $type, 'description' => $description, 'date' => $this->getTime(true), 'idrel' => $idRel];
+        if(!isset($this->jobQueue[$idJob])) {
+            return;
+        }
         $this->jobQueue[$idJob]->log[] = $arr;
         if ($this->debug) {
             $msg = "<b>Job #{$idJob}</b> " . $this->dateToString($this->getTime(true)) . " [$type]:  $description<br>";
@@ -1014,7 +1035,7 @@ class StateMachineOne
         }
         $id = $job->idJob;
         $job = null;
-        
+
         $this->jobQueue[$id] = null;
         unset($this->jobQueue[$id]);
     }
@@ -1035,7 +1056,7 @@ class StateMachineOne
                 break;
             case self::DOCDB:
                 $this->docOne->delete('job'.$job->idJob);
-                break;                
+                break;
         }
     }
 
@@ -1204,7 +1225,7 @@ cin;
      */
     public function fetchUI()
     {
-        
+
 
         // fetch values
         $lastjob=@$_REQUEST['frm_curjob'];
@@ -1216,7 +1237,7 @@ cin;
                 $job = $this->getLastJob();
             }
         }
-        
+
         $button = @$_REQUEST['frm_button'];
         $buttonEvent = @$_REQUEST['frm_button_event'];
         $new_state = @$_REQUEST['frm_new_state'];
@@ -1233,7 +1254,7 @@ cin;
                     if(is_array($value)) {
                         $fetchField[$colFields] = ($fetchField[$colFields] === '') ? null : json_decode($fetchField[$colFields]);
                     } else {
-                        $fetchField[$colFields] = ($fetchField[$colFields] === '') ? null : $fetchField[$colFields];    
+                        $fetchField[$colFields] = ($fetchField[$colFields] === '') ? null : $fetchField[$colFields];
                     }
                 }
 
@@ -1272,7 +1293,7 @@ cin;
                         $msg = 'Error deleting the job ' . $e->getMessage();
                     }
                     $this->removeJob($job);
-                  
+
                 }
 
                 break;
@@ -1327,7 +1348,7 @@ cin;
                     $job = $this->getLastJob(); // if we are unable to read the job (it was deleted), then we read the last 
                 }
             }
-        } 
+        }
         $idJob = ($job === null) ? '??' : $job->idJob;
         $jobCombobox="<select name='frm_curjob' class='form-control'>\n";
         $jobCombobox.="<option value='$idJob'>--Last Job ($idJob)--</option>\n";
@@ -1335,13 +1356,13 @@ cin;
             $jobCombobox.="<option value={$tmpJ->idJob} ".($lastjob==$tmpJ->idJob ?'selected':'' )." >{$tmpJ->idJob}</option>\n";
         }
         $jobCombobox.='</select>';
-       
+
 
         echo '<!doctype html>';
         echo "<html lang='en'>";
         echo '<head><title>StateMachineOne Version ' . $this->VERSION . '</title>';
         echo "<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>";
-        echo '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">';
+        echo '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">';
         echo '<style>html { font-size: 14px; }</style>';
         echo '</head><body>';
 
@@ -1352,7 +1373,7 @@ cin;
         echo 'StateMachineOne Version ' . $this->VERSION . ' Job #' . $idJob . ' Jobs in queue: '.
             ' ('.count($this->getJobQueue()).') </h5>';
         echo '<div class="card-body">';
-        
+
 
         if ($msg != '') {
             echo '<div class="alert alert-primary" role="alert">' . $msg . '</div>';
@@ -1473,9 +1494,8 @@ cin;
                     echo '</div>';
 
                 } else {
-                    echo "<input class='form-control' autocomplete='off' 
-                        type='text' name='frm_$colFields' 
-                        value='" . htmlentities($job->fields[$colFields]->toString()) . "' /></br>";
+                    $type=(isset($this->fieldUI[$colFields])) ? $type=$this->fieldUI[$colFields] : 'READWRITE';
+                    $this->viewUIField($type,$colFields,$job->fields[$colFields]->toString());
                 }
             } elseif(is_array($value)) {
                 echo "<input class='form-control' autocomplete='off' 
@@ -1483,9 +1503,11 @@ cin;
                 value='" . htmlentities(json_encode($job->fields[$colFields])) . "' /></br>";
 
             } else {
-                echo "<input class='form-control' autocomplete='off' 
-                type='text' name='frm_$colFields' 
-                value='" . htmlentities($job->fields[$colFields]) . "' /></br>";
+
+                $type=(isset($this->fieldUI[$colFields])) ? $type=$this->fieldUI[$colFields] : 'READWRITE';
+                $this->viewUIField($type,$colFields,$job->fields[$colFields]);
+
+
             }
             echo '</div>';
             //echo "</div>";
@@ -1506,18 +1528,74 @@ cin;
             echo '</div>';
         }
 
-        
+
         echo '</div>';
         echo '</form>';
         echo '</div></div>'; //card
         echo '</div><!-- col --></div><!-- row --><br>';
-        echo '<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>';
-        echo '<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>';
-        echo '<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>';
+        echo '<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>';
+        echo '<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>';
+        echo '<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>';
         echo '</body></html>';
     }
-    
-    
+    private function viewUIField($type,$colFields,$value) {
+        if(is_array($type)) {
+            if(count($type)===2) {
+                echo "<div class='input-group mb-3'>
+                          <div class='input-group-prepend' id='button-addon3'>";
+                foreach ($type as $k => $v) {
+                    echo "<button class='btn btn-outline-secondary' type='button' 
+                            onclick=\"document.getElementById('frm_$colFields').value= '$v'\">$k</button>";
+                    }
+                echo "</div>
+                          <input type='text' class='form-control' name='frm_$colFields' id='frm_$colFields'
+                          value='" . htmlentities($value) . "'>
+                        </div>";
+            } else {
+                echo "<div class='input-group mb-3'>
+              <div class='input-group-prepend'>
+                <button class='btn btn-outline-secondary dropdown-toggle' type='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>Dropdown</button>
+                <div class='dropdown-menu'>";
+                foreach ($type as $k => $v) {
+                    echo "<a class='dropdown-item' href='#' onclick=\"document.getElementById('frm_$colFields').value='$v'; return false;\">$k</a>";
+                }
+                echo "    </div>
+              </div>
+              <input type='text' class='form-control' name='frm_$colFields' id='frm_$colFields'>
+            </div>";
+            }
+            return;
+        }
+        switch ($type) {
+            case 'READ':
+                echo "<input class='form-control' autocomplete='off' readonly
+                                type='text' name='frm_$colFields' 
+                                value='" . htmlentities($value) . "' /></br>";
+                break;
+            case 'ONOFF':
+                echo "<div class='input-group mb-3'>
+                                  <div class='input-group-prepend' id='button-addon3'>
+                                    <button class='btn btn-outline-secondary' type='button' onclick=\"document.getElementById('frm_$colFields').value=1\">ON</button>
+                                    <button class='btn btn-outline-secondary ' type='button' onclick=\"document.getElementById('frm_$colFields').value=0\">OFF</button>
+                                  </div>
+                                  <input type='text' class='form-control' name='frm_$colFields' id='frm_$colFields'
+                                  value='" . htmlentities($value) . "'>
+                                </div>";
+                break;
+            case 'NUMERIC':
+                echo "<input class='form-control' autocomplete='off' 
+                                type='numeric' name='frm_$colFields' 
+                                value='" . htmlentities($value) . "' /></br>";
+                break;
+            default:
+                echo "<input class='form-control' autocomplete='off' 
+                                type='text' name='frm_$colFields' 
+                                value='" . htmlentities($value) . "' /></br>";
+                break;
+        }
+    }
+
+
 
     //</editor-fold>
 
