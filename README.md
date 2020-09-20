@@ -332,7 +332,9 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
 
-* 2.8 2020-09-15 added the field $fieldUI.   
+* 2.9 2020-09-20 The flags are visualized differently. Also the serialization of text_job now use serialize instead
+ of json.  Previous jobs must be flushed, you can flush with $stateMachine->createDbTable(false);   
+* 2.8 2020-09-15 added the field $fieldUI to specify visual components.   
 * 2.7 2020-08-11 a small update of dependecies.
 * 2.6 2020-04-23
     * Slimming down the installation. Now "Docs" is not included in the installation  

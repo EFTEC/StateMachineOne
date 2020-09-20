@@ -3,6 +3,10 @@
 namespace eftec\statemachineone;
 
 
+
+
+use RuntimeException;
+
 class Pending implements StateSerializable
 {
     /** @var array=[\eftec\statemachineone\Pending::factoryScheduleItem()]  */
@@ -77,6 +81,6 @@ class Pending implements StateSerializable
      */
     public function setParent($job)
     {
-        // TODO: Implement setParent() method.
+       throw new RuntimeException("Not implemented");
     }
 }

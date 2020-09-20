@@ -21,14 +21,14 @@ use Exception;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.8 2020-09-15
+ * @version  2.9 2020-09-15
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne
 {
 
-    public $VERSION = '2.8';
+    public $VERSION = '2.9';
     const NODB=0;
     const PDODB=1;
     const DOCDB=2;
@@ -456,7 +456,7 @@ class StateMachineOne
      *
      * @return Job
      */
-    private function arrayToJob($row)
+    public function arrayToJob($row)
     {
         $job = new Job();
         $job->idJob = $row['idjob'];
@@ -470,7 +470,11 @@ class StateMachineOne
             ->setDateExpired(strtotime($row['dateexpired']))
             ->setDateEnd(strtotime($row['dateend']));
         $arr = [];
-        $text=json_decode($row['text_job'],true);
+        try {
+            $text = unserialize($row['text_job']); // json_decode($row['text_job'],true);
+        } catch(Exception $ex) {
+            throw new \RuntimeException("unable to unserialize job");
+        }
         foreach ($this->fieldDefault as $k => $v) {
             if (!is_object($v)) {
                 if(is_array($v)) {
@@ -479,8 +483,11 @@ class StateMachineOne
                     $arr[$k] = $row[$k];
                 }
             } elseif ($v instanceof StateSerializable) {
-                $arr[$k] = clone $v;
-                $arr[$k]->fromString($job, $text[$k]);
+                //$arr[$k] = clone $v;
+                $arr[$k]=$text[$k];
+                $arr[$k]->setParent($job);
+                $arr[$k]->setCaller($this);
+                //$arr[$k]->fromString($job, $text[$k]);
             }
         }
         $job->setFields($arr);
@@ -488,11 +495,15 @@ class StateMachineOne
     }
 
     /**
-     * @param Job $job
+     * It converts an job into an array
+     * 
+     * @param Job  $job
+     *
+     * @param bool $serializeCustom if false, then it doesn't package text_job
      *
      * @return array
      */
-    private function jobToArray($job)
+    public function jobToArray($job,$serializeCustom=true)
     {
         $arr = [];
         $arr['idjob'] = $job->idJob;
@@ -503,21 +514,33 @@ class StateMachineOne
         $arr['dateexpired'] = date('Y-m-d H:i:s', $job->dateExpired);
         $arr['dateend'] = date('Y-m-d H:i:s', $job->dateEnd);
         // native fields (fields that aren't object or array)
-        $text=[];
-        foreach ($this->fieldDefault as $k => $v) {
-            if (!is_object($v)) {
-                if(is_array($v)) {
-                    $text[$k] =$job->fields[$k];
-                } else {
-                    $arr[$k] = $job->fields[$k];
+        if($serializeCustom) {
+            $text = [];
+            foreach ($this->fieldDefault as $k => $v) {
+                if (!is_object($v)) {
+                    if (is_array($v)) {
+                        $text[$k] = $job->fields[$k];
+                    } else {
+                        $arr[$k] = $job->fields[$k];
+                    }
+                } elseif ($v instanceof StateSerializable) {
+                    /** @see \eftec\statemachineone\Flags::__serialize */
+                    $text[$k] = $job->fields[$k]; //->toString();
                 }
-            } elseif ($v instanceof StateSerializable) {
-                /** @see \eftec\statemachineone\Flags::toString */
-                $text[$k] = $job->fields[$k]->toString();
+            }
+            // non native fields
+            $arr['text_job'] = serialize($text);
+        } else {
+            foreach ($this->fieldDefault as $k => $v) {
+                if (!is_object($v)) {
+                    if (is_array($v)) {
+                        $arr[$k] = $job->fields[$k];
+                    } 
+                } elseif ($v instanceof StateSerializable) {
+                    $arr[$k] = $job->fields[$k]; //->toString();
+                }
             }
         }
-        // non native fields
-        $arr['text_job']=json_encode($text);
 
         return $arr;
     }

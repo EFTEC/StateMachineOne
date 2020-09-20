@@ -29,13 +29,13 @@ class Flags implements StateSerializable
     /** @var array|null */
     private $level=[];
     /** @var int[] (time of expiration, if -1 then it does not expires) */
-    private $timeExpire = [];    
+    private $timeExpire = [];
     /** @var bool if true then the container has changed */
     private $changed;
     /** @var null|StateMachineOne The statemachine caller. It is used for callbacks */
     private $caller;
     /** @var Job|null The job related with the flag. It is used for callbacks */
-    public $parentJob;
+    private $parentJob;
 
     /**
      * Flags constructor.
@@ -65,18 +65,42 @@ class Flags implements StateSerializable
         }
     }
 
+    /**
+     * It retruns a serialized string with the information of the flag
+     *
+     * @return string
+     */
     public function toString()
     {
-        return serialize($this->stack) . ';;'  // 0
-            . serialize($this->stackId) . ';;'  // 1
-            . serialize($this->timeExpire) . ';;' //2
-            . serialize($this->level) . ';;'  //3
-            . ($this->changed ? 1 : 0); //4
+        return serialize($this->__serialize()); //4
     }
 
     /**
+     * It returns an associative array with the information of the flag.
+     *
+     * @return array
+     */
+    public function __serialize() {
+        return ['stack'=>$this->stack
+                ,'stackId'=>$this->stackId
+                ,'timeExpire'=>$this->timeExpire
+                ,'level'=>$this->level
+                ,'changed'=>($this->changed ? 1 : 0)];
+    }
+    public function __unserialize($arr) {
+        $this->stack = $arr['stack'];
+        $this->stackId =$arr['stackId'];
+        $this->timeExpire = $arr['timeExpire'];
+        $this->check(); // check if the flag has expired or not.
+        $this->level = $arr['level'];
+        $this->changed = (@$arr['changed'] == 1);
+    }
+
+    /**
+     * Creates a flag from a job and a string
+     *
      * @param Job    $job
-     * @param String $string
+     * @param String $string a serialized string
      *
      * @return mixed|void
      */
@@ -84,17 +108,25 @@ class Flags implements StateSerializable
     {
         try {
             $this->parentJob = $job;
-            $arr = explode(';;', $string);
-            $this->stack = @unserialize($arr[0]);
-            $this->stackId = @unserialize($arr[1]);
-            $this->timeExpire = @unserialize($arr[2]);
-            $this->check(); // check if the flag is expired or not.
-            $this->level = @unserialize($arr[3]);
-            $this->changed = (@$arr[4] == 1);
+            $arr = @unserialize($string);
+            $this->__unserialize($arr);
+
         } catch(Exception $ex) {
             $this->cleanAllFlag();
         }
+    }
 
+    /**
+     * Creates a flag from a job and a string
+     * @param Job $job
+     * @param string $string a serialized string
+     *
+     * @return Flags
+     */
+    public static function factory($job,$string) {
+        $obj=new Flags();
+        $obj->fromString($job,$string);
+        return $obj;
     }
 
 
@@ -175,7 +207,7 @@ class Flags implements StateSerializable
 
     /**
      * It returns true if the flag exists, false if not.
-     * 
+     *
      * @param int $idUnique
      *
      * @return bool
@@ -217,13 +249,13 @@ class Flags implements StateSerializable
     {
         if(isset($this->stack[$idUnique])) {
             return ['flag'=>$this->stack[$idUnique]
-                ,'id'=>$this->stackId[$idUnique]
-                ,'level'=>$this->level[$idUnique]
-                ,'time'=>$this->timeExpire[$idUnique]];
+                    ,'id'=>$this->stackId[$idUnique]
+                    ,'level'=>$this->level[$idUnique]
+                    ,'time'=>$this->timeExpire[$idUnique]];
         }
-
         return null;
     }
+
     /**
      * It returns the min level of the whole container.
      *
@@ -253,6 +285,12 @@ class Flags implements StateSerializable
     public function setParent($job)
     {
         $this->parentJob=$job;
+        
+        return $this;
+    }
+    public function setCaller($stateMachineOne)
+    {
+        $this->caller=$stateMachineOne;
         return $this;
     }
 }
