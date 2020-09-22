@@ -184,7 +184,6 @@ class StateMachineOne
      * @return int
      */
     public function wait() {
-        echo "waiting";
         return 0;
     }
 
