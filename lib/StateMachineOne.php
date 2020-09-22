@@ -105,7 +105,7 @@ class StateMachineOne
     /** @var MiniLang */
     public $miniLang;
     /** @var null|object It is the service class (optional)  */
-    private $serviceObject;
+    public $serviceObject;
 
     // callbacks
     /** @var callable it's called when we change state (by default it returns true) */
@@ -1161,23 +1161,41 @@ function $fnName(\$machine) {
     foreach(\$machine->transitions as &\$trans) {
         \$trans->caller=\$machine;
     }
-    // events
+    // states
+    {$this->cacheStates()}
+    
+    // events [optional] such as "click", "close_operation", etc.
     {$this->cacheEvents()}
     foreach(\$machine->events as &\$event) {
         \$event->setCaller(\$machine);
     }
+    
     // minilang
     {$this->cacheMiniLang()}
-    \$machine->miniLang->serviceClass=\$machine;
+    \$machine->miniLang->serviceClass=\$machine->serviceObject;
     \$machine->miniLang->setCaller(\$machine);    
 }
 cin;
+        
+    }
+    private function cacheStates() {
+        if (count($this->states) === 0) {
+            return '';
+        }
+        $states = $this->states;
+        $phpCode = '$machine->states=unserialize( \'' . $this->serializeEscape($states) . '\');';
+        return $phpCode;
     }
 
     private function serializeEscape($object)
     {
         //return serialize($object);
         return str_replace('\'', "\\'", serialize($object));
+    }
+    private function serializeSplit($txt,$tabs="\t\t") {
+        $size=strlen($txt);
+        $pack=ceil($size/80);
+        
     }
 
     private function cacheMiniLang()

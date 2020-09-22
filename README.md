@@ -3,7 +3,7 @@ It is State Machine library written on PHP aimed to business process.
 This library has only a simple external dependency, it is a minimalist (yet complete) library with only 3 classes.  
 
 Since this library is PHP native, then it could run in Laravel, Symfony and any other frameworks.  
- 
+
 
 [![Build Status](https://travis-ci.org/EFTEC/StateMachineOne.svg?branch=master)](https://travis-ci.org/EFTEC/StateMachineOne)
 [![Packagist](https://img.shields.io/packagist/v/eftec/statemachineone.svg)](https://packagist.org/packages/eftec/statemachineone)
@@ -56,6 +56,7 @@ Also, every transition could have a timeout. If the timeout is reached then the 
     * **continue**  The transition changes of state and the job resumes of the pause. It is only possible to do the transition if the job has the **active state** = pause or active
     * **stop** The transition changes of state and the job is stopped. It is only possible to do the transition if the job has the **active state** = active or pause.
     * **stay** The transition does not change of state but it does the operations defined by the set.   
+  * **Event**: (Optional). Events are special operation that changes one or more states.
 * **Active:** Every job has an **active state**. There are 4: none,stop,active,inactive,pause. It is different from the states.
 So, for example, a job could have the **state**: INPROGRESS and the **active state**: PAUSE.   
     * **none** = the job doesn't exist. It can't change of state, neither it is loaded (from the database) by default
@@ -99,14 +100,14 @@ It must include all the possible situation. The real world is not as easy as: se
 
 ![cooker](Docs/deliveryboy.jpg)
 
-  
+
 * **STATE_ABORTTRANSPORT**   Something happened, the delivery must be aborted. 
 * **STATE_HELP**    The delivery boy is ready to deliver but he is not able to find the address or maybe there is nobody, so he calls for help.  
 * **STATE_DELIVERED**  The food is delivered. Our hero returns to base (Chinese restaurant).
 
 ![cooker](Docs/food.jpg)
 
- 
+
 * **STATE_ABORTED**  The transaction is aborted, nobody at home or the address is wrong.
 
 ### Transitions (ChopSuey's exercise)
@@ -217,21 +218,35 @@ The transition is written as follow:
     * **stop** means the state will change and the job will stop (end of the job)  
     * **pause** it means the state will change and the job will pause.  A job paused can't change of state, even if it meets the condition.  
     * **continue** it means the state will change and the job will continue from pause.
-    * **stay** it means the state will not change (but it executes any other instruction).  
+    * **stay** it means the state will not change (but it executes any other instruction if any).  
 
 ## The transition language is written with the next syntax.
-> _when_ **var1** = **var2** and **var3** = **var4** or **var4** = **var5**
-> _set_ **var1** = **var2** , **var3** = **var4**
-> _timeout_ **var1**
-> _fulltimeout_ **var2**
-* there are two operations we could do **when** and/or **set**
+```php
+"_when_ var1 = var2 and var3 = var4 or var4 = var5"
+"_set_ var1 = var2 , var3 = var4"
+"_timeout_ var1"
+"_fulltimeout_ var2"
+```
+
+* there are three operations we could do **when** and/or **set** and/or **else**
 
 ### Transition when
-The transition happens when this condition meets. For example:  
-> when field=0  // it happens when the field is zero.   
-> when $var='hi' // it happens when the global variable is 'hi'   
-> when fn()=44 // the transition is triggered when the function fn() returns 44  
-> when always // its always true. It is the same than "when 1=1". The transition is always executed
+It adds a condition so where the transition must be done. For example:  
+
+```php
+$smachine->addTransition(STATE_ONE,STATE_TWO,'when field = 0');
+```
+
+In this case, the state changes from STATE_ONE to STATE_TWO when field is zero.
+
+Types of transition:
+
+```php
+"when field=0"  // it happens when the field is zero.   
+"when $var='hi'" // it happens when the global variable is 'hi'   
+"when fn()=44" // the transition is triggered when the function fn() returns 44  
+"when always" // its always true. It is the same than "when 1=1". The transition is always executed
+```
 
 It compares a constant. The binary operator for comparison are
 * = Equals
@@ -239,80 +254,197 @@ It compares a constant. The binary operator for comparison are
 * **&lt; &lt;=** Less and less than
 * **&gt; &gt;=** Great and great than
 * **contain** If a text contains other.
-> when field contain 'text'
+```php
+"when field contain 'text'"
+```
 
 Values of the field could be as the next ones:
 * **field** = it is a field of the job.
-> when field = field2  // when field (of the job) is equals to field2
+```php
+"when field = field2"  // when field (of the job) is equals to field2
+```
+
 * **_idjob** = it is the number of the current job. It is calculated every time the job is evaluated
-> set id=_idjob
-* **$var** = it is a global variable (php)
+```php
+"when id=_idjob"
+```
+
+* **$var** = it is a global variable of PHP.  Take note that 
+```php
+$v1=20;
+$smachine->addTransition(S1,S2,"when $v1=1"); // WRONG: the variable v1 is evaluated when it is defined, i.e equals to write "when 20=1"
+$smachine->addTransition(S1,S2,"when \$v1=1"); // RIGHT: the variable v1 is evaluated when the transition is checked
+$smachine->addTransition(S1,S2,'when $v1=1'); // RIGHT:(') the variable v1 is evaluated when the transition is checked
+```
+
 * **777** = it is a numeric constant
-> when field = 777 // when field is equals to 777
+```php
+"when field = 777" // when field is equals to 777
+```
+
+
 * **"AAA"**, **'aaa'** = it is a literal     
-> when field = 'hello' // when field is equals to the textr hello
+  when field = 'hello' // when field is equals to the text hello
+
 * **function()** = it is a global function. Every function must have the parameter $job.
-> when field = somefunc() // function somefunc(Job $job) {...} 
+```php
+"when field = somefunc()" // function somefunc(Job $job) {...} 
+```
+
 * **null()** it is the null value
-> when field = null() 
+```php
+"when field = null() "
+```
+
 * **true()** it is the true value (true)
-> when field = true() // when field is equals to true
+```php
+"when field = true()" // when field is equals to true
+```
+
 * **false()** it is the false value (false)
-> when field = true() // when field is equals to false
-* **on()** it is the on value (1)  
-* **off()** it is the off value (0)  
-* **undef()** it is the undefined value (-1)  
-* **flip()** indicates that the value will be flipped (1=>0 and 0=>1). Example (x=1) x = flip(), now (x=0). If the value is not zero, then it's flipped to zero.    
-> set field=flip() // it is only valid for set.
+```php
+"when field = true()"  // when field is equals to false
+```
+
+
+> * **on()** it is the on value (1)  
+>
+> * **off()** it is the off value (0)  
+>
+> * **undef()** it is the undefined value (-1)  
+>
+> * **flip()** indicates that the value will be flipped (1=>0 and 0=>1). Example (x=1) x = flip(), now (x=0). If the value is not zero, then it's flipped to zero.    
+>
+
+```php
+"set field=flip()" // it is only valid for set.
+```
+
+
+
 * **now()** it defines the current timestamp (in seconds)
 * **interval()** it returns the current interval between now and the last state.
 * **fullinterval()** it returns the current interval between now and the start of the job.
 
-For example  
-> when field2 = 2 and field3 > someFunction() and  field4=$var  
-> > Where somefunction must be defined as someFunction(Job $job) {}
+#### For example  
+
+```php
+$smachine=new StateMachineOne();
+function someFunction($job) {
+    // we could do something here we should return a value
+    return 0;
+}
+$var=222;
+$smachine->fieldDefault=[
+	'field2'=>0
+	,'field3'=>0
+	,'field4'=>0];
+$smachine->addTransition(STATE_ONE,STATE_TWO
+                         ,'when field2 = 2 and field3 > someFunction() and  field4=$var');
+
+```
 
 ### Transition set
-> set field = 0 , field2 = 3
+
+We could add an operation of change of variables when a transition is done.
+
+```php
+$smachine->addTransition(STATE_ONE,STATE_TWO,'when field = 0 set field=1');
+```
+
+In this case, when we are in STATE_ONE and field=0, then we change to state STATE_TWO and we assign the field=1
+
+Examples:
+
+```php
+"set field = 0 , field2 = 3"
+```
 
 It sets a field of the job.
 
 * The first value of the operation can't be a constant. 
-> set 0 = 20  // is invalid
-* The first value could be a function.
-> set myfunc() = 20  
-> > Where the function (global) must be defined as myfunc(Job $job,$input) {}
-* The first value could be a field or a (global) variable
-> set field=20  
-> set $variable=20  
+```php
+"set 0 = 20"  // is invalid
+```
 
-> set field = 0  
+* We also could set a function.
+```php
+"set myfunc() = 20"  
+```
+
+> Where the function (global) must be defined as myfunc(Job $job,$input) {}
+* The first value could be a field or a (global) variable
+
+```php
+"set field=20"  
+"set $variable=20"  
+
+"set field = 0"  
+```
 
 It sets the field to the value 0
 
-> set field + 1
+```php
+"set field + 1"
+```
 
 It increases the value of field by 1 (field=field+1)
 
-> set field - 1
+```php
+"set field - 1"
+```
 
 It decreases the value of field by 1 (field=field-1)
 
+### Transition else
+
+It works similar than "set" but it is executed when the transition is not done.
+
+```php
+$smachine->addTransition(STATE_ONE,STATE_TWO,'when field = 0 set field2="done" else field2="not done"');
+```
+
+In this case, it sets the field2="not done" until the transition is done. 
+
+> **Note:** This operation is called every time the expression is evaluated. So it could be evaluated many times.
+
 ### Transition timeout (in seconds)
+
+```php
+$smachine->addTransition(STATE_ONE,STATE_TWO,'when field = 0 timeout 3600');
+```
+
+The state chances from STATE_ONE to STATE_TWO when the field is zero, or has elapsed 3600 seconds.
+
+
 
 It sets the timeout between the time of current state and the current time.
 If a timeout happens, then the transition is executed.
 
-> timeout 3600   // 1 hour timeout  
-> timeout field // timeout by field, it is calculated each time.  
+```php
+"timeout 3600"   // 1 hour timeout  
+"timeout field" // timeout by field, it is calculated each time.
+```
+
+  
 
 ### Transition fulltimeout (in seconds)
+
+```php
+$smachine->addTransition(STATE_ONE,STATE_TWO,'when field = 0 fulltimeout  3600');
+```
+
+The state chances from STATE_ONE to STATE_TWO when the field is zero, or has elapsed (since the start of the job) 3600 seconds.
 
 It sets the timeout between the time of initial state and the current time.
 If a timeout happens, then the transition is executed.
 
-> fulltimeout 3600   // 1 hour timeout  
-> fulltimeout field // timeout by field, the field is evaluated each time.    
+```php
+"fulltimeout 3600"   // 1 hour timeout  
+"fulltimeout field" // timeout by field, the field is evaluated each time.    
+```
+
+
 
 ## GUI
 
@@ -326,6 +458,28 @@ This library has a build-in GUI for testing.
 [Job](Job.md) It is the model class for the job  
 [Transition](Transition.md) It is the model class for the transitions.  
 
+## Cache Configuration
+
+It is possible to cache all the configurations.
+
+### Saving configuration
+
+```php
+$stateMachine=new StateMachineOne();
+// configuration goes here.
+file_put_contents("mycode.php", "<?php\n".$stateMachine->cacheMachine("FumMachineCache"));  
+```
+
+### Loading configuration:
+
+```php
+$stateMachine=new StateMachineOne();
+include 'mycode.php';
+FumMachineCache($stateMachine);
+```
+
+
+
 ## License
 
 Dual license (LGPL 3.0 and Commercial). See LICENSE file.
@@ -333,15 +487,15 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 ## Version
 
 * 2.9 2020-09-20 The flags are visualized differently. Also the serialization of text_job now use serialize instead
- of json.  Previous jobs must be flushed, you can flush with $stateMachine->createDbTable(false);   
+ of JSON.  Previous jobs must be flushed, you can flush with $stateMachine->createDbTable(false);   
 * 2.8 2020-09-15 added the field $fieldUI to specify visual components.   
-* 2.7 2020-08-11 a small update of dependecies.
+* 2.7 2020-08-11 a small update of dependencies.
 * 2.6 2020-04-23
     * Slimming down the installation. Now "Docs" is not included in the installation  
     
 * 2.5 2020-04-13  
-    * updating dependency eftec/pdoone 1.15 to 1.32.1  
-    * updating dependency etec/minilang 2.14 to 2.15  
+    * updating dependency **eftec/pdoone** 1.15 to 1.32.1  
+    * updating dependency **etec/minilang** 2.14 to 2.15  
 * 2.4 2019-12-26
     * Service Object now works on events.
     * Updated library eftec/PdoOne to 1.15
