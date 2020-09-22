@@ -23,14 +23,14 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.9 2020-09-15
+ * @version  2.9.1 2020-09-22
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne
 {
 
-    public $VERSION = '2.9';
+    public $VERSION = '2.9.1';
     const NODB=0;
     const PDODB=1;
     const DOCDB=2;
@@ -177,6 +177,15 @@ class StateMachineOne
         $eventMiniLang->separate($conditions);
         $this->eventNames[$name] = $conditions;
         $this->events[$name] = $eventMiniLang;
+    }
+
+    /**
+     * It is used for the operation "when wait timeout 5555"
+     * @return int
+     */
+    public function wait() {
+        echo "waiting";
+        return 0;
     }
 
     /**
@@ -894,7 +903,8 @@ class StateMachineOne
         }
         foreach ($this->transitions as $idTransition => $trn) {
             // the isset it is because the job could be deleted from the queue.
-            if (isset($job) && $trn->state0 == $job->state) { // if the state of the job is equals than the transition
+            // if the state of the job is equals than the transition
+            if (isset($job) && $trn->state0 == $job->state) { 
                 if ($this->getTime() - $job->dateLastChange >= $trn->getDuration($job)
                     || $this->getTime() - $job->dateInit >= $trn->getFullDuration($job)
                 ) {
@@ -1466,12 +1476,14 @@ cin;
 
         echo "<div class='form-group row'>";
         echo "<label class='col-sm-4 col-form-label'>Elapsed full (sec)</label>";
-        echo "<div class='col-sm-5'><span>" . gmdate('H:i:s', ($this->getTime() - $job->dateInit)) . '</span></br>';
+        $delta=($this->getTime() - $job->dateInit);
+        echo "<div class='col-sm-5'><span>" . gmdate('H:i:s',$delta )." ($delta seconds)" . '</span></br>';
         echo '</div></div>';
 
         echo "<div class='form-group row'>";
         echo "<label class='col-sm-4 col-form-label'>Elapsed last state (sec)</label>";
-        echo "<div class='col-sm-5'><span>" . gmdate('H:i:s', ($this->getTime() - $job->dateLastChange))
+        $delta=($this->getTime() - $job->dateLastChange);
+        echo "<div class='col-sm-5'><span>" . gmdate('H:i:s', $delta)." ($delta seconds)"
             . '</span></br>';
         echo '</div></div>';
 

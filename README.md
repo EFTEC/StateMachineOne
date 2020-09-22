@@ -56,6 +56,7 @@ Also, every transition could have a timeout. If the timeout is reached then the 
     * **continue**  The transition changes of state and the job resumes of the pause. It is only possible to do the transition if the job has the **active state** = pause or active
     * **stop** The transition changes of state and the job is stopped. It is only possible to do the transition if the job has the **active state** = active or pause.
     * **stay** The transition does not change of state but it does the operations defined by the set.   
+    * **stayonce** It's similar than stay but it does the operation once.   
   * **Event**: (Optional). Events are special operation that changes one or more states.
 * **Active:** Every job has an **active state**. There are 4: none,stop,active,inactive,pause. It is different from the states.
 So, for example, a job could have the **state**: INPROGRESS and the **active state**: PAUSE.   
@@ -486,6 +487,7 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
 
+* 2.9.1 2020-09-22 cacheMachine() now works correctly.
 * 2.9 2020-09-20 The flags are visualized differently. Also the serialization of text_job now use serialize instead
  of JSON.  Previous jobs must be flushed, you can flush with $stateMachine->createDbTable(false);   
 * 2.8 2020-09-15 added the field $fieldUI to specify visual components.   
