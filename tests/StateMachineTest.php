@@ -82,7 +82,7 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
      */
     public function test2doc() {
         $tmpstate=new StateMachineOne(null);
-        $tmpstate->setDocDB(dirname(__FILE__). '/tmpdoc');
+        $tmpstate->setDocDB(__DIR__ . '/tmpdoc');
         //$tmpstate->getDocOne()->collection(dirname(__FILE__). '/tmpdoc',true);
         $tmpstate->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
         $tmpstate->setDefaultInitState(10);
@@ -118,7 +118,10 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
         // let's check consistency
         self::assertEquals(true,$this->statemachineone->checkConsistency(false),'consistency must be true');
         /** @see \eftec\statemachineone\Flags::toString */
-        self::assertEquals('a:1:{s:3:"msg";s:1:"2";};;a:1:{s:3:"msg";i:0;};;a:1:{s:3:"msg";i:-1;};;a:1:{s:3:"msg";i:0;};;1',$job->fields['field2']->toString(),'field2 must be a flag');
+        self::assertEquals('a:5:{s:5:"stack";a:1:{s:3:"msg";s:1:"2";}s:7:"stackId";'.
+            'a:1:{s:3:"msg";i:0;}s:10:"timeExpire";a:1:{s:3:"msg";i:-1;}s:5:'.
+            '"level";a:1:{s:3:"msg";i:0;}s:7:"changed";i:1;}'
+            ,$job->fields['field2']->toString(),'field2 must be a flag');
         /** @see \eftec\statemachineone\Flags::getFlag */
         self::assertEquals(['flag' => '2','id' => 0,'level' => 0,'time' => -1],$job->fields['field2']->getFlag('msg'),'field2.msg must returns a flag');
         self::assertEquals('STATE1',$this->statemachineone->getJobStateName($job),'current state must be STATE1');

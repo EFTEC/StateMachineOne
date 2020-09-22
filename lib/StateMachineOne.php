@@ -1,4 +1,5 @@
-<?php /** @noinspection UnusedConstructorDependenciesInspection */
+<?php /** @noinspection UnknownInspectionInspection */
+/** @noinspection UnusedConstructorDependenciesInspection */
 /** @noinspection JsonEncodingApiUsageInspection */
 /** @noinspection TypeUnsafeArraySearchInspection */
 /** @noinspection TypeUnsafeComparisonInspection */
@@ -15,6 +16,7 @@ use eftec\DocumentStoreOne\DocumentStoreOne;
 use eftec\PdoOne;
 use eftec\minilang\MiniLang;
 use Exception;
+use RuntimeException;
 
 /**
  * Class StateMachineOne
@@ -378,11 +380,15 @@ class StateMachineOne
             case self::PDODB:
                 $row = $this->getDB()->select('*')->from($this->tableJobs)->where('idactive<>0 and idjob=?', [$idJob])
                     ->first();
-                $this->jobQueue[$row['idjob']] = $this->arrayToJob($row);
+                if($row!==false) {
+                    $this->jobQueue[$row['idjob']] = $this->arrayToJob($row);
+                }
                 break;
             case self::DOCDB:
                 $row=$this->docOne->get($idJob);
-                $this->jobQueue[$row['idjob']] = $this->arrayToJob($row);
+                if($row!==false) {
+                    $this->jobQueue[$row['idjob']] = $this->arrayToJob($row);
+                }
                 break;
         }
     }
@@ -473,7 +479,7 @@ class StateMachineOne
         try {
             $text = unserialize($row['text_job']); // json_decode($row['text_job'],true);
         } catch(Exception $ex) {
-            throw new \RuntimeException("unable to unserialize job");
+            throw new RuntimeException("unable to unserialize job");
         }
         foreach ($this->fieldDefault as $k => $v) {
             if (!is_object($v)) {
