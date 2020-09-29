@@ -1,6 +1,6 @@
 # Definition of the class StateMachineOne
 
- 
+
 ## Field tableJobs (string)
 The name of the table to store the jobs
 ## Field tableJobLogs (string)
