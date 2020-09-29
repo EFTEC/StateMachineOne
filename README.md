@@ -487,6 +487,7 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
 
+* 2.9.2 2020-09-29 saveDbJob() updated the primary key field. Now, it skips to update it.
 * 2.9.1 2020-09-22 cacheMachine() now works correctly.
 * 2.9 2020-09-20 The flags are visualized differently. Also the serialization of text_job now use serialize instead
  of JSON.  Previous jobs must be flushed, you can flush with $stateMachine->createDbTable(false);   

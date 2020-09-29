@@ -23,14 +23,14 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.9.1 2020-09-22
+ * @version  2.9.2 2020-09-29
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne
 {
 
-    public $VERSION = '2.9.1';
+    public $VERSION = '2.9.2';
     const NODB=0;
     const PDODB=1;
     const DOCDB=2;
@@ -669,31 +669,30 @@ class StateMachineOne
      */
     public function saveDBJob($job)
     {
+   
         switch ($this->dbActive) {
+            
             case self::PDODB:
                 try {
                     if ($job->isNew) {
-                        $this->getDB()
-                            ->from($this->tableJobs);
                         $arr = $this->jobToArray($job);
-                        foreach ($arr as $k => $item) {
-                            $this->getDB()->set("`$k`=?", $item);
-                        }
-                        $job->idJob = $this->getDB()->insert();
+                        $job->idJob=$this->getDB()
+                            ->from($this->tableJobs)
+                            ->set($arr)
+                            ->insert();
                         $job->isNew = false;
                         //$this->jobQueue[$job->idJob]=$job;
                         return $job->idJob;
                     }
 
                     if ($job->isUpdate) {
-                        $this->getDB()
-                            ->from($this->tableJobs);
                         $arr = $this->jobToArray($job);
-                        foreach ($arr as $k => $item) {
-                            $this->getDB()->set("`$k`=?", $item);
-                        }
-                        $this->getDB()->where('idjob=?', $job->idJob);
-                        $this->getDB()->update();
+                        unset($arr['idjob']); // we are not updating the index
+                        $this->getDB()
+                            ->from($this->tableJobs)
+                            ->set($arr)
+                            ->where(['idjob'=> $job->idJob])
+                            ->update();
                         $job->isUpdate = false;
                         //$this->jobQueue[$job->idJob]=$job;
                         return $job->idJob;
@@ -903,11 +902,12 @@ class StateMachineOne
         foreach ($this->transitions as $idTransition => $trn) {
             // the isset it is because the job could be deleted from the queue.
             // if the state of the job is equals than the transition
-            if (isset($job) && $trn->state0 == $job->state) { 
+            if (isset($job) && $trn->state0 == $job->state) {
                 if ($this->getTime() - $job->dateLastChange >= $trn->getDuration($job)
                     || $this->getTime() - $job->dateInit >= $trn->getFullDuration($job)
                 ) {
                     // timeout time is up, we will do the transition anyways
+                    
                     $this->miniLang->setDict($job->fields);
                     if ($trn->doTransition($this, $job, true, $idTransition)) {
                         if ($trn->state0 != $trn->state1) {
@@ -1089,7 +1089,7 @@ class StateMachineOne
             case self::PDODB:
                 $this->getDB()
                     ->from($this->tableJobs)
-                    ->where('idjob=?', [$job->idJob])
+                    ->where(['idjob'=> $job->idJob])
                     ->delete();
                 break;
             case self::DOCDB:
@@ -1192,8 +1192,7 @@ cin;
             return '';
         }
         $states = $this->states;
-        $phpCode = '$machine->states=unserialize( \'' . $this->serializeEscape($states) . '\');';
-        return $phpCode;
+        return '$machine->states=unserialize( \'' . $this->serializeEscape($states) . '\');';
     }
 
     private function serializeEscape($object)
@@ -1201,11 +1200,10 @@ cin;
         //return serialize($object);
         return str_replace('\'', "\\'", serialize($object));
     }
-    private function serializeSplit($txt,$tabs="\t\t") {
+    /*private function serializeSplit($txt,$tabs="\t\t") {
         $size=strlen($txt);
-        $pack=ceil($size/80);
-        
-    }
+        $pack=ceil($size/80);        
+    }*/
 
     private function cacheMiniLang()
     {
@@ -1357,7 +1355,7 @@ cin;
                 $this->changeState($job, $new_state);
                 $ga=$job->getActive();
                 if ($ga === 'none' || $ga === 'stop') {
-                    $job->setActive('active'); // we change the state to active.
+                    $job->setActive($ga); // we change the state to active.
                 }
                 $this->saveDBJob($job);
                 $msg = 'State changed';
