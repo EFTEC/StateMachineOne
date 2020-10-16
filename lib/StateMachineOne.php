@@ -23,13 +23,13 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.10 2020-10-15
+ * @version  2.10.1 2020-10-15
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne {
 
-    public $VERSION = '2.10';
+    public $VERSION = '2.10.1';
     const NODB = 0;
     const PDODB = 1;
     const DOCDB = 2;
@@ -703,6 +703,8 @@ class StateMachineOne {
                                     $arr[$k] = $v;
                                 }
                             }
+                        } else {
+                            $arr=$newJob;
                         }
                         unset($arr['idjob']); // we are not updating the index
                         if(count($arr)>0) {

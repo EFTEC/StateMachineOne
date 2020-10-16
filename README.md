@@ -519,6 +519,8 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
 
+* 2.10.1 2020-10-15
+  * A small bug in saveDbJob where the $backup field is null and we are updating.
 * 2.10 2020-10-15 
    * Logs now are separated by ,, instead of |. It is because some message could uses "|"
    * Log state, we added the number of transaction.  

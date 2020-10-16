@@ -1,7 +1,7 @@
 {
     "name": "eftec/statemachineone",
     "description": "A state Machine library for business processes",
-    "version": "2.10",
+    "version": "2.10.1",
     "type": "library",
     "keywords": [
         "php"
