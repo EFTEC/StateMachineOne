@@ -84,6 +84,8 @@ class Transition
     public function evalLogic(StateMachineOne $smo, Job $job,$idTransition) {
         
 	    $r=$this->caller->miniLang->evalLogic($idTransition);
+	    //echo "<br>eval:<br>";
+        //var_dump($this->caller->miniLang->errorLog);
 	    if ($r==='wait') {
             return false;
         } // wait
@@ -93,7 +95,6 @@ class Transition
         if ($r) {
             return $this->doTransition($smo,$job,false,$idTransition);
         }
-
         $this->caller->miniLang->evalSet($idTransition,'else');
         return false;
     }
@@ -122,9 +123,9 @@ class Transition
 				    $smo->changeState($job, $this->state1);
 				    $this->caller->miniLang->evalSet($numTransaction);
 				    //if ($smo->isDbActive()) $smo->saveDBJob($job);
-				    $smo->addLog($job, 'INFO','TRANSITION', 'state|changed|'
-					    .$smo->getStates()[$this->state0]."|{$this->state0}|"
-					    .$smo->getStates()[$this->state1]."|{$this->state1}|{$this->result}");
+				    $smo->addLog($job, 'INFO','TRANSITION', 'state,,changed,,'
+					    .$smo->getStates()[$this->state0].",,{$this->state0},,"
+					    .$smo->getStates()[$this->state1].",,{$this->state1},,$numTransaction,,{$this->result}");
 				    return true;
 			    }
 			    break;
@@ -151,9 +152,9 @@ class Transition
                     $job->setActive('pause');
                     $this->caller->miniLang->evalSet($numTransaction);
                     //if ($smo->isDbActive()) $smo->saveDBJob($job);
-                    $smo->addLog($job, 'INFO','TRANSITION', 'state|changed|'
-                        . $smo->getStates()[$this->state0] . "|{$this->state0}|"
-                        . $smo->getStates()[$this->state1] . "|{$this->state1}|{$this->result}");
+                    $smo->addLog($job, 'INFO','TRANSITION', 'state,,changed,,'
+                        . $smo->getStates()[$this->state0] . ",,{$this->state0},,"
+                        . $smo->getStates()[$this->state1] . ",,{$this->state1},,$numTransaction,,{$this->result}");
                     if ($smo->pauseTriggerWhen === 'after') {
                         $smo->callPauseTrigger($job);
                     }
@@ -166,9 +167,9 @@ class Transition
 				    $job->setActive('active');
 				    $this->caller->miniLang->evalSet($numTransaction);
 				    //if ($smo->isDbActive()) $smo->saveDBJob($job);
-				    $smo->addLog($job, 'INFO','TRANSITION', 'state|continue'
-					    .$smo->getStates()[$this->state0]."|{$this->state0}|"
-					    .$smo->getStates()[$this->state1]."|{$this->state1}|{$this->result}");
+				    $smo->addLog($job, 'INFO','TRANSITION', 'state,,continue,,'
+					    .$smo->getStates()[$this->state0].",,{$this->state0},,"
+					    .$smo->getStates()[$this->state1].",,{$this->state1},,$numTransaction,,{$this->result}");
 				    return true;
 			    }
 			    break;
@@ -179,9 +180,9 @@ class Transition
 				    
 				    $this->caller->miniLang->evalSet($numTransaction);
 				    //if ($smo->isDbActive()) $smo->saveDBJob($job);
-				    $smo->addLog($job, 'INFO','TRANSITION', 'state|stop'
-					    .$smo->getStates()[$this->state0]."|{$this->state0}|"
-					    .$smo->getStates()[$this->state1]."|{$this->state1}|{$this->result}");
+				    $smo->addLog($job, 'INFO','TRANSITION', 'state,,stop,,'
+					    .$smo->getStates()[$this->state0].",,{$this->state0},,"
+					    .$smo->getStates()[$this->state1].",,{$this->state1},,$numTransaction,,{$this->result}");
 				    $smo->callStopTrigger($job);
 				    if ($smo->isAutoGarbage()) {
 				    	$smo->garbageCollector(); // job done, deleting from the queue.

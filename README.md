@@ -4,7 +4,6 @@ This library has only a simple external dependency, it is a minimalist (yet comp
 
 Since this library is PHP native, then it could run in Laravel, Symfony and any other frameworks.  
 
-
 [![Build Status](https://travis-ci.org/EFTEC/StateMachineOne.svg?branch=master)](https://travis-ci.org/EFTEC/StateMachineOne)
 [![Packagist](https://img.shields.io/packagist/v/eftec/statemachineone.svg)](https://packagist.org/packages/eftec/statemachineone)
 [![Total Downloads](https://poser.pugx.org/eftec/statemachineone/downloads)](https://packagist.org/packages/eftec/statemachineone)
@@ -479,6 +478,39 @@ include 'mycode.php';
 FumMachineCache($stateMachine);
 ```
 
+## Log Format
+
+Commonly, the log format could be of the type info or error.   Flag could show a different type.
+
+### [info]
+
+
+> state,,changed,,Parked,,1,,Idling,,2,,0,,change
+
+* state = verb of the operation.
+
+* changed = the operation executed. It could be changed,stop,continue
+
+* Parked = the first state (before the change)
+
+* 1 = the number of the first state (before the change)
+
+* Idling = the state it changed.
+
+* 2 = the number of the state it changed.
+
+* 0 = the transaction that triggered the change.
+
+* change = the description of the change.
+
+### [error]
+
+
+> state,,transition,,text,,1,,message  // when a check of the job fails
+
+> savejob,,message // when to save a job fails.
+
+> changestate,,idjob,,idstate,newstate // when the change of a state fails
 
 
 ## License
@@ -487,6 +519,11 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
 
+* 2.10 2020-10-15 
+   * Logs now are separated by ,, instead of |. It is because some message could uses "|"
+   * Log state, we added the number of transaction.  
+* saveDbJob(): Update in the database: The library doesn't update fields that aren't changed. For this,  it creates a backup variable every time a job is loaded and it compares the backup with the job to save.
+   
 * 2.9.2 2020-09-29 saveDbJob() updated the primary key field. Now, it skips to update it.
 * 2.9.1 2020-09-22 cacheMachine() now works correctly.
 * 2.9 2020-09-20 The flags are visualized differently. Also the serialization of text_job now use serialize instead

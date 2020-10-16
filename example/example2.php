@@ -28,7 +28,8 @@ $smachine->fieldDefault=[
 	,'instock'=>null
 	,'picked'=>null];
 $smachine->setdb('mysql','localhost',"root","abc.123","statemachinedb");
-$smachine->createDbTable(true); // you don't need to create this table every time.
+$smachine->getDB()->logLevel=3;
+$smachine->createDbTable(false); // you don't need to create this table every time.
 
 $smachine->setStopTrigger(function($smo,$job) {echo "Trigger: job is stopping<br>"; return true;});
 $smachine->setPauseTrigger(function($smo,$job) {echo "Trigger: job is paused<br>"; return true;},'after');
@@ -52,6 +53,8 @@ $dummy='hello';
 function dummy($job) {
 	return 'hello';
 }
+
+
 
 $smachine->addTransition(STATE_PICK,STATE_CANCEL,'when instock = 0',"stop");
 $smachine->addTransition(STATE_PICK,STATE_TRANSPORT,'when picked = 1',"change");
@@ -77,10 +80,12 @@ $object=['customerpresent'=>1
 	,'fieldnotstored'=>'hi' // this field is not store or it's part of the state machine
 	,'instock'=>1
 	,'picked'=>1];
-
+echo "<br>Creating job<br>";
 $job=$smachine->createJob($object);
 
 $smachine->checkAllJobs();
+echo "<br>sleeping 2 seconds<br>";
+
 sleep(2);
 $smachine->checkAllJobs();
 

@@ -54,7 +54,7 @@ function dummy($job) {
 	return 'hello calling dummy';
 }
 
-$smachine->addTransition(STATE_PICK,STATE_CANCEL,'when instock = 0',"stop");
+$smachine->addTransition(STATE_PICK,STATE_CANCEL,'when instock2 = 0',"stop");
 $smachine->addTransition(STATE_PICK,STATE_TRANSPORT,'when picked = 1 set a1=dummy(_idjob)',"change");
 $smachine->addTransition(STATE_TRANSPORT,STATE_TODELIVER,'when addressnotfound = 0',"change");
 $smachine->addTransition(STATE_TRANSPORT,STATE_HELP,'when addressnotfound = 1',"change");

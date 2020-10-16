@@ -11,7 +11,7 @@ use eftec\statemachineone\Transition;
 // we use autoload's composer, so we call it here.
 include "../vendor/autoload.php";
 
-$smachine=new StateMachineOne();
+$smachine=new StateMachineOne(null);
 $smachine->setDebug(true);
 
 
