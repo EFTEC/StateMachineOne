@@ -81,7 +81,7 @@ class Transition
      *
      * @return bool
      */
-    public function evalLogic(StateMachineOne $smo, Job $job,$idTransition) {
+    public function evalLogic($smo, $job,$idTransition) {
         
 	    $r=$this->caller->miniLang->evalLogic($idTransition);
 	    //echo "<br>eval:<br>";
@@ -89,7 +89,7 @@ class Transition
 	    if ($r==='wait') {
             return false;
         } // wait
-        if ($this->result==='stayonce' && isset($job->transitions[$idTransition])) {
+        if ($this->result==='stayonce' && isset( $job->transitions[$idTransition])) {
             return false; // transition was already done.
         }
         if ($r) {
@@ -115,7 +115,7 @@ class Transition
             return false;
         }
 	    $this->currentJob=$job;
-        $job->transitions[$numTransaction]=1;
+        $job->transitions[$numTransaction]=true;
 	    switch ($this->result) {
 		    case 'change':
 		    	if ($forced || $ga === 'active') { // we only changed if the job is active.

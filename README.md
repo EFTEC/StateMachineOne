@@ -444,6 +444,85 @@ If a timeout happens, then the transition is executed.
 "fulltimeout field" // timeout by field, the field is evaluated each time.    
 ```
 
+## JOB
+
+### What is a job?
+
+Let's say we have a blueprint to build the house. The **job** is the action to build the house and the blueprint is the **transitions**.   So, the job is an operative part of our workflow.
+
+A **job** keeps values, including the current **state** and it has a lifecycle, while the workflow (the transitions) doesn't keep any single value. It is possible to create a short life job that works in a single web thread. However, if we need to keep the values, then we could use a database or a file system (flat file).  
+
+### Creating a job
+
+There are several ways to create a job.   One of them is using the GUI and other is via code.  
+
+Creating a job via code
+
+```php
+// $smachine is our state machine with transitions, events and such.
+$job=$smachine->createJob(['value1'=>'hi','value2'=>'world']); // we create a job with the values value1 and value2
+// or we could create the job the with the default values
+$job=$smachine->createJob();
+
+$smachine->checkJob($job); // then we executed the job.
+
+var_dump($job->state); // the id of the current state. 
+var_dump($job->fields); // And we could see the result of the job
+```
+
+### Running the state machine in a job
+
+```php
+$smachine->checkJob($job); // then we executed the job.
+$smachine->checkAllJob(); // We execute all jobs stored in our state machine.
+
+```
+
+### Getting a job
+
+```php
+$smachine->getLastJob(); // we load the last job (if we already has a job into a memory);
+$smachine->getJob($idJob); // we get a job from the queue.
+$smachine->getJob($idJob); // we get a job from the queue.
+$smachine->getJobQueue(); // we get all the jobs from the queue
+$smachine->loadDbJob($idJob); // we read a job with the id $idJob and we store into the queue
+$smachine->loadDbAllJob(); // We load all jobs (including inactive jobs) from the database and we store into the queue
+$smachine->loadDBActiveJobs(); // We load all active jobs from the database and we store into the queue.
+```
+
+
+
+### Database and jobs.
+
+```php
+$smachine->loadDbJob($idJob); // we read a job with the id $idJob
+$smachine->loadDbAllJob(); // We load all jobs (including inactive jobs) from the database.
+$smachine->loadDBActiveJobs(); // We load all active jobs from the database.
+$smachine->saveDBAllJob(); // we save all the jobs in memory.
+$smachine->saveDBJob($job); // we save a specific job.
+$smachine->saveDBJobLog($job,$texto); // we save a log of a job.
+$smachine->deleteJobDB($job); // we delete a specific job.
+
+```
+
+
+
+### Fields used in Job
+
+* **$idJob** int number or position of the job on the queue
+* **$idParentJob** int|null the number of the parent job
+* **$dateInit** int initial date (timestamp)
+* **$dateLastChange** int date of the last change (timestamp)
+* **$dateEnd** int date of end (timestamp)
+* **$dateExpired**  int date of expiration (timestamp)
+* **$state** string|int the id of the current state
+* **$fields** array fields or values per job. It must be an associative array
+* **$stateFlow**  array indicates the flow of states
+* **$transitions** bool[] it is used to determine if transition was already executed
+* **$isNew** bool If the job is new or not. It is used to store into the database (insert)
+* **$isUpdate** bool If the job is updated. It is used to store into the database (update)
+* **$log**  string[]
+
 
 
 ## GUI
@@ -519,13 +598,15 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
 
+* 2.11 22020-10-16
+  * Jobs has an extra field called idParentJob.   *Job tables must be rebuild* or added the column: idparentjob int.     
 * 2.10.1 2020-10-15
   * A small bug in saveDbJob where the $backup field is null and we are updating.
 * 2.10 2020-10-15 
    * Logs now are separated by ,, instead of |. It is because some message could uses "|"
    * Log state, we added the number of transaction.  
 * saveDbJob(): Update in the database: The library doesn't update fields that aren't changed. For this,  it creates a backup variable every time a job is loaded and it compares the backup with the job to save.
-   
+  
 * 2.9.2 2020-09-29 saveDbJob() updated the primary key field. Now, it skips to update it.
 * 2.9.1 2020-09-22 cacheMachine() now works correctly.
 * 2.9 2020-09-20 The flags are visualized differently. Also the serialization of text_job now use serialize instead

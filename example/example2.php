@@ -53,7 +53,7 @@ $dummy='hello';
 function dummy($job) {
 	return 'hello';
 }
-
+var_dump($smachine->getDB()->lastError());
 
 
 $smachine->addTransition(STATE_PICK,STATE_CANCEL,'when instock = 0',"stop");
@@ -80,14 +80,19 @@ $object=['customerpresent'=>1
 	,'fieldnotstored'=>'hi' // this field is not store or it's part of the state machine
 	,'instock'=>1
 	,'picked'=>1];
-echo "<br>Creating job<br>";
+echo "<br><br><b>Creating job</b><br>";
+echo "set1:";
+var_dump($smachine->getDB()->set);
 $job=$smachine->createJob($object);
-
-$smachine->checkAllJobs();
-echo "<br>sleeping 2 seconds<br>";
-
+echo "set2:";
+var_dump($smachine->getDB()->lastError());
+var_dump($smachine->getDB()->set);
+echo "<br><br><b>Checking job</b><br>";
+$smachine->checkJob($job);
+echo "<br><br><b>sleeping 2 seconds</b><br>";
+die(1);
 sleep(2);
-$smachine->checkAllJobs();
+$smachine->getJobQueue();
 
 echo "<hr>";
 $object=['customerpresent'=>-1 // undefined

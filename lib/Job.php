@@ -15,6 +15,8 @@ namespace eftec\statemachineone;
 class Job {
 	/** @var int number or position of the job on the queue */
     public $idJob=0;
+    /** @var int|null the number of the parent job  */
+    public $idParentJob=null;
     /** @var int initial date (timestamp) */
     public $dateInit;
 	/** @var int date of the last change (timestamp)*/
@@ -23,14 +25,14 @@ class Job {
     public $dateEnd;
     /** @var int date of expiration (timestamp) */
     public $dateExpired;
-    /** @var mixed  */
+    /** @var string|int the id of the current state  */
     public $state;
-    /** @var array fields or values per job */
+    /** @var array fields or values per job. It must be an associative array */
     public $fields;
     /** @var array indicates the flow of states */
     public $stateFlow=[];
 
-    /** @var array */
+    /** @var bool[] it is used to determine if transition was already executed */
     public $transitions=[];
     /**
      * none= the job doesn't exist or it's deleted.
@@ -45,8 +47,7 @@ class Job {
     public $isNew=false;
     /** @var bool If the job is updated. It is used to store into the database (update) */
     public $isUpdate=false;
-    
-    /** @var array */
+    /** @var string[]  */
     public $log;
     
 	public function wait($param=null) {
@@ -106,7 +107,7 @@ class Job {
     }
 
     /**
-     * @param mixed $state
+     * @param string|int $state The id of the state.
      * @return Job
      */
     public function setState($state)
@@ -115,12 +116,19 @@ class Job {
         return $this;
     }
 
+    /**
+     * It returns the current id of the state.
+     * 
+     * @return string|int
+     */
     public function getCurrentState()
     {
         return $this->state;
     }
     /**
-     * @param array $fields
+     * It sets the fields of the job.
+     * 
+     * @param array $fields An associative array.
      * @return Job
      */
     public function setFields($fields)

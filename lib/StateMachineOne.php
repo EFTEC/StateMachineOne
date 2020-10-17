@@ -23,13 +23,13 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.10.1 2020-10-15
+ * @version  2.11 2020-10-15
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne {
 
-    public $VERSION = '2.10.1';
+    public $VERSION = '2.11';
     const NODB = 0;
     const PDODB = 1;
     const DOCDB = 2;
@@ -78,7 +78,8 @@ class StateMachineOne {
     /** @var string The name of the table to store the logs per job. If it's empty then it is not used */
     public $tableJobLogs = '';
     /** @var array The list of database columns used by the job */
-    public $columnJobs = ['idjob', 'idactive', 'idstate', 'dateinit', 'datelastchange', 'dateexpired', 'dateend'];
+    public $columnJobs = ['idjob','idparentjob', 'idactive', 'idstate', 'dateinit', 'datelastchange'
+        , 'dateexpired', 'dateend'];
     /** @var array The List of database columns used by the log of the job */
     public $columnJobLogs = ['idjoblog', 'idjob', 'idrel', 'type', 'description', 'date'];
 
@@ -483,6 +484,7 @@ class StateMachineOne {
     public function arrayToJob($row) {
         $job = new Job();
         $job->idJob = $row['idjob'];
+        $job->idParentJob = $row['idparentjob'];
 
         $job->setIsUpdate(false)
             ->setIsNew(false)
@@ -529,6 +531,7 @@ class StateMachineOne {
     public function jobToArray($job, $serializeCustom = true) {
         $arr = [];
         $arr['idjob'] = $job->idJob;
+        $arr['idparentjob'] = $job->idParentJob;
         $arr['idactive'] = $job->getActiveNumber();
         $arr['idstate'] = $job->state;
         $arr['dateinit'] = date('Y-m-d H:i:s', $job->dateInit);
@@ -590,18 +593,13 @@ class StateMachineOne {
 
                     if ($exist === false || $drop) {
                         $tabledef = [
-                            'idjob' => 'INT NOT NULL AUTO_INCREMENT'
-                            ,
-                            'idactive' => 'int'
-                            ,
-                            'idstate' => 'int'
-                            ,
-                            'dateinit' => 'timestamp DEFAULT \'1970-01-01 00:00:01\''
-                            ,
-                            'datelastchange' => 'timestamp DEFAULT \'1970-01-01 00:00:01\''
-                            ,
-                            'dateexpired' => 'timestamp DEFAULT \'1970-01-01 00:00:01\''
-                            ,
+                            'idjob' => 'INT NOT NULL AUTO_INCREMENT',
+                            'idparentjob' => 'INT',
+                            'idactive' => 'int',
+                            'idstate' => 'int',
+                            'dateinit' => 'timestamp DEFAULT \'1970-01-01 00:00:01\'',
+                            'datelastchange' => 'timestamp DEFAULT \'1970-01-01 00:00:01\'',
+                            'dateexpired' => 'timestamp DEFAULT \'1970-01-01 00:00:01\'',
                             'dateend' => 'timestamp DEFAULT \'1970-01-01 00:00:01\''
                         ];
                         $this->createColsTable($tabledef, $this->fieldDefault);
@@ -614,15 +612,15 @@ class StateMachineOne {
                 ADD INDEX `' . $this->tableJobs . '_key3` (`dateinit` ASC)';
                         $this->getDB()->runRawQuery($sql);
                         if ($this->tableJobLogs) {
-                            $sql = 'CREATE TABLE IF NOT EXISTS `' . $this->tableJobLogs . "` (
-                  `idjoblog` INT NOT NULL AUTO_INCREMENT,
-                  `idjob` int,
-                  `idrel` varchar(200),
-                  `type` varchar(50),
-                  `description` varchar(2000),
-                  `date` timestamp DEFAULT '1970-01-01 00:00:01',
-                  PRIMARY KEY (`idjoblog`));";
-                            $this->getDB()->runRawQuery($sql);
+                            $tabledef=[
+                                'idjoblog'=>'INT NOT NULL AUTO_INCREMENT',
+                                'idjob'=>'int',
+                                'idrel'=>'varchar(200)',
+                                'type'=>'varchar(50)',
+                                'description'=>'varchar(2000)',
+                                'date'=>'timestamp DEFAULT \'1970-01-01 00:00:01\''
+                            ];
+                            $this->getDB()->createTable($this->tableJobLogs, $tabledef, 'idjoblog');
                         }
 
                     }
@@ -636,6 +634,8 @@ class StateMachineOne {
     }
 
     /**
+     * it creates the columns of the table based in the type of fields.
+     * 
      * @param array $defTable
      * @param array $fields
      *
@@ -683,6 +683,7 @@ class StateMachineOne {
                 try {
                     if ($job->isNew) {
                         $arr=$this->jobToArray($job);
+
                         if(count($arr)>0) {
                             $job->idJob = $this->getDB()
                                 ->from($this->tableJobs)
@@ -720,6 +721,7 @@ class StateMachineOne {
                     }
                     
                 } catch (Exception $e) {
+                    
                     $this->addLog($job, 'ERROR', 'SAVEJOB', 'save,,' . $e->getMessage());
                 }
                 return 0;
@@ -827,23 +829,25 @@ class StateMachineOne {
     /**
      * It creates a new job.
      *
-     * @param array    $fields
-     * @param string   $active      =['none','inactive','active','pause','stop'][$i]
-     * @param mixed    $initState
-     * @param int|null $dateStart
-     * @param int|null $durationSec Duration (maximum) in seconds of the event
-     * @param int|null $expireSec
+     * @param array|null $fields The fields of the new job. If null, then it uses the default values defined by
+     *                           $this->fieldDefault
+     * @param string     $active      =['none','inactive','active','pause','stop'][$i]
+     * @param mixed      $initState
+     * @param int|null   $dateStart
+     * @param int|null   $durationSec Duration (maximum) in seconds of the event
+     * @param int|null   $expireSec
      *
      * @return Job
      */
     public function createJob(
-        $fields,
+        $fields = null,
         $active = 'active',
         $initState = null,
         $dateStart = null,
         $durationSec = null,
         $expireSec = null
     ) {
+        $fields = $fields === null ? $this->fieldDefault : $fields;
         $initState = $initState === null ? $this->defaultInitState : $initState;
         $dateStart = $dateStart === null ? $this->getTime() : $dateStart;
         $dateEnd = $durationSec === null ? 2047483640 : $dateStart + $durationSec;
