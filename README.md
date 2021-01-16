@@ -599,7 +599,10 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
 
-* 2.11 22020-10-16
+* 2.12 2021-01-16
+  * Some cleanups of the code.  
+  * Updated dependencies.
+* 2.11 2020-10-16
   * Jobs has an extra field called idParentJob.   *Job tables must be rebuild* or added the column: idparentjob int.     
 * 2.10.1 2020-10-15
   * A small bug in saveDbJob where the $backup field is null and we are updating.

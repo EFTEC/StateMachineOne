@@ -1,4 +1,5 @@
-<?php /** @noinspection PhpUnused */
+<?php /** @noinspection UnknownInspectionInspection */
+/** @noinspection PhpUnused */
 
 /** @noinspection PhpUnusedParameterInspection */
 
@@ -16,7 +17,7 @@ class Job {
 	/** @var int number or position of the job on the queue */
     public $idJob=0;
     /** @var int|null the number of the parent job  */
-    public $idParentJob=null;
+    public $idParentJob;
     /** @var int initial date (timestamp) */
     public $dateInit;
 	/** @var int date of the last change (timestamp)*/

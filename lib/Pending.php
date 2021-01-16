@@ -1,8 +1,8 @@
-<?php /** @noinspection PhpUnused */
+<?php /** @noinspection UnknownInspectionInspection */
+
+/** @noinspection PhpUnused */
 
 namespace eftec\statemachineone;
-
-
 
 
 use RuntimeException;

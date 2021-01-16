@@ -23,13 +23,13 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.11 2020-10-15
+ * @version  2.12 2021-01-16
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne {
 
-    public $VERSION = '2.11';
+    public $VERSION = '2.12';
     const NODB = 0;
     const PDODB = 1;
     const DOCDB = 2;
@@ -214,7 +214,7 @@ class StateMachineOne {
             return;
         }
         $this->events[$name]->setDict($jobExec->fields);
-        $this->events[$name]->evalSet(0);
+        $this->events[$name]->evalSet();
         $this->checkJob($jobExec);
         if ($this->dbActive != self::NODB) {
             $this->saveDBJob($jobExec,$jobBackup);
@@ -288,7 +288,7 @@ class StateMachineOne {
      */
     public function setDocOne($docOne) {
         $this->docOne = $docOne;
-        $this->docOne->autoSerialize(true, 'php');
+        $this->docOne->autoSerialize(true);
         $this->dbActive = self::DOCDB;
     }
 
@@ -327,7 +327,7 @@ class StateMachineOne {
     ) {
         $this->dbActive = self::DOCDB;
         $this->docOne = new DocumentStoreOne($database, $collection, $strategy, $server, true, $keyEncryption);
-        $this->docOne->autoSerialize(true, 'php');
+        $this->docOne->autoSerialize(true);
     }
 
     /**
@@ -864,7 +864,7 @@ class StateMachineOne {
             ->setIsUpdate(false);
         switch ($this->dbActive) {
             case self::PDODB:
-                $this->saveDBJob($job,null);
+                $this->saveDBJob($job);
                 break;
             case self::DOCDB:
                 $idJob = $job->idJob = $this->docOne->getNextSequence('seq_' . $this->tableJobs);
@@ -880,7 +880,7 @@ class StateMachineOne {
             $this->callStartTrigger($job);
             $job->setActive($active);
             if ($this->dbActive !== self::NODB) {
-                $this->saveDBJob($job,null);
+                $this->saveDBJob($job);
             }
         }
 
@@ -1302,7 +1302,8 @@ cin;
     public function fetchUI() {
 
         // fetch values
-        $lastjob = @$_REQUEST['frm_curjob'];
+        /** @noinspection ElvisOperatorCanBeUsedInspection */
+        $lastjob = isset($_REQUEST['frm_curjob']) ? $_REQUEST['frm_curjob'] : null;
         if (!$lastjob) {
             $job = $this->getLastJob();
             $jobBackup = $job===null ? null:  clone $job;
@@ -1315,9 +1316,9 @@ cin;
             $jobBackup = $job===null ? null:  clone $job;
         }
 
-        $button = @$_REQUEST['frm_button'];
-        $buttonEvent = @$_REQUEST['frm_button_event'];
-        $new_state = @$_REQUEST['frm_new_state'];
+        $button = isset($_REQUEST['frm_button']) ? $_REQUEST['frm_button'] : null;
+        $buttonEvent =isset($_REQUEST['frm_button_event']) ? $_REQUEST['frm_button_event'] : null;
+        $new_state = isset( $_REQUEST['frm_new_state']) ? $_REQUEST['frm_new_state'] : null;
         $msg = '';
         $fetchField = $this->fieldDefault;
         foreach ($this->fieldDefault as $colFields => $value) {
@@ -1325,9 +1326,13 @@ cin;
             if (isset($_REQUEST[$fieldName])) {
                 if ($value instanceof StateSerializable) {
                     $fetchField[$colFields] = clone $value;
-                    $fetchField[$colFields]->fromString($job, @$_REQUEST['frm_' . $colFields]);
+                    $fetchField[$colFields]->fromString(
+                        $job
+                        , isset($_REQUEST['frm_' . $colFields]) ? $_REQUEST['frm_' . $colFields] : null);
                 } else {
-                    $fetchField[$colFields] = @$_REQUEST['frm_' . $colFields];
+                    $fetchField[$colFields] = isset($_REQUEST['frm_' . $colFields])
+                        ? $_REQUEST['frm_' . $colFields]
+                        : null;
                     if (is_array($value)) {
                         $fetchField[$colFields] = ($fetchField[$colFields] === '') ? null
                             : json_decode($fetchField[$colFields]);
@@ -1415,7 +1420,7 @@ cin;
     public function viewUI($job = null, $msg = '') {
         $lastjob = '';
         if (($job === null)) {
-            $lastjob = @$_REQUEST['frm_curjob'];
+            $lastjob = isset($_REQUEST['frm_curjob']) ? $_REQUEST['frm_curjob'] : null;
             if (!$lastjob) {
                 $job = $this->getLastJob();
             } else {
