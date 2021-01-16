@@ -4,7 +4,7 @@ This library has only a simple external dependency, it is a minimalist (yet comp
 
 Since this library is PHP native, then it could run in Laravel, Symfony and any other frameworks.  
 
-[![Build Status](https://travis-ci.org/EFTEC/StateMachineOne.svg?branch=master)](https://travis-ci.org/EFTEC/StateMachineOne)
+
 [![Packagist](https://img.shields.io/packagist/v/eftec/statemachineone.svg)](https://packagist.org/packages/eftec/statemachineone)
 [![Total Downloads](https://poser.pugx.org/eftec/statemachineone/downloads)](https://packagist.org/packages/eftec/statemachineone)
 [![Maintenance](https://img.shields.io/maintenance/yes/2021.svg)]()
