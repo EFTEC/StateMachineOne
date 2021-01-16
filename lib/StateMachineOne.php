@@ -1302,7 +1302,6 @@ cin;
     public function fetchUI() {
 
         // fetch values
-        /** @noinspection ElvisOperatorCanBeUsedInspection */
         $lastjob = isset($_REQUEST['frm_curjob']) ? $_REQUEST['frm_curjob'] : null;
         if (!$lastjob) {
             $job = $this->getLastJob();
