@@ -4,12 +4,14 @@ namespace eftec\tests;
 
 
 
+use eftec\PdoOne;
 use eftec\statemachineone\Flags;
 use eftec\statemachineone\StateMachineOne;
+use Exception;
 
 class StateMachineTest extends AbstractStateMachineOneTestCase {
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function test1() {
 	    $this->statemachineone->setStates([1,2,3]);
@@ -56,8 +58,16 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
 	    self::assertEquals('hello',$job->fields['field1'],'field1 must be "hello"');
 	    self::assertEquals('world',$job->fields['field2'],'field2 must be "world"');  
     }
+    public function testPdo() {
+        $smo=new StateMachineOne(null);
+        $pdo=new PdoOne('test','','','');
+        $pdo->open();
+        $pdo->logLevel=3;
+        $smo->setPdoOne($pdo);
+        //$smo->loadDBAllJob();
+    }
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function test2() {
         $this->statemachineone->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
@@ -78,7 +88,7 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function test2doc() {
         $tmpstate=new StateMachineOne(null);
@@ -104,7 +114,7 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
 
     }
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function test3() {
         $this->statemachineone->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
@@ -130,7 +140,7 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function testSC() {
         $this->statemachineone->setStates([10=>"STATE1"]);
@@ -148,7 +158,7 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
         self::assertEquals('pong hello',$job->fields['field2'],'field2 must returns pong hello');
     }
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function testMultipleJobs() {
         $this->statemachineone->setStates([10=>"STATE_START",20=>'STATE_END']);

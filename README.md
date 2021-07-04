@@ -15,23 +15,39 @@ Since this library is PHP native, then it could run in Laravel, Symfony and any 
 [![CocoaPods](https://img.shields.io/badge/docs-70%25-yellow.svg)]()
 
 - [StateMachineOne](#statemachineone)
-  * [What is a state machine?.](#what-is-a-state-machine-)
-  * [Notes](#notes)
-  * [Example, ChopSuey Chinese Delivery Food.](#example--chopsuey-chinese-delivery-food)
-    + [Fields (ChopSuey's exercise)](#fields--chopsuey-s-exercise-)
-    + [States (ChopSuey's exercise)](#states--chopsuey-s-exercise-)
-    + [Transitions (ChopSuey's exercise)](#transitions--chopsuey-s-exercise-)
-    + [Final Code (ChopSuey's example)](#final-code--chopsuey-s-example-)
-  * [Other examples](#other-examples)
-  * [Transition language](#transition-language)
-  * [The transition language is written with the next syntax.](#the-transition-language-is-written-with-the-next-syntax)
-    + [Transition when](#transition-when)
-    + [Transition set](#transition-set)
-    + [Transition timeout (in seconds)](#transition-timeout--in-seconds-)
-    + [Transition fulltimeout (in seconds)](#transition-fulltimeout--in-seconds-)
-  * [Classes](#classes)
-  * [Version](#version)
-  * [What is missing](#what-is-missing)
+  - [What is a state machine?.](#what-is-a-state-machine)
+  - [Notes](#notes)
+  - [Example, ChopSuey Chinese Delivery Food.](#example-chopsuey-chinese-delivery-food)
+    - [Fields (ChopSuey's exercise)](#fields-chopsueys-exercise)
+    - [States (ChopSuey's exercise)](#states-chopsueys-exercise)
+    - [Transitions (ChopSuey's exercise)](#transitions-chopsueys-exercise)
+    - [Final Code (ChopSuey's example)](#final-code-chopsueys-example)
+  - [Other examples](#other-examples)
+  - [Transition language](#transition-language)
+  - [The transition language is written with the next syntax.](#the-transition-language-is-written-with-the-next-syntax)
+    - [Transition when](#transition-when)
+    - [Transition set](#transition-set)
+    - [Transition else](#transition-else)
+    - [Transition timeout (in seconds)](#transition-timeout-in-seconds)
+    - [Transition fulltimeout (in seconds)](#transition-fulltimeout-in-seconds)
+  - [JOB](#job)
+    - [What is a job?](#what-is-a-job)
+    - [Creating a job](#creating-a-job)
+    - [Running the state machine in a job](#running-the-state-machine-in-a-job)
+    - [Getting a job](#getting-a-job)
+    - [Database and jobs.](#database-and-jobs)
+    - [Fields used in Job](#fields-used-in-job)
+  - [GUI](#gui)
+  - [Classes](#classes)
+  - [Cache Configuration](#cache-configuration)
+    - [Saving configuration](#saving-configuration)
+    - [Loading configuration:](#loading-configuration)
+  - [Log Format](#log-format)
+    - [[info]](#info)
+    - [[error]](#error)
+  - [License](#license)
+  - [Version](#version)
+  - [What is missing](#what-is-missing)
 
 
 ## What is a state machine?.
@@ -211,7 +227,7 @@ $smachine->addTransition(STATE_PICK,STATE_CANCEL
 ```
 
 The transition is written as follow:
-* initial state
+* initial state (or initial states)
 * end state
 * Transition language
 * outcome, it could be **change** (default value),**stop**,**pause**, **continue** and **stay**
@@ -239,6 +255,16 @@ $smachine->addTransition(STATE_ONE,STATE_TWO,'when field = 0');
 ```
 
 In this case, the state changes from STATE_ONE to STATE_TWO when field is zero.
+
+It could also exist multiple initial states
+
+```php
+$smachine->addTransition([STATE_ONE,STATE_EXTRA],STATE_TWO,'when field = 0');
+// its the same than to add multiples transitions:
+// $smachine->addTransition(STATE_ONE,STATE_TWO,'when field = 0');
+// $smachine->addTransition(STATE_EXTRA,STATE_TWO,'when field = 0');
+```
+
 
 Types of transition:
 
@@ -599,6 +625,10 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
 
+
+* 2.13 2021-07-03
+  * addTransition() now allows multiple initial states. 
+  * Updated dependencies in composer.json 
 * 2.12 2021-01-16
   * Some cleanups of the code.  
   * Updated dependencies.

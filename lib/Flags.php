@@ -103,7 +103,7 @@ class Flags implements StateSerializable
      * @param Job    $job
      * @param String $string a serialized string
      *
-     * @return mixed|void
+     * @return void
      */
     public function fromString($job,$string)
     {

@@ -77,7 +77,7 @@ class Pending implements StateSerializable
      *
      * @param Job $job
      *
-     * @return mixed
+     * @return void
      */
     public function setParent($job)
     {

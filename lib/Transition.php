@@ -10,10 +10,10 @@ use eftec\minilang\MiniLang;
 
 /**
  * Class Transition
- * @package eftec\statemachineone
+ * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version 1.4 2018-12-26
- * @link https://github.com/EFTEC/StateMachineOne
+ * @version  1.5 2021-07-03
+ * @link     https://github.com/EFTEC/StateMachineOne
  */
 class Transition
 {
@@ -23,10 +23,6 @@ class Transition
     public $state1;
     /** @var callable */
     public $function;
-    /** @var int|array Maximum duration (in seconds) of this transition. If the time it's up, then the transition is executed */
-    private $duration = 2000000;
-    /** @var int|array Maximum duration (in second) considering the whole job. If the time it's up then this transitin is done */
-    private $fullDuration = 2000000;
     /** @var string */
     public $txtCondition;
     /** @var callable|mixed */
@@ -37,18 +33,27 @@ class Transition
     public $miniLang;
     /** @var StateMachineOne */
     public $caller;
-
     /** @var Job */
     public $currentJob;
+    /**
+     * @var int|array Maximum duration (in seconds) of this transition. If the time it's up, then the transition is
+     *      executed
+     */
+    private $duration = 2000000;
+    /**
+     * @var int|array Maximum duration (in second) considering the whole job. If the time it's up then this transitin
+     *      is done
+     */
+    private $fullDuration = 2000000;
 
     /**
      * Transition constructor.
      *
      * @param StateMachineOne $caller
-     * @param string $state0
-     * @param string $state1
-     * @param mixed $conditions
-     * @param string $result
+     * @param string          $state0
+     * @param string          $state1
+     * @param mixed           $conditions
+     * @param string          $result
      */
     public function __construct($caller, $state0, $state1, $conditions, $result = '')
     {
@@ -76,8 +81,8 @@ class Transition
 
     /**
      * @param StateMachineOne $smo
-     * @param Job $job
-     * @param int $idTransition number of the transition.
+     * @param Job             $job
+     * @param int             $idTransition number of the transition.
      *
      * @return bool
      */
@@ -103,9 +108,9 @@ class Transition
      * It does the transition unless it is stopped or the active status is not compatible.
      *
      * @param StateMachineOne $smo
-     * @param Job $job
-     * @param bool $forced If true then the transition is done whatever the active status (unless it is stop)
-     * @param int $numTransaction
+     * @param Job             $job
+     * @param bool            $forced If true then the transition is done whatever the active status (unless it is stop)
+     * @param int             $numTransaction
      *
      * @return bool True if the transition is done, otherwise false.
      */
@@ -125,8 +130,8 @@ class Transition
                     $this->caller->miniLang->evalSet($numTransaction);
                     //if ($smo->isDbActive()) $smo->saveDBJob($job);
                     $smo->addLog($job, 'INFO', 'TRANSITION', 'state,,changed,,'
-                        . $smo->getStates()[$this->state0] . ",,{$this->state0},,"
-                        . $smo->getStates()[$this->state1] . ",,{$this->state1},,$numTransaction,,{$this->result}");
+                        . $smo->getStates()[$this->state0] . ",,$this->state0,,"
+                        . $smo->getStates()[$this->state1] . ",,$this->state1,,$numTransaction,,$this->result");
                     return true;
                 }
                 break;
@@ -136,7 +141,7 @@ class Transition
                     $this->caller->miniLang->evalSet($numTransaction);
                     //if ($smo->isDbActive()) $smo->saveDBJob($job);
                     //$smo->addLog($job, "INFO", "state <b>stay</b> in "
-                    //    .$smo->getStates()[$this->state0]."({$this->state0}) {$this->result}");
+                    //    .$smo->getStates()[$this->state0]."($this->state0) $this->result");
                     return true;
                 }
                 break;
@@ -154,8 +159,8 @@ class Transition
                     $this->caller->miniLang->evalSet($numTransaction);
                     //if ($smo->isDbActive()) $smo->saveDBJob($job);
                     $smo->addLog($job, 'INFO', 'TRANSITION', 'state,,changed,,'
-                        . $smo->getStates()[$this->state0] . ",,{$this->state0},,"
-                        . $smo->getStates()[$this->state1] . ",,{$this->state1},,$numTransaction,,{$this->result}");
+                        . $smo->getStates()[$this->state0] . ",,$this->state0,,"
+                        . $smo->getStates()[$this->state1] . ",,$this->state1,,$numTransaction,,$this->result");
                     if ($smo->pauseTriggerWhen === 'after') {
                         $smo->callPauseTrigger($job);
                     }
@@ -169,8 +174,8 @@ class Transition
                     $this->caller->miniLang->evalSet($numTransaction);
                     //if ($smo->isDbActive()) $smo->saveDBJob($job);
                     $smo->addLog($job, 'INFO', 'TRANSITION', 'state,,continue,,'
-                        . $smo->getStates()[$this->state0] . ",,{$this->state0},,"
-                        . $smo->getStates()[$this->state1] . ",,{$this->state1},,$numTransaction,,{$this->result}");
+                        . $smo->getStates()[$this->state0] . ",,$this->state0,,"
+                        . $smo->getStates()[$this->state1] . ",,$this->state1,,$numTransaction,,$this->result");
                     return true;
                 }
                 break;
@@ -182,8 +187,8 @@ class Transition
                     $this->caller->miniLang->evalSet($numTransaction);
                     //if ($smo->isDbActive()) $smo->saveDBJob($job);
                     $smo->addLog($job, 'INFO', 'TRANSITION', 'state,,stop,,'
-                        . $smo->getStates()[$this->state0] . ",,{$this->state0},,"
-                        . $smo->getStates()[$this->state1] . ",,{$this->state1},,$numTransaction,,{$this->result}");
+                        . $smo->getStates()[$this->state0] . ",,$this->state0,,"
+                        . $smo->getStates()[$this->state1] . ",,$this->state1,,$numTransaction,,$this->result");
                     $smo->callStopTrigger($job);
                     if ($smo->isAutoGarbage()) {
                         $smo->garbageCollector(); // job done, deleting from the queue.
@@ -192,7 +197,7 @@ class Transition
                 }
                 break;
             default:
-                trigger_error("Error: Result of transition {$this->result} not defined");
+                trigger_error("Error: Result of transition $this->result not defined");
         }
         return false;
     }
@@ -231,6 +236,15 @@ class Transition
 
     }
 
+    /**
+     * @param int $duration
+     * @return Transition
+     */
+    public function setDuration($duration)
+    {
+        $this->duration = $duration;
+        return $this;
+    }
 
     /**
      * @return string
@@ -239,7 +253,6 @@ class Transition
     {
         return $this->txtCondition;
     }
-
 
     /**
      * @param string $state0
@@ -268,16 +281,6 @@ class Transition
     public function setFunction(callable $function)
     {
         $this->function = $function;
-        return $this;
-    }
-
-    /**
-     * @param int $duration
-     * @return Transition
-     */
-    public function setDuration($duration)
-    {
-        $this->duration = $duration;
         return $this;
     }
 
