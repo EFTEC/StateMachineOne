@@ -66,7 +66,7 @@ The target of this library is to ease the process to create a state machine for 
 * **Job:** it's the process to run.  A job could have a single state at the same time.  
 * **State:** it's the current condition of the job.  
 * **Transition:** it's the change from one **state** to another. The transition is conditioned to a set of values, time or a function.  
-Also, every transition could have a timeout. If the timeout is reached then the transition is done, no matter the values or the conditions (even if it has the **active** state paused).  The transition could have 3 outcomes:
+  Also, every transition could have a timeout. If the timeout is reached then the transition is done, no matter the values or the conditions (even if it has the **active** state paused).  The transition could have 3 outcomes:
     * **change** The transition changes of state and the job is keep active. It is only possible to do the transition if the job has the ****active state**** = active.
     * **pause**  The transition changes of state and the job is paused. It is only possible to do the transition if the job has the **active state** = active.
     * **continue**  The transition changes of state and the job resumes of the pause. It is only possible to do the transition if the job has the **active state** = pause or active
@@ -75,7 +75,7 @@ Also, every transition could have a timeout. If the timeout is reached then the 
     * **stayonce** It's similar than stay but it does the operation once.   
   * **Event**: (Optional). Events are special operation that changes one or more states.
 * **Active:** Every job has an **active state**. There are 4: none,stop,active,inactive,pause. It is different from the states.
-So, for example, a job could have the **state**: INPROGRESS and the **active state**: PAUSE.   
+  So, for example, a job could have the **state**: INPROGRESS and the **active state**: PAUSE.   
     * **none** = the job doesn't exist. It can't change of state, neither it is loaded (from the database) by default
     * **stop** = the job has stopped (finished), it could be a successful, aborted or canceled. It can't change of state neither it is loaded by default.   
     * **pause** = the job is on hold, it will not change of state (unless it is forced) but it could be continued. 
@@ -341,7 +341,6 @@ $smachine->addTransition(S1,S2,'when $v1=1'); // RIGHT:(') the variable v1 is ev
 > * **undef()** it is the undefined value (-1)  
 >
 > * **flip()** indicates that the value will be flipped (1=>0 and 0=>1). Example (x=1) x = flip(), now (x=0). If the value is not zero, then it's flipped to zero.    
->
 
 ```php
 "set field=flip()" // it is only valid for set.
@@ -352,6 +351,7 @@ $smachine->addTransition(S1,S2,'when $v1=1'); // RIGHT:(') the variable v1 is ev
 * **now()** it defines the current timestamp (in seconds)
 * **interval()** it returns the current interval between now and the last state.
 * **fullinterval()** it returns the current interval between now and the start of the job.
+* **timestate()** it returns the time elapsed of the current state.
 
 #### For example  
 
@@ -441,9 +441,7 @@ In this case, it sets the field2="not done" until the transition is done.
 $smachine->addTransition(STATE_ONE,STATE_TWO,'when field = 0 timeout 3600');
 ```
 
-The state chances from STATE_ONE to STATE_TWO when the field is zero, or has elapsed 3600 seconds.
-
-
+The state chances from STATE_ONE to STATE_TWO when the field is zero, or has elapsed 3600 seconds elapsed in the STATE_ONE.
 
 It sets the timeout between the time of current state and the current time.
 If a timeout happens, then the transition is executed.
@@ -475,7 +473,7 @@ If a timeout happens, then the transition is executed.
 
 ### What is a job?
 
-Let's say we have a blueprint to build the house. The **job** is the action to build the house and the blueprint is the **transitions**.   So, the job is an operative part of our workflow.
+Let's say we have a blueprint to build the house. The **job** is the action to build the house and the blueprint is the **transitions**.   So, the job is an operative part of our work-flow.
 
 A **job** keeps values, including the current **state** and it has a lifecycle, while the workflow (the transitions) doesn't keep any single value. It is possible to create a short life job that works in a single web thread. However, if we need to keep the values, then we could use a database or a file system (flat file).  
 
@@ -626,6 +624,10 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 ## Version
 
 
+* 2.14 2021-09-17
+
+  * added duringState() that allows to do one operation while the job is in some state.
+  * added internal function timestate() that returns the current time of the current state (of the current job).
 * 2.13 2021-07-03
   * addTransition() now allows multiple initial states. 
   * Updated dependencies in composer.json 
@@ -640,7 +642,6 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
    * Logs now are separated by ,, instead of |. It is because some message could uses "|"
    * Log state, we added the number of transaction.  
 * saveDbJob(): Update in the database: The library doesn't update fields that aren't changed. For this,  it creates a backup variable every time a job is loaded and it compares the backup with the job to save.
-  
 * 2.9.2 2020-09-29 saveDbJob() updated the primary key field. Now, it skips to update it.
 * 2.9.1 2020-09-22 cacheMachine() now works correctly.
 * 2.9 2020-09-20 The flags are visualized differently. Also the serialization of text_job now use serialize instead
@@ -649,7 +650,6 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 * 2.7 2020-08-11 a small update of dependencies.
 * 2.6 2020-04-23
     * Slimming down the installation. Now "Docs" is not included in the installation  
-    
 * 2.5 2020-04-13  
     * updating dependency **eftec/pdoone** 1.15 to 1.32.1  
     * updating dependency **etec/minilang** 2.14 to 2.15  
@@ -676,18 +676,15 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
     * If the job's field is an object or array, then it is store in a MEDIUMTEXT FIELD (serialized)
     * method Flags::flagexist()
     * method StateMachineOne::removetransition()
-
 * 2.0 2019-08-24 
     * Changed the flags. The definition of push is flipped. After push('msg','id'..) now push('id','msg'..)
     * Added method to set the time.
-
 * 1.12 2019-08-16
     * Updated MiniLang
     * Added method viewJson()
     * Now event doesn't crash if the job is null.
     * CreateColTable() (private method) is removed.
     * Flag() now has expiration (optional)
-
 * 1.11 2019-08-04 Some fixes.
 * 1.10 2019-08-04
     * Updated to "eftec/minilang": "^2.7"

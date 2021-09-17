@@ -219,7 +219,7 @@ class Transition
     }
 
     /**
-     * if the duration is numeric then it's not calculated. Otherwise, it is calculated using the job.
+     * if the value of duration is numeric then it's not calculated. Otherwise, it is calculated using the job.
      * @param Job $job
      * @return int|null
      */

@@ -24,7 +24,7 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.13 2021-07-03
+ * @version  2.14 2021-09-17
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
@@ -163,11 +163,17 @@ class StateMachineOne
         };
         $dict = []; // we set the values as empty. The values are loaded per job basis.
         $this->serviceObject = $serviceObject;
-        $this->miniLang = new MiniLang($this, $dict, ['wait', 'always'], ['timeout', 'fulltimeout'], $serviceObject);
+        $this->miniLang = new MiniLang($this, $dict, ['wait', 'always','timestate'], ['timeout', 'fulltimeout'], $serviceObject);
     }
 
+
     /**
-     * Add a new transition. It is the definition of transition, indicating the from, where and conditions.
+     * Add a new transition. It is the definition of transition, indicating the "from", "where" and "conditions".
+     * <pre>
+     * $this->addTransition(10,11,'when condition>2 set value=20','change') // if condition>2 then set the value
+     *                                                                      // and change to the state 11
+     * $this->addTransition(10,11,'when condition>2 set value=20','stay') // it changes values but keeps the state
+     * </pre>
      *
      * @param string|array $state0     Initial state defined in setStates()
      * @param string       $state1     Ending state defined in setStates() if <b>result</b>="stay", then <b>state1</b>
@@ -179,7 +185,7 @@ class StateMachineOne
      *                                 sets milk as 1</p>
      *                                 <p><b>"when wait timeout 500"</b> = transitions if has passed more than 500
      *                                 seconds since the last stage</p>
-     *                                 <p><b>"when always"</b> = it always transitions. It is the same than "when 1=1"
+     *                                 <p><b>"when true()"</b> = it always transitions. It is the same than "when 1=1"
      *                                 </p>
      * @param string       $result     =['change','pause','continue','stop','stay'][$i]
      *
@@ -196,6 +202,33 @@ class StateMachineOne
             $this->transitions[] = new Transition($this, $state0, $state1, $conditions, $result);
         }
 
+        return count($this->transitions) - 1;
+    }
+
+    /**
+     * It is a macro of addTransition. It does an operation (indicated by "then" every time the job is in the state.<br>
+     * <b>Example:</b><br>
+     * <pre>
+     * $this->duringState(123,'when condition>2 set value=20')
+     * $this->duringState(123,'set value=20') // when is always true
+     * </pre>
+     *
+     * @param string|array $state the id of the state.
+     * @param string $then if then when/where condition is empty then it always true.
+     * @return int Returns the last id of the transaction.
+     * @see \eftec\statemachineone\StateMachineOne::setStates
+     */
+    public function duringState($state,$then) {
+        if(stripos($then,'when')===false || stripos($then,'where')===false) {
+            $then='when true() '.$then;
+        }
+        if (is_array($state)) {
+            foreach ($state as $stateV) {
+                $this->transitions[] = new Transition($this, $stateV, $stateV, $then, 'stay');
+            }
+        } else {
+            $this->transitions[] = new Transition($this, $state, $state, $then, 'stay');
+        }
         return count($this->transitions) - 1;
     }
 
@@ -238,6 +271,18 @@ class StateMachineOne
     public function wait()
     {
         return 0;
+    }
+    public function always($param=null) {
+        return true;
+    }
+
+    /**
+     * It returns the time elapsed in the current state of the current job.
+     * @param null $param
+     * @return int
+     */
+    public function timestate($param=null) {
+        return $this->getTime()-$this->getCurrentTransition()->currentJob->dateLastChange;
     }
 
     /**
@@ -2017,6 +2062,13 @@ cin;
     public function getTransitions()
     {
         return $this->transitions;
+    }
+
+    /**
+     * @return Transition
+     */
+    public function getCurrentTransition() {
+        return $this->transitions[$this->currentTransition];
     }
 
     //</editor-fold>
