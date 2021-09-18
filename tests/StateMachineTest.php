@@ -216,6 +216,43 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
         self::assertEquals('active',$job->getActive(),'active must be stop');
 
     }
+    public $conteo=0;
+    public function testFlagMessage() {
+        $this->conteo=0;
+        $this->statemachineone->customSaveDBJobLog=function ($arg=null,$arg2=null) {
+            // here we save in the log
+            $this->conteo++;
+            var_dump('save in log ');
+            var_dump($arg2);
+            //var_dump($arg);
+        };
+
+        $this->statemachineone->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
+        $this->statemachineone->setDefaultInitState(10);
+        $this->statemachineone->fieldDefault=['field1'=>1,'field2'=>new Flags('myflag',true,$this->statemachineone),'counter'=>0];
+        $this->statemachineone->addTransition(10,20,'when field1 = 1 set field2.message("hello world2")','change');
+        $this->statemachineone->addTransition(20,30,'when field1 = 1 set field2.message("hello world")','stay');
+        $this->statemachineone->addTransition(20,30,'when field1 = 1 set field2.message("hello world")','stay');
+
+
+        $this->statemachineone->createJob($this->statemachineone->fieldDefault);
+        $this->statemachineone->checkAllJobs();
+        $job=$this->statemachineone->getLastJob();
+        // let's check consistency
+        //$a1=new Flags();
+        //$a1->getStack()
+        self::assertEquals(3,$this->conteo,'it must save the log twice');
+
+        self::assertEquals(true,$this->statemachineone->checkConsistency(false),'consistency must be true');
+        /** @see \eftec\statemachineone\Flags::toString */
+        self::assertEquals('a:5:{s:5:"stack";a:1:{s:4:"_msg";s:11:"hello world";}s:7:"stackId";a:1:{s:4:"_msg";i:1;}s:10:"timeExpire";a:1:{s:4:"_msg";i:-1;}s:5:"level";a:1:{s:4:"_msg";i:0;}s:7:"changed";i:1;}'
+            ,$job->fields['field2']->toString(),'field2 must be a correct flag');
+        /** @see \eftec\statemachineone\Flags::getFlag */
+        self::assertEquals(['flag' => 'hello world','id' => 1,'level' => 0,'time' => -1],$job->fields['field2']->getFlag('_msg'),'field2.msg has some wrong values');
+        self::assertEquals('STATE2',$this->statemachineone->getJobStateName($job),'current state must be STATE2');
+        self::assertEquals('active',$job->getActive(),'it must be active');
+        $this->statemachineone->customSaveDBJobLog=null;
+    }
 
     /**
      * @throws Exception

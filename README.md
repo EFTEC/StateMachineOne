@@ -623,7 +623,8 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
 
-
+* 2.15 2021-09-18
+  * added method messages() to class Flag 
 * 2.14 2021-09-17
 
   * added duringState() that allows to do one operation while the job is in some state.

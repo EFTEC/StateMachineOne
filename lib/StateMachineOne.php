@@ -24,7 +24,7 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.14 2021-09-17
+ * @version  2.15 2021-09-18
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
@@ -83,9 +83,9 @@ class StateMachineOne
     public $serviceObject;
     /** @var string =['after','before','instead'][$i] */
     public $pauseTriggerWhen; // none
-    /** @var callable|null */
+    /** @var callable|null It is used to replace the current method used to store the logs */
     public $customSaveDBJobLog;
-    /** @var bool its true if any value is changed during checkAllJobs() */
+    /** @var bool it's true if any value is changed during checkAllJobs() */
     public $changed = false;
     private $debug = false;
     private $debugAsArray = false;
@@ -785,7 +785,7 @@ class StateMachineOne
                     $text[$k] = $job->fields[$k]; //->toString();
                 }
             }
-            // non native fields
+            // non-native fields
             $arr['text_job'] = serialize($text);
         } else {
             foreach ($this->fieldDefault as $k => $v) {
@@ -827,10 +827,10 @@ class StateMachineOne
                 echo($msg);
             }
         }
-        if ($this->dbActive !== self::NODB) {
-            $arr['description'] = strip_tags($arr['description']);
-            $this->saveDBJobLog($job, $arr);
-        }
+        //if ($this->dbActive !== self::NODB) {
+        $arr['description'] = strip_tags($arr['description']);
+        $this->saveDBJobLog($job, $arr);
+        //}
     }
 
     /**
@@ -887,15 +887,15 @@ class StateMachineOne
      */
     public function saveDBJobLog($job, $arr)
     {
+        if (is_callable([$this, 'customSaveDBJobLog'], true) && $this->customSaveDBJobLog !== null) {
+            return call_user_func($this->customSaveDBJobLog, $job, $arr);
+            //$this->customSaveDBJobLog($job,$arr);
+        }
         switch ($this->dbActive) {
             case self::PDODB:
                 if (!$this->tableJobLogs) {
                     return true;
                 } // it doesn't save if the table is not set.
-                if (is_callable([$this, 'customSaveDBJobLog'], true) && $this->customSaveDBJobLog !== null) {
-                    return call_user_func($this->customSaveDBJobLog, $job, $arr);
-                    //$this->customSaveDBJobLog($job,$arr);
-                }
                 try {
 
                     $this->getDB()
