@@ -55,7 +55,7 @@ class Transition
      * @param mixed           $conditions
      * @param string          $result
      */
-    public function __construct($caller, $state0, $state1, $conditions, $result = '')
+    public function __construct($caller, $state0, $state1, $conditions, $result = '',$storeClass=false)
     {
         $this->caller = $caller;
         $this->state0 = $state0;
@@ -68,7 +68,16 @@ class Transition
         }
         if (is_string($conditions)) {
             $this->txtCondition = $conditions;
-            $this->caller->miniLang->separate($conditions); // this process could be a bit expensive.
+            if (!$this->caller->miniLang->usingClass) {
+                // we need to evaluate the code (otherwise, we do nothing)
+                if ($storeClass) {
+                    // we generate php code
+                    $this->caller->miniLang->separate2($conditions); // this process could be a bit expensive.
+                } else {
+                    // we parse the code in runtime.
+                    $this->caller->miniLang->separate($conditions); // this process could be a bit expensive.
+                }
+            }
             if (isset($this->caller->miniLang->areaValue['timeout'])) {
                 $this->duration = $this->caller->miniLang->areaValue['timeout'];
             }

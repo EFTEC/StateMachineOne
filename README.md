@@ -623,6 +623,11 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
 
+* 2.16 2021-09-26
+  * [Core] Updated the dependency of the class  **MiniLang** 2.20.1
+  * [Core] Solved a problem with the method **SaveDbJob()**
+  * [Core] The new method **addMethodTransition2**() could be used to create a class with the logic using the new version of **MiniLang**
+  * [Transition] Now the class **Transition** could calculate the transition in runtime using **Minilang** (normal behaviour) or it could use a generated class pre-compiled. This feature will increase the performance considerably, however it requires to create the class.
 * 2.15 2021-09-18
   * added method messages() to class Flag 
 * 2.14 2021-09-17

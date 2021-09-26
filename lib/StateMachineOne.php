@@ -1,4 +1,5 @@
-<?php /** @noinspection SqlResolve */
+<?php /** @noinspection SqlNoDataSourceInspection */
+/** @noinspection SqlResolve */
 /** @noinspection UnknownInspectionInspection */
 /** @noinspection UnusedConstructorDependenciesInspection */
 /** @noinspection JsonEncodingApiUsageInspection */
@@ -24,7 +25,7 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.15 2021-09-18
+ * @version  2.16 2021-09-26
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
@@ -34,7 +35,7 @@ class StateMachineOne
     const NODB = 0;
     const PDODB = 1;
     const DOCDB = 2;
-    public $VERSION = '2.12';
+    public $VERSION = '2.16';
     /**
      * @var array Possible states. It must be an associative array.<br>
      * <p>$statemachine->states=['State1'=>'name of the state','State2'=>'another name'];</p>
@@ -134,8 +135,9 @@ class StateMachineOne
      * StateMachineOne constructor.
      *
      * @param null|object $serviceObject If we want to use a service class.
+     * @param string      $miniLangClass [optionally] you can use a different mini language.
      */
-    public function __construct($serviceObject)
+    public function __construct($serviceObject,$miniLangClass= MiniLang::class)
     {
 
         // reset values
@@ -163,7 +165,7 @@ class StateMachineOne
         };
         $dict = []; // we set the values as empty. The values are loaded per job basis.
         $this->serviceObject = $serviceObject;
-        $this->miniLang = new MiniLang($this, $dict, ['wait', 'always','timestate'], ['timeout', 'fulltimeout'], $serviceObject);
+        $this->miniLang = new $miniLangClass($this, $dict, ['wait', 'always','timestate'], ['timeout', 'fulltimeout'], $serviceObject);
     }
 
 
@@ -200,6 +202,45 @@ class StateMachineOne
             }
         } else {
             $this->transitions[] = new Transition($this, $state0, $state1, $conditions, $result);
+        }
+
+        return count($this->transitions) - 1;
+    }
+
+    /**
+     * Add a new transition and store into a class.<br>
+     * It is the definition of transition, indicating the "from", "where" and "conditions".
+     * <pre>
+     * $this->addMethodTransition2(10,11,'when condition>2 set value=20','change') // if condition>2 then set the value
+     *                                                                      // and change to the state 11
+     * $this->addMethodTransition2(10,11,'when condition>2 set value=20','stay') // it changes values but keeps the state
+     * </pre>
+     *
+     * @param string|array $state0     Initial state defined in setStates()
+     * @param string       $state1     Ending state defined in setStates() if <b>result</b>="stay", then <b>state1</b>
+     *                                 is ignored.
+     * @param mixed        $conditions It sets a condition(s) (also it could changes of properties). Example:<br>
+     *                                 <p><b>"when store_open = 1 and stock_milk > 0"</b> = it jumps if the
+     *                                 condition(s) is meet</p>
+     *                                 <p><b>"when money >= price set milk = 1'"</b> = it jump if the condition(s) also
+     *                                 sets milk as 1</p>
+     *                                 <p><b>"when wait timeout 500"</b> = transitions if has passed more than 500
+     *                                 seconds since the last stage</p>
+     *                                 <p><b>"when true()"</b> = it always transitions. It is the same than "when 1=1"
+     *                                 </p>
+     * @param string       $result     =['change','pause','continue','stop','stay'][$i]
+     *
+     * @return int Returns the last id of the transaction.
+     * @see \eftec\statemachineone\StateMachineOne::setStates
+     */
+    public function addMethodTransition2($state0, $state1, $conditions, $result = 'change')
+    {
+        if (is_array($state0)) {
+            foreach ($state0 as $stateV) {
+                $this->transitions[] = new Transition($this, $stateV, $state1, $conditions, $result,true);
+            }
+        } else {
+            $this->transitions[] = new Transition($this, $state0, $state1, $conditions, $result,true);
         }
 
         return count($this->transitions) - 1;
@@ -565,7 +606,7 @@ class StateMachineOne
      * (optional), it creates a database table, including indexes.
      * Right now it only works with 'mysql'
      *
-     * @param bool $drop if true, then the table will be dropped.
+     * @param bool|string $drop if true, then the table will be dropped.
      *
      * @throws Exception
      */
@@ -701,7 +742,6 @@ class StateMachineOne
                 try {
                     if ($job->isNew) {
                         $arr = $this->jobToArray($job);
-
                         if (count($arr) > 0) {
                             $job->idJob = $this->getDB()
                                 ->from($this->tableJobs)
@@ -897,15 +937,15 @@ class StateMachineOne
                     return true;
                 } // it doesn't save if the table is not set.
                 try {
-
-                    $this->getDB()
+                    $query=$this->getDB()
                         ->from($this->tableJobLogs);
-                    $this->getDB()->set('idjob=?', $job->idJob);
-                    $this->getDB()->set('idrel=?', $arr['idrel']);
-                    $this->getDB()->set('type=?', $arr['type']);
-                    $this->getDB()->set('description=?', $arr['description']);
-                    $this->getDB()->set('date=?', date('Y-m-d H:i:s', $arr['date']));
-                    $this->getDB()->insert();
+                    $query->set('idjob=?', $job->idJob);
+                    $query->set('idrel=?', $arr['idrel']);
+                    $query->set('type=?', $arr['type']);
+                    $query->set('description=?', $arr['description']);
+                    $query->set('date=?', date('Y-m-d H:i:s', $arr['date']));
+                    $query->insert();
+
                     return true;
                 } catch (Exception $e) {
                     echo 'error ' . $e->getMessage();
@@ -1020,7 +1060,7 @@ class StateMachineOne
                         }
                         $this->changed = true;
                     }
-                } elseif (count($this->miniLang->where[$idTransition])) {
+                } elseif ($this->miniLang->usingClass || count($this->miniLang->where[$idTransition])) {
                     // we check the transition based on table
                     $this->miniLang->setDict($job->fields);
                     if ($trn->evalLogic($this, $job, $idTransition)) {
@@ -1813,7 +1853,7 @@ cin;
                 }
                 echo "    </div>
               </div>
-              <input type='text' class='form-control' name='frm_$colFields' id='frm_$colFields'>
+              <input type='text' class='form-control' name='frm_$colFields' id='frm_$colFields' value='".htmlentities($value)."'>
             </div>";
             }
             return;
