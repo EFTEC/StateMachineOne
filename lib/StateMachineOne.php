@@ -25,7 +25,7 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.16 2021-09-26
+ * @version  2.17 2021-09-26
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
@@ -35,7 +35,7 @@ class StateMachineOne
     const NODB = 0;
     const PDODB = 1;
     const DOCDB = 2;
-    public $VERSION = '2.16';
+    public $VERSION = '2.17';
     /**
      * @var array Possible states. It must be an associative array.<br>
      * <p>$statemachine->states=['State1'=>'name of the state','State2'=>'another name'];</p>
@@ -269,6 +269,32 @@ class StateMachineOne
             }
         } else {
             $this->transitions[] = new Transition($this, $state, $state, $then, 'stay');
+        }
+        return count($this->transitions) - 1;
+    }
+    /**
+     * It is a macro of addTransition. It does an operation (indicated by "then" every time the job is in the state.<br>
+     * <b>Example:</b><br>
+     * <pre>
+     * $this->duringState2(123,'when condition>2 set value=20')
+     * $this->duringState2(123,'set value=20') // when is always true
+     * </pre>
+     *
+     * @param string|array $state the id of the state.
+     * @param string $then if then when/where condition is empty then it always true.
+     * @return int Returns the last id of the transaction.
+     * @see \eftec\statemachineone\StateMachineOne::setStates
+     */
+    public function duringState2($state,$then) {
+        if(stripos($then,'when')===false || stripos($then,'where')===false) {
+            $then='when true() '.$then;
+        }
+        if (is_array($state)) {
+            foreach ($state as $stateV) {
+                $this->transitions[] = new Transition($this, $stateV, $stateV, $then, 'stay',true);
+            }
+        } else {
+            $this->transitions[] = new Transition($this, $state, $state, $then, 'stay',true);
         }
         return count($this->transitions) - 1;
     }
