@@ -33,7 +33,7 @@ class Transition
     public $miniLang;
     /** @var StateMachineOne */
     public $caller;
-    /** @var Job */
+    /** @var Job used to determine the current time */
     public $currentJob;
     /**
      * @var int|array Maximum duration (in seconds) of this transition. If the time it's up, then the transition is
@@ -47,15 +47,25 @@ class Transition
     private $fullDuration = 2000000;
 
     /**
-     * Transition constructor.
+     * Transition constructor.<br>
+     * The transition is a definition of a state, but it also allows evaluating and execute a swith of states<br>
+     * The transition allows moving one job from one state to another if happens some conditions.<br>
+     * It also allows to do some operation such as to pause, stay and stop (end of the workflow)<br>
+     * <b>Example:</b><br>
+     * <pre>
+     * $a1=new Transition($caller,'initialstate','endstate','if condition=1','change')
+     * </pre>
      *
-     * @param StateMachineOne $caller
-     * @param string          $state0
-     * @param string          $state1
-     * @param mixed           $conditions
-     * @param string          $result
+     * @param StateMachineOne $caller     The caller (usually, a statemachine instance).
+     * @param string          $state0     The initial state
+     * @param string          $state1     The end state. It could be the same initial state.
+     * @param mixed           $conditions The code with the conditions. The conditions are expressed by MiniLang.
+     * @param string          $result     =['change','pause','continue','stop','stay'][$i]
+     * @param bool            $storeClass If true, then it doesn't change the state, but it stores the operation in
+     *                                    MiniLang. It is useful if you want to create a MiniLang class.
+     * @see https://github.com/EFTEC/MiniLang for more information about conditions.
      */
-    public function __construct($caller, $state0, $state1, $conditions, $result = '',$storeClass=false)
+    public function __construct($caller, $state0, $state1, $conditions, $result = '', $storeClass = false)
     {
         $this->caller = $caller;
         $this->state0 = $state0;

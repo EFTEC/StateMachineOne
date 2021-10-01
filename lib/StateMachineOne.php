@@ -25,7 +25,7 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.17 2021-09-26
+ * @version  2.18 2021-10-01
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
@@ -35,7 +35,7 @@ class StateMachineOne
     const NODB = 0;
     const PDODB = 1;
     const DOCDB = 2;
-    public $VERSION = '2.17';
+    public $VERSION = '2.18';
     /**
      * @var array Possible states. It must be an associative array.<br>
      * <p>$statemachine->states=['State1'=>'name of the state','State2'=>'another name'];</p>
@@ -129,6 +129,7 @@ class StateMachineOne
     private $stopTriggerWhen;
     /** @var callable This function increased in 1 the next id of the job. It is only called if we are not using a database */
     private $getNumberTrigger;
+    public $zeroDate='1970-01-01 00:00:01';
 
     /**
      * Constructor of the class. By default, the construct set default triggers.
@@ -208,8 +209,8 @@ class StateMachineOne
     }
 
     /**
-     * Add a new transition and store into a class.<br>
-     * It is the definition of transition, indicating the "from", "where" and "conditions".
+     * Add a new transition and store into Minilang, so you later could save into a Minilang Class.<br>
+     * It allows to create a definition of transition, indicating the "from", "where" and "conditions".
      * <pre>
      * $this->addMethodTransition2(10,11,'when condition>2 set value=20','change') // if condition>2 then set the value
      *                                                                      // and change to the state 11
@@ -273,7 +274,8 @@ class StateMachineOne
         return count($this->transitions) - 1;
     }
     /**
-     * It is a macro of addTransition. It does an operation (indicated by "then" every time the job is in the state.<br>
+     * It is a macro of addTransition. It's similar to duringState() but it is used to store the information in
+     * MiniLang, so you can save it later inside a Minilang Class
      * <b>Example:</b><br>
      * <pre>
      * $this->duringState2(123,'when condition>2 set value=20')
@@ -302,13 +304,19 @@ class StateMachineOne
     /**
      * It removes a single transition
      *
-     * @param $idTransition
+     * @param int $idTransition
      */
     public function removeTransition($idTransition)
     {
         array_splice($this->transitions, $idTransition, 1);
     }
 
+    /**
+     * It removes multiples transitions.
+     *
+     * @param int $transitionStart
+     * @param int $length
+     */
     public function removeTransitions($transitionStart, $length)
     {
         array_splice($this->transitions, $transitionStart, $length);
@@ -656,10 +664,10 @@ class StateMachineOne
                             'idparentjob' => 'INT',
                             'idactive' => 'int',
                             'idstate' => 'int',
-                            'dateinit' => 'timestamp DEFAULT \'1970-01-01 00:00:01\'',
-                            'datelastchange' => 'timestamp DEFAULT \'1970-01-01 00:00:01\'',
-                            'dateexpired' => 'timestamp DEFAULT \'1970-01-01 00:00:01\'',
-                            'dateend' => 'timestamp DEFAULT \'1970-01-01 00:00:01\''
+                            'dateinit' => 'timestamp DEFAULT \''.$this->zeroDate.'\'',
+                            'datelastchange' => 'timestamp DEFAULT \''.$this->zeroDate.'\'',
+                            'dateexpired' => 'timestamp DEFAULT \''.$this->zeroDate.'\'',
+                            'dateend' => 'timestamp DEFAULT \''.$this->zeroDate.'\''
                         ];
                         $this->createColsTable($tabledef, $this->fieldDefault);
                         $this->getDB()->createTable($this->tableJobs, $tabledef, 'idjob');
@@ -677,7 +685,7 @@ class StateMachineOne
                                 'idrel' => 'varchar(200)',
                                 'type' => 'varchar(50)',
                                 'description' => 'varchar(2000)',
-                                'date' => 'timestamp DEFAULT \'1970-01-01 00:00:01\''
+                                'date' => 'timestamp DEFAULT \''.$this->zeroDate.'\''
                             ];
                             $this->getDB()->createTable($this->tableJobLogs, $tabledef, 'idjoblog');
                         }
