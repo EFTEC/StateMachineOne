@@ -13,7 +13,8 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
     /**
      * @throws Exception
      */
-    public function test1() {
+    public function test1(): void
+    {
 	    $this->statemachineone->setStates([1,2,3]);
 	    $this->statemachineone->setDefaultInitState(1);
 	    $this->statemachineone->fieldDefault=['field1'=>1,'field2'=>0,'field3'=>0,'field4'=>123,'counter'=>0];
@@ -56,9 +57,10 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
 	    $this->statemachineone->callEvent("testme",$job);
 
 	    self::assertEquals('hello',$job->fields['field1'],'field1 must be "hello"');
-	    self::assertEquals('world',$job->fields['field2'],'field2 must be "world"');  
+	    self::assertEquals('world',$job->fields['field2'],'field2 must be "world"');
     }
-    public function testAditionals() {
+    public function testAditionals(): void
+    {
         // $this->statemachineone->setDebug(true);
         $this->statemachineone->setStates([1,2,3]);
         $this->statemachineone->resetTransition();
@@ -81,7 +83,8 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
         self::assertEquals(0,$job->fields['v1']);
 
     }
-    public function notestPdo() {
+    public function notestPdo(): void
+    {
         $smo=new StateMachineOne(null);
         $pdo=new PdoOne('test','','','');
         $pdo->open();
@@ -92,7 +95,8 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
     /**
      * @throws Exception
      */
-    public function test2() {
+    public function test2(): void
+    {
         $this->statemachineone->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
         $this->statemachineone->setDefaultInitState(10);
         $this->statemachineone->fieldDefault=['field1'=>1,'field2'=>0,'counter'=>0];
@@ -103,13 +107,14 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
         $job=$this->statemachineone->getLastJob();
         // let's check consistency
         self::assertEquals(true,$this->statemachineone->checkConsistency(false),'consistency must be true');
-        
+
         self::assertEquals('200',$job->fields['field2'],'field2 must be 200');
         self::assertEquals('STATE1',$this->statemachineone->getJobStateName($job),'current state must be STATE1');
         self::assertEquals('active',$job->getActive(),'active must be stop');
 
     }
-    public function test4Duration() {
+    public function test4Duration(): void
+    {
         $this->statemachineone->resetTransition();
         $this->statemachineone->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
         $this->statemachineone->setDefaultInitState(10);
@@ -130,7 +135,8 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
         self::assertGreaterThanOrEqual(2,$job->fields['delta']);
 
     }
-    public function test3duringState() {
+    public function test3duringState(): void
+    {
         // definitions
         $this->statemachineone->resetTransition();
         $this->statemachineone->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
@@ -146,7 +152,8 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
         self::assertEquals('300',$job->fields['field2'],'field2 must be 300');
         self::assertEquals('300',$job->fields['field3'],'field3 must be 300');
     }
-    public function test2new() {
+    public function test2new(): void
+    {
         $this->statemachineone->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
         $this->statemachineone->setDefaultInitState(10);
         $this->statemachineone->fieldDefault=['field1'=>1,'field2'=>0,'counter'=>0];
@@ -168,9 +175,16 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
     /**
      * @throws Exception
      */
-    public function test2doc() {
+    public function test2doc(): void
+    {
         $tmpstate=new StateMachineOne(null);
         $tmpstate->setDocDB(__DIR__ . '/tmpdoc');
+        $tmpstate->getDocOne()->delete('job1');
+        $tmpstate->getDocOne()->delete('job2');
+        $tmpstate->getDocOne()->delete('job3');
+        $tmpstate->getDocOne()->delete('job4');
+        $tmpstate->getDocOne()->delete('job4');
+        //die(1);
         //$tmpstate->getDocOne()->collection(dirname(__FILE__). '/tmpdoc',true);
         $tmpstate->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
         $tmpstate->setDefaultInitState(10);
@@ -194,7 +208,8 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
     /**
      * @throws Exception
      */
-    public function test3() {
+    public function test3(): void
+    {
         $this->statemachineone->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
         $this->statemachineone->setDefaultInitState(10);
         $this->statemachineone->fieldDefault=['field1'=>1,'field2'=>new Flags(),'counter'=>0];
@@ -217,7 +232,8 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
 
     }
     public $conteo=0;
-    public function testFlagMessage() {
+    public function testFlagMessage(): void
+    {
         $this->conteo=0;
         $this->statemachineone->customSaveDBJobLog=function ($arg=null,$arg2=null) {
             // here we save in the log
@@ -257,7 +273,8 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
     /**
      * @throws Exception
      */
-    public function testSC() {
+    public function testSC(): void
+    {
         $this->statemachineone->setStates([10=>"STATE1"]);
         $this->statemachineone->setDefaultInitState(10);
         $this->statemachineone->fieldDefault=['field1'=>1,'field2'=>new Flags(),'counter'=>0];
@@ -275,7 +292,8 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
     /**
      * @throws Exception
      */
-    public function testMultipleJobs() {
+    public function testMultipleJobs(): void
+    {
         $this->statemachineone->setStates([10=>"STATE_START",20=>'STATE_END']);
         $this->statemachineone->setDefaultInitState(10);
         $this->statemachineone->fieldDefault=['field1'=>123,'field2'=>-1,'counter'=>0];
@@ -287,9 +305,9 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
         $state2['field1']=456;
         $this->statemachineone->createJob($state2);
         $this->statemachineone->checkAllJobs();
-  
+
         //var_dump($this->statemachineone->getJobQueue());
-        
+
         $job=$this->statemachineone->getJob(1);
         // let's check consistency
         self::assertEquals(123,$job->fields['field2'],'field2 must returns 123');
