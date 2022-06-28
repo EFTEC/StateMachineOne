@@ -9,7 +9,7 @@ class StateMachineOne_all_Test extends TestCase
     /** @var StateMachineOne */
     protected $state;
 
-    public function setUp() {
+    public function setUp():void {
 
         $this->state = new StateMachineOne(null);
         $this->state->setDebug(true);
@@ -50,13 +50,13 @@ class StateMachineOne_all_Test extends TestCase
                                          'brake' => 0,
                                          'speed' => 0
                                      ]);
-   
+
         // car is pakred
         $this->state->checkJob($job);
         self::assertEquals(['pedal'=>0,'turnkey'=>0,'gas'=>100,'brake'=>0,'speed'=>0],$job->fields);
         $job->fields['pedal']=1;
         $job->fields['turnkey']=1;
-        
+
         // i push the pedal and i turn the key. gas > 0
         $this->state->checkJob($job);
         self::assertEquals(['pedal'=>1,'turnkey'=>1,'gas'=>100,'brake'=>0,'speed'=>0],$job->fields);
@@ -85,7 +85,7 @@ class StateMachineOne_all_Test extends TestCase
     }
 
 
-    
+
     public function test_2() {
         $this->state->setDefaultInitState(PARKED);
         $this->state->setStates([
@@ -101,7 +101,7 @@ class StateMachineOne_all_Test extends TestCase
         $this->state->addTransition(PARKED, PARKED
             , 'when arr1.a1=1 and arr1.a2=2 set arr2.a1="ok" else arr2.a1="wrong"','stay');
         $this->state->addTransition(PARKED, PARKED
-            , 'when 1=arr1.a1 and 2=arr1.a2 set arr2.a1="ok" else arr2.a1="wrong"','stay');        
+            , 'when 1=arr1.a1 and 2=arr1.a2 set arr2.a1="ok" else arr2.a1="wrong"','stay');
         $this->state->addTransition(PARKED, PARKED
             , 'when arr1.a1=1 and arr1.a2=3 set arr2.a2="wrong" else arr2.a2="ok"','stay');
 
@@ -110,14 +110,14 @@ class StateMachineOne_all_Test extends TestCase
 
         // car is pakred
         $this->state->checkAllJobs();
-        
+
         self::assertEquals(
             [
                 'arr1'=>['a1'=>1,'a2'=>2]
                 ,'arr2'=>['a1'=>"ok",'a2'=>"ok"]
             ]
             ,$job->fields);
-      
+
 
     }
 
@@ -150,7 +150,7 @@ class StateMachineOne_all_Test extends TestCase
         $this->state->checkAllJobs();
         self::assertEquals('OK',$job->fields['MSG2']);
         self::assertEquals('OK',$job->fields['MSG']);
-        
+
 
 
     }

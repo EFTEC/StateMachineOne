@@ -622,6 +622,8 @@ Commonly, the log format could be of the type info or error.   Flag could show a
 Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
+* 2.18 2022-06-28
+  * Update dependencies. 
 * 2.17 2021-10-01
   * [Core] added the method $zeroDate to set the default datetime value inside the database.  
 * 2.17 2021-09-26
