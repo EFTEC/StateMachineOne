@@ -11,7 +11,7 @@ class Pending implements StateSerializable
 {
     /** @var array=[\eftec\statemachineone\Pending::factoryScheduleItem()]  */
     public $schedule;
-    
+
     public $cyclical=false;
     public $cyclicalInterval=0;
 
@@ -21,11 +21,12 @@ class Pending implements StateSerializable
      *
      * @return array
      */
-    public static function factoryScheduleItem($time=0,$done=false) {
+    public static function factoryScheduleItem($time=0,$done=false): array
+    {
         return ['time'=>$time,'done'=>$done];
     }
 
-    
+
     /**
      * Pending constructor.
      *
@@ -46,8 +47,9 @@ class Pending implements StateSerializable
      *
      * @return int
      */
-    public function getLastIndex($time=null) {
-        $time=($time===null)?time():$time;
+    public function getLastIndex($time=null): int
+    {
+        $time= $time ?? time();
         $result=0;
         $index=-1;
         foreach($this->schedule as $k=>$s) {
@@ -58,8 +60,8 @@ class Pending implements StateSerializable
         }
         return $index;
     }
-    
-    public function toString()
+
+    public function toString():string
     {
         return serialize($this->schedule).';;'.serialize($this->cyclical).';;'.serialize($this->cyclicalInterval);
     }
@@ -67,9 +69,9 @@ class Pending implements StateSerializable
     public function fromString($job,$string)
     {
         $arr = explode(';;', $string);
-        $this->schedule=unserialize($arr[0]);
-        $this->cyclical=unserialize($arr[1]);
-        $this->cyclicalInterval=unserialize($arr[2]);
+        $this->schedule=unserialize($arr[0],['allowed_classes'=>false]);
+        $this->cyclical=unserialize($arr[1],['allowed_classes'=>false]);
+        $this->cyclicalInterval=unserialize($arr[2],['allowed_classes'=>false]);
     }
 
     /**
@@ -79,7 +81,7 @@ class Pending implements StateSerializable
      *
      * @return void
      */
-    public function setParent($job)
+    public function setParent($job):void
     {
        throw new RuntimeException("Not implemented");
     }

@@ -1,12 +1,14 @@
-<?php /** @noinspection PhpPropertyOnlyWrittenInspection */
+<?php /** @noinspection TypeUnsafeArraySearchInspection */
+/** @noinspection NestedTernaryOperatorInspection */
+/** @noinspection PhpPropertyOnlyWrittenInspection */
 /** @noinspection SqlNoDataSourceInspection */
 /** @noinspection SqlResolve */
 /** @noinspection UnknownInspectionInspection */
 /** @noinspection UnusedConstructorDependenciesInspection */
 /** @noinspection JsonEncodingApiUsageInspection */
-/** @noinspection TypeUnsafeArraySearchInspection */
+
 /** @noinspection TypeUnsafeComparisonInspection */
-/** @noinspection NestedTernaryOperatorInspection */
+
 /** @noinspection PhpPrivateFieldCanBeLocalVariableInspection */
 /** @noinspection PhpUnused */
 /** @noinspection PhpUnusedParameterInspection */
@@ -26,7 +28,7 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.19 2022-06-28
+ * @version  2.20 2022-08-26
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
@@ -36,7 +38,7 @@ class StateMachineOne
     public const NODB = 0;
     public const PDODB = 1;
     public const DOCDB = 2;
-    public $VERSION = '2.19';
+    public $VERSION = '2.20';
     /**
      * @var array Possible states. It must be an associative array.<br>
      * <p>$statemachine->states=['State1'=>'name of the state','State2'=>'another name'];</p>
@@ -62,7 +64,7 @@ class StateMachineOne
     /** @var array It indicates extra fields/states */
     public $fieldDefault = [''];
     /**
-     * @var array (optional) it is used to indicates how to display the values in the web-ui<br>
+     * @var array (optional) it is used to indicate how to display the values in the web-ui<br>
      *            <b>Example:</b>
      *            <pre>
      *            $this->fieldUI=['col'=>'READWRITE'
@@ -228,7 +230,7 @@ class StateMachineOne
      *                                 sets milk as 1</p>
      *                                 <p><b>"when wait timeout 500"</b> = transitions if has passed more than 500
      *                                 seconds since the last stage</p>
-     *                                 <p><b>"when true()"</b> = it always transitions. It is the same than "when 1=1"
+     *                                 <p><b>"when true()"</b> = it always transitions. It is the same as "when 1=1"
      *                                 </p>
      * @param string       $result     =['change','pause','continue','stop','stay'][$i]
      *
@@ -831,7 +833,7 @@ class StateMachineOne
     }
 
     /**
-     * It converts an job into an array
+     * It converts a job into an array
      *
      * @param Job  $job
      *
@@ -914,15 +916,15 @@ class StateMachineOne
     }
 
     /**
-     * It returns the current timestamp. If exists an universal timer
+     * It returns the current timestamp. If exists a universal timer
      * (a global function called universaltime), then it uses it.  Why?
      * It is because sometimes we want the same time.
      *
-     * @param bool $microtime if true then it returns the microtime
+     * @param bool $microtime if true then it returns the microtime as float
      *
-     * @return int
+     * @return int|float
      */
-    public function getTime($microtime = false): int
+    public function getTime($microtime = false)
     {
         if (function_exists('universaltime')) {
             return universaltime($microtime);
@@ -1091,7 +1093,7 @@ class StateMachineOne
                 if ($this->getTime() - $job->dateLastChange >= $trn->getDuration($job)
                     || $this->getTime() - $job->dateInit >= $trn->getFullDuration($job)
                 ) {
-                    // timeout time is up, we will do the transition anyways
+                    // timeout time is up, we will do the transition anyway
 
                     $this->miniLang->setDict($job->fields);
                     if ($trn->doTransition($this, $job, true, $idTransition)) {
@@ -1232,6 +1234,7 @@ cin;
         $events = $this->events;
         // we removed the caller to avoid circular reference.
         foreach ($events as $event) {
+            /** @noinspection PhpParamsInspection */
             $event->setCaller(null);
         }
         $phpCode = '$machine->events=unserialize( \'' . $this->serializeEscape($events) . '\');';
@@ -1441,7 +1444,7 @@ cin;
     {
         $fields = $fields ?? $this->fieldDefault;
         $initState = $initState ?? $this->defaultInitState;
-        $dateStart = $dateStart ?? $this->getTime();
+        $dateStart = $dateStart ?? (int)$this->getTime();
         $dateEnd = $durationSec === null ? 2047483640 : $dateStart + $durationSec;
         $dateExpire = $expireSec === null ? 2047483640 : $dateStart + $expireSec;
         $job = new Job();
@@ -1848,7 +1851,7 @@ cin;
      *
      * @param array     $states     It could be an associative array (1=>'state name',2=>'state') or a numeric array
      *                              (1,2)
-     * @param null|bool $generateId if false then it self generates the id (based in the data), if true then it is
+     * @param null|bool $generateId if false then it self-generates the id (based in the data), if true then it is
      *                              calculated
      */
     public function setStates($states, $generateId = true): void
@@ -2105,7 +2108,7 @@ cin;
      * @param string   $when =['after','before','instead'][$i] If we want to call it after it's stop, before or instead
      *                       of
      *
-     * @test void this(),'it must returns nothing'
+     * @test void this(),'it must return nothing'
      */
     public function setStopTrigger(callable $stopTrigger, $when = 'after'): void
     {

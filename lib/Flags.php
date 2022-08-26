@@ -59,7 +59,7 @@ class Flags implements StateSerializable
      *
      * @return Flags
      */
-    public static function factory($job, $string)
+    public static function factory($job, $string): Flags
     {
         $obj = new Flags();
         $obj->fromString($job, $string);
@@ -74,11 +74,11 @@ class Flags implements StateSerializable
      *
      * @return void
      */
-    public function fromString($job, $string)
+    public function fromString($job, $string):void
     {
         try {
             $this->parentJob = $job;
-            $arr = @unserialize($string);
+            $arr = @unserialize($string,['allowed_classes'=>true]);
             $this->__unserialize($arr);
 
         } catch (Exception $ex) {
@@ -86,7 +86,7 @@ class Flags implements StateSerializable
         }
     }
 
-    public function __unserialize($arr)
+    public function __unserialize($arr):void
     {
         $this->stack = $arr['stack'];
         $this->stackId = $arr['stackId'];
@@ -99,7 +99,7 @@ class Flags implements StateSerializable
     /**
      * It checks if the flags are expired.  If they are expired, then they are pulled out.
      */
-    public function check()
+    public function check(): void
     {
         $now = $this->getTime();
         $keys = array_keys($this->stack);
@@ -134,7 +134,7 @@ class Flags implements StateSerializable
      *
      * @return $this
      */
-    public function pull($idUnique = '', $msg = '', $level = 0, $idRel = 0)
+    public function pull($idUnique = '', $msg = '', $level = 0, $idRel = 0): self
     {
         if (isset($this->stack[$idUnique])) {
             unset($this->stack[$idUnique], $this->stackId[$idUnique], $this->timeExpire[$idUnique]);
@@ -151,7 +151,7 @@ class Flags implements StateSerializable
      *
      * @return $this
      */
-    public function cleanAllFlag()
+    public function cleanAllFlag(): self
     {
         $this->changed = true;
         $this->stack = [];
@@ -168,7 +168,7 @@ class Flags implements StateSerializable
      *
      * @return string
      */
-    public function toString()
+    public function toString():string
     {
         return serialize($this->__serialize()); //4
     }
@@ -178,7 +178,7 @@ class Flags implements StateSerializable
      *
      * @return array
      */
-    public function __serialize()
+    public function __serialize(): array
     {
         return ['stack' => $this->stack
             , 'stackId' => $this->stackId
@@ -205,11 +205,11 @@ class Flags implements StateSerializable
      *                               is defined by each application
      * @param int        $timeExpire (optional) The time (in seconds) this process will expire and
      *                               it will be self deleted. -1 means no expiration.
-     * @param int|null   $idRel      (optional) Id of the relation of "to whom is the flag".
+     * @param int|null   $idRel      (optional) The ID of the relation of "to whom is the flag".
      *
      * @return $this
      */
-    public function push($idUnique = 0, $msg = '', $level = 0, $timeExpire = -1, $idRel = 0)
+    public function push($idUnique = 0, $msg = '', $level = 0, $timeExpire = -1, $idRel = 0): self
     {
         if (isset($this->stack[$idUnique]) && @$this->stackId[$idUnique] == $idRel
             && $this->stack[$idUnique] == $msg && $this->level[$idUnique] == $level
@@ -231,7 +231,7 @@ class Flags implements StateSerializable
         }
         return $this;
     }
-    public function message($msg = '')
+    public function message($msg = ''): Flags
     {
         if (isset($this->stack['_msg']) && $this->stack['_msg'] == $msg
         ) {
@@ -256,7 +256,7 @@ class Flags implements StateSerializable
      *
      * @return bool
      */
-    public function flagexist($idUnique)
+    public function flagexist($idUnique): bool
     {
         return isset($this->stack[$idUnique]);
     }
@@ -266,7 +266,7 @@ class Flags implements StateSerializable
      *
      * @return array|null
      */
-    public function getStack()
+    public function getStack(): ?array
     {
         return $this->stack;
     }
@@ -277,7 +277,7 @@ class Flags implements StateSerializable
      *
      * @return array|null=['flag','id','level','time']
      */
-    public function getFlag($idUnique)
+    public function getFlag($idUnique): ?array
     {
         if (isset($this->stack[$idUnique])) {
             return ['flag' => $this->stack[$idUnique]
@@ -293,7 +293,7 @@ class Flags implements StateSerializable
      *
      * @return int
      */
-    public function getMinLevel()
+    public function getMinLevel(): int
     {
         return (count($this->level)) ? min($this->level) : 0;
     }
@@ -303,7 +303,7 @@ class Flags implements StateSerializable
      *
      * @return int
      */
-    public function getMaxLevel()
+    public function getMaxLevel(): int
     {
         return (count($this->level)) ? max($this->level) : 0;
     }
@@ -315,7 +315,7 @@ class Flags implements StateSerializable
      *
      * @return $this
      */
-    public function setParent($job)
+    public function setParent($job):self
     {
         $this->parentJob = $job;
 
@@ -328,7 +328,7 @@ class Flags implements StateSerializable
      * @param $stateMachineOne
      * @return $this
      */
-    public function setCaller($stateMachineOne)
+    public function setCaller($stateMachineOne): self
     {
         $this->caller = $stateMachineOne;
         return $this;

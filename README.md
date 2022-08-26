@@ -71,8 +71,8 @@ The target of this library is to ease the process to create a state machine for 
     * **pause**  The transition changes of state and the job is paused. It is only possible to do the transition if the job has the **active state** = active.
     * **continue**  The transition changes of state and the job resumes of the pause. It is only possible to do the transition if the job has the **active state** = pause or active
     * **stop** The transition changes of state and the job is stopped. It is only possible to do the transition if the job has the **active state** = active or pause.
-    * **stay** The transition does not change of state but it does the operations defined by the set.   
-    * **stayonce** It's similar than stay but it does the operation once.   
+    * **stay** The transition does not change of state, but it does the operations defined by the set.   
+    * **stayonce** It's similar than stay, but it does the operation once.   
   * **Event**: (Optional). Events are special operation that changes one or more states.
 * **Active:** Every job has an **active state**. There are 4: none,stop,active,inactive,pause. It is different from the states.
   So, for example, a job could have the **state**: INPROGRESS and the **active state**: PAUSE.   
@@ -99,10 +99,10 @@ customer name, address and such) because they are not part or used by the state 
 
 * **customerpresent** =1 if the customer is at home, 0=if not, =null not defined yet
 * **addressnotfound** =1 if the address is not found by the delivery boy, =0 if found, =null if it's not yet defined.
-* **signeddeliver** =1 if the customer signed the deliver, =0 if not, =null if its not defined. 
-* **abort** =1 if the deliver must be aborted (for example, an accident), =0 if not.
+* **signeddeliver** =1 if the customer signed the delivery, =0 if not, =null if its not defined. 
+* **abort** =1 if the delivery must be aborted (for example, an accident), =0 if not.
 * **instock**  =1 if the product is in stock, =0 if it's not, =null if it is not defined.
-* **picked** =1 if the deliver boy picked and packed the product, =0 if not yet.
+* **picked** =1 if the delivery boy picked and packed the product, =0 if not yet.
 
 ### States (ChopSuey's exercise)
 
@@ -622,6 +622,9 @@ Commonly, the log format could be of the type info or error.   Flag could show a
 Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
+* 2.20 2022-08-26
+  * Fixed some typos.
+  * Fixed a bug with gettime() that it could return a float or an int.
 * 2.18 2022-06-28
   * Update dependencies. 
 * 2.17 2021-10-01

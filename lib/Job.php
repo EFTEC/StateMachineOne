@@ -36,8 +36,8 @@ class Job {
     /** @var bool[] it is used to determine if transition was already executed */
     public $transitions=[];
     /**
-     * none= the job doesn't exist or it's deleted.
-     * inactive= the job exists but it hasn't started
+     * none= the job doesn't exist, or it's deleted.
+     * inactive= the job exists, but it hasn't started
      * active = the job is running
      * pause = the job is paused
      * stop = the job has ended (succesfully,cancelled or other)
@@ -50,14 +50,16 @@ class Job {
     public $isUpdate=false;
     /** @var string[]  */
     public $log;
-    
-	public function wait($param=null) {
+
+	public function wait($param=null): bool
+    {
 		return false;
 	}
-	public function always($param=null) {
+	public function always($param=null): bool
+    {
 		return true;
 	}
-	
+
 	/**
      * Job constructor.
      */
@@ -72,7 +74,7 @@ class Job {
      * @param int $dateInit
      * @return Job
      */
-    public function setDateInit($dateInit)
+    public function setDateInit($dateInit): Job
     {
         $this->dateInit = $dateInit;
         return $this;
@@ -82,8 +84,8 @@ class Job {
 	 * @param int $dateLastChange
 	 * @return Job
 	 */
-	public function setDateLastChange($dateLastChange)
-	{
+	public function setDateLastChange($dateLastChange): Job
+    {
 		$this->dateLastChange = $dateLastChange;
 		return $this;
 	}
@@ -91,7 +93,7 @@ class Job {
      * @param int $dateEnd
      * @return Job
      */
-    public function setDateEnd($dateEnd)
+    public function setDateEnd($dateEnd): Job
     {
         $this->dateEnd = $dateEnd;
         return $this;
@@ -101,7 +103,7 @@ class Job {
      * @param int $dateExpired
      * @return Job
      */
-    public function setDateExpired($dateExpired)
+    public function setDateExpired($dateExpired): Job
     {
         $this->dateExpired = $dateExpired;
         return $this;
@@ -111,7 +113,7 @@ class Job {
      * @param string|int $state The id of the state.
      * @return Job
      */
-    public function setState($state)
+    public function setState($state): Job
     {
         $this->state = $state;
         return $this;
@@ -119,7 +121,7 @@ class Job {
 
     /**
      * It returns the current id of the state.
-     * 
+     *
      * @return string|int
      */
     public function getCurrentState()
@@ -128,11 +130,11 @@ class Job {
     }
     /**
      * It sets the fields of the job.
-     * 
+     *
      * @param array $fields An associative array.
      * @return Job
      */
-    public function setFields($fields)
+    public function setFields($fields): Job
     {
         $this->fields = $fields;
         $this->setParentFields();
@@ -140,9 +142,10 @@ class Job {
     }
 
     /**
-     * It refresh the fields. If the fields are implementation of StateSerializable, then it sets the parent.
+     * It refreshes the fields. If the fields are implementation of StateSerializable, then it sets the parent.
      */
-    public function setParentFields() {
+    public function setParentFields(): void
+    {
         foreach($this->fields as $item) {
             if ($item instanceof StateSerializable) {
                 $item->setParent($this);
@@ -155,12 +158,12 @@ class Job {
      * @param string $active= ['none','inactive','active','pause','stop'][$i]
      * @return Job
      */
-    public function setActive($active)
+    public function setActive($active): Job
     {
         $this->active=$active;
         return $this;
     }
-    public function setActiveNumber($activeNum)
+    public function setActiveNumber($activeNum): Job
     {
         switch ($activeNum) {
             case 1: $this->active='inactive'; break;
@@ -175,10 +178,12 @@ class Job {
     /**
      * @return string= ['none','inactive','active','pause','stop'][$i]
      */
-    public function getActive() {
+    public function getActive(): string
+    {
         return $this->active;
     }
-    public function getActiveNumber() {
+    public function getActiveNumber(): ?int
+    {
         switch ($this->active) {
             case 'none':
                 return 0;
@@ -200,7 +205,7 @@ class Job {
      * @param bool $isNew
      * @return Job
      */
-    public function setIsNew($isNew)
+    public function setIsNew($isNew): Job
     {
         $this->isNew = $isNew;
         return $this;
@@ -210,7 +215,7 @@ class Job {
      * @param bool $isUpdate
      * @return Job
      */
-    public function setIsUpdate($isUpdate)
+    public function setIsUpdate($isUpdate): Job
     {
         $this->isUpdate = $isUpdate;
         return $this;
