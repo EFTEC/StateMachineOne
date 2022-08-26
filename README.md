@@ -7,10 +7,9 @@ Since this library is PHP native, then it could run in Laravel, Symfony and any 
 
 [![Packagist](https://img.shields.io/packagist/v/eftec/statemachineone.svg)](https://packagist.org/packages/eftec/statemachineone)
 [![Total Downloads](https://poser.pugx.org/eftec/statemachineone/downloads)](https://packagist.org/packages/eftec/statemachineone)
-[![Maintenance](https://img.shields.io/maintenance/yes/2021.svg)]()
+[![Maintenance](https://img.shields.io/maintenance/yes/2022.svg)]()
 [![composer](https://img.shields.io/badge/composer-%3E1.8-blue.svg)]()
-[![php](https://img.shields.io/badge/php->5.6-green.svg)]()
-[![php](https://img.shields.io/badge/php-7.x-green.svg)]()
+[![php](https://img.shields.io/badge/php-7.2-green.svg)]()
 [![php](https://img.shields.io/badge/php-8.x-green.svg)]()
 [![CocoaPods](https://img.shields.io/badge/docs-70%25-yellow.svg)]()
 
