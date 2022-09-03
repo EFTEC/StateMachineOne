@@ -25,16 +25,19 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.21 2022-09-03
+ * @version  2.21.1 2022-09-03
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne
 {
+    /** @var int NODB constants indicate that NO DB would be used */
     public const NODB = 0;
+    /** @var int PDODB constants indicate that PdoOne database would be used */
     public const PDODB = 1;
+    /** @var int PDODB constants indicate that DocumentStoreOne database would be used */
     public const DOCDB = 2;
-    public $VERSION = '2.21';
+    public $VERSION = '2.21.1';
     /**
      * @var array Possible states. It must be an associative array.<br>
      * <p>$statemachine->states=['State1'=>'name of the state','State2'=>'another name'];</p>

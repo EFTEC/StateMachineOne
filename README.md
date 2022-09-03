@@ -631,6 +631,9 @@ Commonly, the log format could be of the type info or error.   Flag could show a
 Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
+* 2.21.1 2022-09-03
+  * Fixed a problem with Flags where the Job or Parent is null.
+  * Interface StateSerializable arguments allows Job or null
 * 2.21 2022-09-03
   * Updated dependencies.
   * Added type hinting/validation to most methods.

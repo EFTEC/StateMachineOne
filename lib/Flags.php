@@ -21,7 +21,7 @@ use Exception;
  */
 class Flags implements StateSerializable
 {
-    /** @var string It is the name (or id) of the container. */
+    /** @var string It is the name (or id) of the container. It is used for debug purposes. */
     private $name;
     /** @var array|null */
     private $stack = [];
@@ -40,11 +40,11 @@ class Flags implements StateSerializable
     /**
      * Flags constructor.
      *
-     * @param mixed                $name         Name of the container of flags
+     * @param string               $name         Name of the container of flags
      * @param bool                 $changed      true if the container has changed.
      * @param StateMachineOne|null $stateMachine The state machine related with the flag.
      */
-    public function __construct($name = null, bool $changed = true, ?StateMachineOne $stateMachine = null)
+    public function __construct(string $name = '', bool $changed = true, ?StateMachineOne $stateMachine = null)
     {
         $this->name = $name;
         $this->changed = $changed;
@@ -68,12 +68,12 @@ class Flags implements StateSerializable
     /**
      * Creates a flag from a job and a string
      *
-     * @param Job    $job
+     * @param Job|null    $job
      * @param String $string a serialized string containing the information of the flag.
      *
      * @return void
      */
-    public function fromString(Job $job, string $string): void
+    public function fromString(?Job $job, string $string): void
     {
         try {
             $this->parentJob = $job;
@@ -110,7 +110,7 @@ class Flags implements StateSerializable
 
     public function getTime($microtime = false)
     {
-        if ($this->caller) {
+        if ($this->caller!==null) {
             return $this->caller->getTime($microtime);
         }
         return $microtime ? microtime(true) : time();
@@ -136,8 +136,8 @@ class Flags implements StateSerializable
     {
         if (isset($this->stack[$idUnique])) {
             unset($this->stack[$idUnique], $this->stackId[$idUnique], $this->timeExpire[$idUnique]);
-            if ($this->parentJob) {
-                $this->caller->addLog($this->parentJob, $this->name, 'PULL'
+            if ($this->parentJob!==null && $this->caller!==null) {
+                $this->caller->addLog($this->parentJob, $this->name ?? '', 'PULL'
                     , "flag,,changed,,$idUnique,,$idRel,,$level,,$msg", $idRel);
             }
         }
@@ -224,8 +224,8 @@ class Flags implements StateSerializable
         }
         $this->level[$idUnique] = $level;
         $this->changed = true;
-        if ($this->parentJob && $this->caller) {
-            $this->caller->addLog($this->parentJob, $this->name, 'PUSH', "flag,,changed,,$idUnique,,$level,,$idRel,,$msg", $idRel);
+        if ($this->parentJob!==null && $this->caller!==null) {
+            $this->caller->addLog($this->parentJob, $this->name ?? '', 'PUSH', "flag,,changed,,$idUnique,,$level,,$idRel,,$msg", $idRel);
         }
         return $this;
     }
@@ -242,8 +242,8 @@ class Flags implements StateSerializable
         $this->timeExpire['_msg'] = -1; // messages never expires.
         $this->level['_msg'] = 0;
         $this->changed = true;
-        if ($this->parentJob && $this->caller) {
-            $this->caller->addLog($this->parentJob, $this->name, 'MESSAGE', $msg, $this->stackId['_msg']);
+        if ($this->parentJob!==null && $this->caller!==null) {
+            $this->caller->addLog($this->parentJob, $this->name ?? '', 'MESSAGE', $msg, $this->stackId['_msg']);
         }
         return $this;
     }
@@ -323,10 +323,10 @@ class Flags implements StateSerializable
     /**
      * It sets the caller. Usually it is the state machine.
      *
-     * @param $stateMachineOne
+     * @param StateMachineOne|null $stateMachineOne
      * @return $this
      */
-    public function setCaller($stateMachineOne): self
+    public function setCaller(?StateMachineOne $stateMachineOne): self
     {
         $this->caller = $stateMachineOne;
         return $this;

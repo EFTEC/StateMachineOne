@@ -8,12 +8,12 @@ interface StateSerializable
     /**
      * It creates an object using a string.
      *
-     * @param Job    $job
-     * @param String $string
+     * @param Job|null $job
+     * @param String   $string
      *
      * @return mixed
      */
-    public function fromString(Job $job, string $string);
+    public function fromString(?Job $job, string $string);
 
     /**
      * It sets the parent
