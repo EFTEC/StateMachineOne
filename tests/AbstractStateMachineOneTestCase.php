@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 abstract class AbstractStateMachineOneTestCase extends TestCase {
     protected $statemachineone;
-    
+
     public function __construct($name = null, array $data = [], $dataName = '') {
         parent::__construct($name, $data, $dataName);
         $serviceObject=new ServiceClass();
@@ -19,7 +19,8 @@ abstract class AbstractStateMachineOneTestCase extends TestCase {
 }
 
 class ServiceClass {
-    public static function ping($value) { // this method could be non-static
+    public static function ping($value): string
+    { // this method could be non-static
         return "pong $value";
     }
 }

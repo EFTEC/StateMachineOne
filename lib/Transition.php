@@ -1,10 +1,8 @@
 <?php /** @noinspection UnknownInspectionInspection */
 /** @noinspection PhpUnusedParameterInspection */
-
 /** @noinspection PhpUnused */
 
 namespace eftec\statemachineone;
-
 
 use eftec\minilang\MiniLang;
 
@@ -17,9 +15,9 @@ use eftec\minilang\MiniLang;
  */
 class Transition
 {
-    /** @var string */
+    /** @var string|int|null */
     public $state0;
-    /** @var string */
+    /** @var string|int|null */
     public $state1;
     /** @var callable */
     public $function;
@@ -57,21 +55,21 @@ class Transition
      * </pre>
      *
      * @param StateMachineOne $caller     The caller (usually, a statemachine instance).
-     * @param string          $state0     The initial state
-     * @param string          $state1     The end state. It could be the same initial state.
+     * @param string|int|null $state0     The initial state
+     * @param string|int|null $state1     The end state. It could be the same initial state.
      * @param mixed           $conditions The code with the conditions. The conditions are expressed by MiniLang.
      * @param string          $result     =['change','pause','continue','stop','stay'][$i]
      * @param bool            $storeClass If true, then it doesn't change the state, but it stores the operation in
      *                                    MiniLang. It is useful if you want to create a MiniLang class.
      * @see https://github.com/EFTEC/MiniLang for more information about conditions.
      */
-    public function __construct($caller, $state0, $state1, $conditions, $result = '', $storeClass = false)
+    public function __construct(StateMachineOne $caller, $state0, $state1, $conditions
+        , string                                $result = '', bool $storeClass = false)
     {
         $this->caller = $caller;
         $this->state0 = $state0;
         $this->state1 = $state1;
         $this->result = $result;
-
         if (is_callable($conditions)) {
             $this->txtCondition = 'custom function()';
             $this->function = $conditions;
@@ -105,7 +103,7 @@ class Transition
      *
      * @return bool
      */
-    public function evalLogic($smo, $job, $idTransition)
+    public function evalLogic(StateMachineOne $smo, Job $job, int $idTransition): bool
     {
         $r = $this->caller->miniLang->evalLogic($idTransition);
         //echo "<br>eval:<br>";
@@ -133,7 +131,7 @@ class Transition
      *
      * @return bool True if the transition is done, otherwise false.
      */
-    public function doTransition($smo, $job, $forced = false, $numTransaction = 0)
+    public function doTransition(StateMachineOne $smo, Job $job, bool $forced = false, int $numTransaction = 0): bool
     {
         $ga = $job->getActive();
         if ($ga === 'stop') {
@@ -144,7 +142,6 @@ class Transition
         switch ($this->result) {
             case 'change':
                 if ($forced || $ga === 'active') { // we only changed if the job is active.
-
                     $smo->changeState($job, $this->state1);
                     $this->caller->miniLang->evalSet($numTransaction);
                     //if ($smo->isDbActive()) $smo->saveDBJob($job);
@@ -169,7 +166,6 @@ class Transition
                     if ($smo->pauseTriggerWhen === 'instead') {
                         return $smo->callPauseTrigger($job);
                     }
-
                     if ($smo->pauseTriggerWhen === 'before') {
                         $smo->callPauseTrigger($job);
                     }
@@ -189,7 +185,7 @@ class Transition
             case 'continue':
                 if ($ga === 'pause' || $ga === 'active' || $forced) { // we only changed if the job is active or paused
                     $smo->changeState($job, $this->state1);
-                    $job->setActive('active');
+                    $job->setActive();
                     $this->caller->miniLang->evalSet($numTransaction);
                     //if ($smo->isDbActive()) $smo->saveDBJob($job);
                     $smo->addLog($job, 'INFO', 'TRANSITION', 'state,,continue,,'
@@ -202,7 +198,6 @@ class Transition
                 if ($ga === 'active' || $ga === 'pause' || $forced) { // we only changed if the job is paused or active.
                     $smo->changeState($job, $this->state1);
                     $job->setActive('stop');
-
                     $this->caller->miniLang->evalSet($numTransaction);
                     //if ($smo->isDbActive()) $smo->saveDBJob($job);
                     $smo->addLog($job, 'INFO', 'TRANSITION', 'state,,stop,,'
@@ -247,19 +242,17 @@ class Transition
         if (is_numeric($this->duration)) {
             return $this->duration;
         }
-
         //return $this->caller->miniLang->getValue($this->duration[0]
         //    , $this->duration[1], $this->duration[2]
         //    , $job, $job->fields);
         return null;
-
     }
 
     /**
      * @param int $duration
      * @return Transition
      */
-    public function setDuration($duration)
+    public function setDuration(int $duration): Transition
     {
         $this->duration = $duration;
         return $this;
@@ -268,26 +261,26 @@ class Transition
     /**
      * @return string
      */
-    public function getTxtCondition()
+    public function getTxtCondition(): string
     {
         return $this->txtCondition;
     }
 
     /**
-     * @param string $state0
+     * @param string|int|null $state0
      * @return Transition
      */
-    public function setState0($state0)
+    public function setState0($state0): Transition
     {
         $this->state0 = $state0;
         return $this;
     }
 
     /**
-     * @param string $state1
+     * @param string|int|null $state1
      * @return Transition
      */
-    public function setState1($state1)
+    public function setState1($state1): Transition
     {
         $this->state1 = $state1;
         return $this;
@@ -297,7 +290,7 @@ class Transition
      * @param callable $function
      * @return Transition
      */
-    public function setFunction(callable $function)
+    public function setFunction(callable $function): Transition
     {
         $this->function = $function;
         return $this;

@@ -1,40 +1,38 @@
 <?php /** @noinspection UnknownInspectionInspection */
 /** @noinspection PhpUnused */
-
 /** @noinspection PhpUnusedParameterInspection */
 
 namespace eftec\statemachineone;
-
-
 /**
  * Class Job
- * @package eftec\statemachineone
+ * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version 1.7 2019-06-16
- * @link https://github.com/EFTEC/StateMachineOne
+ * @version  1.7 2019-06-16
+ * @link     https://github.com/EFTEC/StateMachineOne
  */
-class Job {
-	/** @var int number or position of the job on the queue */
-    public $idJob=0;
-    /** @var int|null the number of the parent job  */
+class Job
+{
+    /** @var int number or position of the job on the queue */
+    public $idJob = 0;
+    /** @var int|null the number of the parent job */
     public $idParentJob;
-    /** @var int initial date (timestamp) */
+    /** @var int|null initial date (timestamp) */
     public $dateInit;
-	/** @var int date of the last change (timestamp)*/
-	public $dateLastChange;
-    /** @var int date of end (timestamp) */
+    /** @var int|null date of the last change (timestamp) */
+    public $dateLastChange;
+    /** @var int|null date of end (timestamp) */
     public $dateEnd;
-    /** @var int date of expiration (timestamp) */
+    /** @var int|null date of expiration (timestamp) */
     public $dateExpired;
-    /** @var string|int the id of the current state  */
+    /** @var string|int|null the id of the current state */
     public $state;
     /** @var array fields or values per job. It must be an associative array */
     public $fields;
     /** @var array indicates the flow of states */
-    public $stateFlow=[];
+    public $stateFlow = [];
 
     /** @var bool[] it is used to determine if transition was already executed */
-    public $transitions=[];
+    public $transitions = [];
     /**
      * none= the job doesn't exist, or it's deleted.
      * inactive= the job exists, but it hasn't started
@@ -43,30 +41,31 @@ class Job {
      * stop = the job has ended (succesfully,cancelled or other)
      * @var string ['none','inactive','active','pause','stop'][$i]
      */
-    private $active='none';
+    private $active = 'none';
     /** @var bool If the job is new or not. It is used to store into the database (insert) */
-    public $isNew=false;
+    public $isNew = false;
     /** @var bool If the job is updated. It is used to store into the database (update) */
-    public $isUpdate=false;
-    /** @var string[]  */
+    public $isUpdate = false;
+    /** @var string[] */
     public $log;
 
-	public function wait($param=null): bool
+    public function wait($param = null): bool
     {
-		return false;
-	}
-	public function always($param=null): bool
-    {
-		return true;
-	}
+        return false;
+    }
 
-	/**
+    public function always($param = null): bool
+    {
+        return true;
+    }
+
+    /**
      * Job constructor.
      */
     public function __construct()
     {
-        $this->log=[];
-        $this->transitions=[];
+        $this->log = [];
+        $this->transitions = [];
     }
 
 
@@ -74,26 +73,27 @@ class Job {
      * @param int $dateInit
      * @return Job
      */
-    public function setDateInit($dateInit): Job
+    public function setDateInit(int $dateInit): Job
     {
         $this->dateInit = $dateInit;
         return $this;
     }
 
-	/**
-	 * @param int $dateLastChange
-	 * @return Job
-	 */
-	public function setDateLastChange($dateLastChange): Job
+    /**
+     * @param int $dateLastChange
+     * @return Job
+     */
+    public function setDateLastChange(int $dateLastChange): Job
     {
-		$this->dateLastChange = $dateLastChange;
-		return $this;
-	}
+        $this->dateLastChange = $dateLastChange;
+        return $this;
+    }
+
     /**
      * @param int $dateEnd
      * @return Job
      */
-    public function setDateEnd($dateEnd): Job
+    public function setDateEnd(int $dateEnd): Job
     {
         $this->dateEnd = $dateEnd;
         return $this;
@@ -103,14 +103,14 @@ class Job {
      * @param int $dateExpired
      * @return Job
      */
-    public function setDateExpired($dateExpired): Job
+    public function setDateExpired(int $dateExpired): Job
     {
         $this->dateExpired = $dateExpired;
         return $this;
     }
 
     /**
-     * @param string|int $state The id of the state.
+     * @param string|int|null $state The id of the state.
      * @return Job
      */
     public function setState($state): Job
@@ -122,19 +122,20 @@ class Job {
     /**
      * It returns the current id of the state.
      *
-     * @return string|int
+     * @return string|int|null
      */
     public function getCurrentState()
     {
         return $this->state;
     }
+
     /**
      * It sets the fields of the job.
      *
      * @param array $fields An associative array.
      * @return Job
      */
-    public function setFields($fields): Job
+    public function setFields(array $fields): Job
     {
         $this->fields = $fields;
         $this->setParentFields();
@@ -146,7 +147,7 @@ class Job {
      */
     public function setParentFields(): void
     {
-        foreach($this->fields as $item) {
+        foreach ($this->fields as $item) {
             if ($item instanceof StateSerializable) {
                 $item->setParent($this);
             }
@@ -155,22 +156,33 @@ class Job {
 
 
     /**
-     * @param string $active= ['none','inactive','active','pause','stop'][$i]
+     * @param string $active = ['none','inactive','active','pause','stop'][$i]
      * @return Job
      */
-    public function setActive($active): Job
+    public function setActive(string $active = 'active'): Job
     {
-        $this->active=$active;
+        $this->active = $active;
         return $this;
     }
+
     public function setActiveNumber($activeNum): Job
     {
         switch ($activeNum) {
-            case 1: $this->active='inactive'; break;
-            case 2: $this->active='active'; break;
-            case 3: $this->active='pause'; break;
-            case 4: $this->active='stop'; break;
-            default: $this->active='none'; break;
+            case 1:
+                $this->active = 'inactive';
+                break;
+            case 2:
+                $this->active = 'active';
+                break;
+            case 3:
+                $this->active = 'pause';
+                break;
+            case 4:
+                $this->active = 'stop';
+                break;
+            default:
+                $this->active = 'none';
+                break;
         }
         return $this;
     }
@@ -182,6 +194,7 @@ class Job {
     {
         return $this->active;
     }
+
     public function getActiveNumber(): ?int
     {
         switch ($this->active) {
@@ -205,7 +218,7 @@ class Job {
      * @param bool $isNew
      * @return Job
      */
-    public function setIsNew($isNew): Job
+    public function setIsNew(bool $isNew = true): Job
     {
         $this->isNew = $isNew;
         return $this;
@@ -215,12 +228,11 @@ class Job {
      * @param bool $isUpdate
      * @return Job
      */
-    public function setIsUpdate($isUpdate): Job
+    public function setIsUpdate(bool $isUpdate = true): Job
     {
         $this->isUpdate = $isUpdate;
         return $this;
     }
-
 
 
 } // end Job

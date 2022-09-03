@@ -98,7 +98,7 @@ customer name, address and such) because they are not part or used by the state 
 
 * **customerpresent** =1 if the customer is at home, 0=if not, =null not defined yet
 * **addressnotfound** =1 if the address is not found by the delivery boy, =0 if found, =null if it's not yet defined.
-* **signeddeliver** =1 if the customer signed the delivery, =0 if not, =null if its not defined. 
+* **signeddeliver** =1 if the customer signed the delivery, =0 if not, =null if it's not defined. 
 * **abort** =1 if the delivery must be aborted (for example, an accident), =0 if not.
 * **instock**  =1 if the product is in stock, =0 if it's not, =null if it is not defined.
 * **picked** =1 if the delivery boy picked and packed the product, =0 if not yet.
@@ -118,7 +118,7 @@ It must include all the possible situation. The real world is not as easy as: se
 
 
 * **STATE_ABORTTRANSPORT**   Something happened, the delivery must be aborted. 
-* **STATE_HELP**    The delivery boy is ready to deliver but he is not able to find the address or maybe there is nobody, so he calls for help.  
+* **STATE_HELP**    The delivery boy is ready to deliver, but he is not able to find the address or maybe there is nobody, so he calls for help.  
 * **STATE_DELIVERED**  The food is delivered. Our hero returns to base (Chinese restaurant).
 
 ![cooker](Docs/food.jpg)
@@ -130,11 +130,16 @@ It must include all the possible situation. The real world is not as easy as: se
 
 * **STATE_PICK** -> **STATE_CANCEL** (END)  When?. instock=0 (end of the job)
 * **STATE_PICK** -> **STATE_TRANSPORT**  When?. instock=1 and picked=1
-* **STATE_TRANSPORT** -> **STATE_ABORTTRANSPORT** (END)  When?. abort=1 (for some reason, our boy abort the transport, is it raining?)
-* **STATE_TRANSPORT** -> **STATE_DELIVERED** (END)  When?. addressnotfound=0,customerpresent=1 and signeddeliver=1. It is delivered, the customer is present and it signed the deliver (plus a tip, I hope it)
-* **STATE_TRANSPORT** -> **STATE_HELP**  When?. addressnotfound=1,customerpresent=0 and signeddeliver<>1. Our deliver calls to home and ask for new instructions. Is it Fake Street #1234 the right address?.  
-* **STATE_HELP** -> **STATE_ABORTED** (END) When?. (15 minutes deadline) or if abort=1.  Our deliver called home and yes, the address is fake (it's a shocking surprise)  
-* **STATE_HELP** -> **STATE_DELIVERED** (END) When?. addressnotfound=0,customerpresent=1 and signeddeliver=1. It is delivered, the customer is present and it signed the deliver (plus a tip, I hope it)  
+* **STATE_TRANSPORT** -> **STATE_ABORTTRANSPORT** (END)  When?. 
+abort=1 (for some reason, our boy abort the transport, is it raining?)
+* **STATE_TRANSPORT** -> **STATE_DELIVERED** (END)  When?. addressnotfound=0,customerpresent=1 and signeddeliver=1. 
+It is delivered, the customer is present, and it signed the delivery (plus a tip, I hope it)
+* **STATE_TRANSPORT** -> **STATE_HELP**  When?. addressnotfound=1,customerpresent=0 and signeddeliver<>1. 
+Our delivery calls to home and ask for new instructions. Is it Fake Street #1234 the right address?.  
+* **STATE_HELP** -> **STATE_ABORTED** (END) When?. (15 minutes deadline) or if abort=1.  
+Our delivery called home and yes, the address is fake (it's a shocking surprise)  
+* **STATE_HELP** -> **STATE_DELIVERED** (END) When?. addressnotfound=0,customerpresent=1 and signeddeliver=1. 
+It is delivered, the customer is present, and it signed the delivery (plus a tip, I hope it)  
 
 ### Final Code (ChopSuey's example)
 [Example/ChopSuey.php](example/ChopSuey.php)
@@ -225,7 +230,7 @@ $smachine->addTransition(STATE_PICK,STATE_CANCEL
 
 ```
 
-The transition is written as follow:
+The transition is written as follows:
 * initial state (or initial states)
 * end state
 * Transition language
@@ -378,7 +383,7 @@ We could add an operation of change of variables when a transition is done.
 $smachine->addTransition(STATE_ONE,STATE_TWO,'when field = 0 set field=1');
 ```
 
-In this case, when we are in STATE_ONE and field=0, then we change to state STATE_TWO and we assign the field=1
+In this case, when we are in "STATE_ONE" and field=0, then we change to state "STATE_TWO", and we assign the field=1
 
 Examples:
 
@@ -472,9 +477,14 @@ If a timeout happens, then the transition is executed.
 
 ### What is a job?
 
-Let's say we have a blueprint to build the house. The **job** is the action to build the house and the blueprint is the **transitions**.   So, the job is an operative part of our work-flow.
+Let's say we have a blueprint to build the house. 
+The **job** is the action to build the house and the blueprint are the **transitions**.   
+So, the job is an operative part of our work-flow.
 
-A **job** keeps values, including the current **state** and it has a lifecycle, while the workflow (the transitions) doesn't keep any single value. It is possible to create a short life job that works in a single web thread. However, if we need to keep the values, then we could use a database or a file system (flat file).  
+A **job** keeps values, including the current **state,** and it has a lifecycle, while the 
+workflow (the transitions) doesn't keep any single value. It is possible to create a short life job 
+that works in a single web thread. However, if we need to keep the values, then we could use a database 
+or a file system (flat file).  
 
 ### Creating a job
 
@@ -621,6 +631,9 @@ Commonly, the log format could be of the type info or error.   Flag could show a
 Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
+* 2.21 2022-09-03
+  * Updated dependencies.
+  * Added type hinting/validation to most methods.
 * 2.20 2022-08-26
   * Fixed some typos.
   * Fixed a bug with gettime() that it could return a float or an int.
@@ -648,16 +661,17 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
   * Some cleanups of the code.  
   * Updated dependencies.
 * 2.11 2020-10-16
-  * Jobs has an extra field called idParentJob.   *Job tables must be rebuild* or added the column: idparentjob int.     
+  * Jobs has an extra field called idParentJob.   *Job tables must be rebuilded* or added the column: idparentjob int.     
 * 2.10.1 2020-10-15
-  * A small bug in saveDbJob where the $backup field is null and we are updating.
+  * A small bug in saveDbJob where the $backup field is null, and we are updating.
 * 2.10 2020-10-15 
-   * Logs now are separated by ,, instead of |. It is because some message could uses "|"
+   * Logs now are separated by ",," instead of |. It is because some message could use "|"
    * Log state, we added the number of transaction.  
-* saveDbJob(): Update in the database: The library doesn't update fields that aren't changed. For this,  it creates a backup variable every time a job is loaded and it compares the backup with the job to save.
+* saveDbJob(): Update in the database: The library doesn't update fields that aren't changed. For this,  
+it creates a backup variable every time a job is loaded, and it compares the backup with the job to save.
 * 2.9.2 2020-09-29 saveDbJob() updated the primary key field. Now, it skips to update it.
 * 2.9.1 2020-09-22 cacheMachine() now works correctly.
-* 2.9 2020-09-20 The flags are visualized differently. Also the serialization of text_job now use serialize instead
+* 2.9 2020-09-20 The flags are visualized differently. Also, the serialization of text_job now use serialize instead
  of JSON.  Previous jobs must be flushed, you can flush with $stateMachine->createDbTable(false);   
 * 2.8 2020-09-15 added the field $fieldUI to specify visual components.   
 * 2.7 2020-08-11 a small update of dependencies.
@@ -672,7 +686,7 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 * 2.3 2019-12-26
     * Method Createdbtable() now sets a valid default value
     * Some cleanups.
-    * Bootstrap updated to 4.4.1. Also it is using https instead of http
+    * Bootstrap updated to 4.4.1. Also, it is using https instead of http
 * 2.2 2019-10-22
     * Updated eftec/MiniLang (dependency) from 2.9 => 2.12
     * Updated eftec/pdoone (depe
@@ -721,7 +735,7 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
     * Added addEvent() and callEvent()   
     * Added timeout and fulltimeout to the transition language  
     * Now transitions doesn't require the timeout.  
-    * idRef are not longer used.    
+    * idRef are no longer used.    
 * 1.2 2018-12-09 Updated dependency  
 * 1.1 2018-12-09 Some corrections.  
 * 1.0 2018-12-08 First (non beta) version.
@@ -729,5 +743,5 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 ## What is missing
 
 * ~~events and timeout~~
-* Most unit test, ~~now it is only the barebone.~~ the unit test is real but it's still basic. 
+* Most unit test, ~~now it is only the barebone.~~ the unit test is real, but it's still basic. 
 * Increase the log features.  

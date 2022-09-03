@@ -1,4 +1,6 @@
-<?php /** @noinspection PhpUnhandledExceptionInspection */
+<?php /** @noinspection PhpIllegalPsrClassPathInspection */
+
+/** @noinspection PhpUnhandledExceptionInspection */
 
 use eftec\statemachineone\StateMachineOne;
 
@@ -12,14 +14,21 @@ class StateMachineOne_all_Test extends TestCase
     public function setUp():void {
 
         $this->state = new StateMachineOne(null);
-        $this->state->setDebug(true);
-        if(!defined('PARKED')) define('PARKED', 1);
-        if(!defined('IDLING')) define('IDLING', 2);
-        if(!defined('DRIVING')) define('DRIVING', 3);
+        $this->state->setDebug();
+        if(!defined('PARKED')) {
+            define('PARKED', 1);
+        }
+        if(!defined('IDLING')) {
+            define('IDLING', 2);
+        }
+        if(!defined('DRIVING')) {
+            define('DRIVING', 3);
+        }
     }
 
 
-    public function test_1() {
+    public function test_1(): void
+    {
 
         $this->state->setDefaultInitState(PARKED);
 
@@ -57,7 +66,7 @@ class StateMachineOne_all_Test extends TestCase
         $job->fields['pedal']=1;
         $job->fields['turnkey']=1;
 
-        // i push the pedal and i turn the key. gas > 0
+        // I push the pedal and I turn the key. gas > 0
         $this->state->checkJob($job);
         self::assertEquals(['pedal'=>1,'turnkey'=>1,'gas'=>100,'brake'=>0,'speed'=>0],$job->fields);
         self::assertEquals(IDLING,$job->state);
@@ -86,7 +95,8 @@ class StateMachineOne_all_Test extends TestCase
 
 
 
-    public function test_2() {
+    public function test_2(): void
+    {
         $this->state->setDefaultInitState(PARKED);
         $this->state->setStates([
             PARKED => 'Parked',
@@ -121,7 +131,8 @@ class StateMachineOne_all_Test extends TestCase
 
     }
 
-    public function test_3() {
+    public function test_3(): void
+    {
 
         $this->state->setDefaultInitState(PARKED);
         $this->state->setStates([

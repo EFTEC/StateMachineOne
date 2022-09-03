@@ -18,7 +18,7 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
 	    $this->statemachineone->setStates([1,2,3]);
 	    $this->statemachineone->setDefaultInitState(1);
 	    $this->statemachineone->fieldDefault=['field1'=>1,'field2'=>0,'field3'=>0,'field4'=>123,'counter'=>0];
-	    $this->statemachineone->addTransition(1,2,'when field1 = 1 set counter + 1 timeout 100 fulltimeout 200','change');
+	    $this->statemachineone->addTransition(1,2,'when field1 = 1 set counter + 1 timeout 100 fulltimeout 200');
         $this->statemachineone->addTransition(2,2,'when field2 = 0 set field3 = -1','stay');
         $this->statemachineone->addTransition(2,2,'when field2 = 0 set field4 + field1-field3','stay'); // field4=field4(123)+field1(1)-field3(-1)
 	    $this->statemachineone->addTransition(2,3,'when field2 = 0 set field1 = 2 , counter + 1','stop');
@@ -232,6 +232,8 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
 
     }
     public $conteo=0;
+
+    /** @noinspection ForgottenDebugOutputInspection */
     public function testFlagMessage(): void
     {
         $this->conteo=0;
@@ -246,7 +248,7 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
         $this->statemachineone->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
         $this->statemachineone->setDefaultInitState(10);
         $this->statemachineone->fieldDefault=['field1'=>1,'field2'=>new Flags('myflag',true,$this->statemachineone),'counter'=>0];
-        $this->statemachineone->addTransition(10,20,'when field1 = 1 set field2.message("hello world2")','change');
+        $this->statemachineone->addTransition(10,20,'when field1 = 1 set field2.message("hello world2")');
         $this->statemachineone->addTransition(20,30,'when field1 = 1 set field2.message("hello world")','stay');
         $this->statemachineone->addTransition(20,30,'when field1 = 1 set field2.message("hello world")','stay');
 
@@ -298,7 +300,7 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
         $this->statemachineone->setDefaultInitState(10);
         $this->statemachineone->fieldDefault=['field1'=>123,'field2'=>-1,'counter'=>0];
         /** @see \eftec\tests\ServiceClass::ping we are calling this method */
-        $this->statemachineone->addTransition(10,20,'when true() set field2=field1','change');
+        $this->statemachineone->addTransition(10,20,'when true() set field2=field1');
         $this->statemachineone->addTransition(20,20,'when true()','stop');
         $this->statemachineone->createJob($this->statemachineone->fieldDefault);
         $state2=$this->statemachineone->fieldDefault;

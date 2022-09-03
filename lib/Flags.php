@@ -1,6 +1,5 @@
 <?php /** @noinspection UnknownInspectionInspection */
 /** @noinspection TypeUnsafeComparisonInspection */
-
 /** @noinspection PhpUnused */
 
 namespace eftec\statemachineone;
@@ -41,11 +40,11 @@ class Flags implements StateSerializable
     /**
      * Flags constructor.
      *
-     * @param mixed                $name Name of the container of flags
-     * @param bool                 $changed true if the container has changed.
+     * @param mixed                $name         Name of the container of flags
+     * @param bool                 $changed      true if the container has changed.
      * @param StateMachineOne|null $stateMachine The state machine related with the flag.
      */
-    public function __construct($name = null, $changed = true, $stateMachine = null)
+    public function __construct($name = null, bool $changed = true, ?StateMachineOne $stateMachine = null)
     {
         $this->name = $name;
         $this->changed = $changed;
@@ -59,7 +58,7 @@ class Flags implements StateSerializable
      *
      * @return Flags
      */
-    public static function factory($job, $string): Flags
+    public static function factory(Job $job, string $string): Flags
     {
         $obj = new Flags();
         $obj->fromString($job, $string);
@@ -74,19 +73,18 @@ class Flags implements StateSerializable
      *
      * @return void
      */
-    public function fromString($job, $string):void
+    public function fromString(Job $job, string $string): void
     {
         try {
             $this->parentJob = $job;
-            $arr = @unserialize($string,['allowed_classes'=>true]);
+            $arr = @unserialize($string, ['allowed_classes' => true]);
             $this->__unserialize($arr);
-
         } catch (Exception $ex) {
             $this->cleanAllFlag();
         }
     }
 
-    public function __unserialize($arr):void
+    public function __unserialize($arr): void
     {
         $this->stack = $arr['stack'];
         $this->stackId = $arr['stackId'];
@@ -126,15 +124,15 @@ class Flags implements StateSerializable
      * pull('light','lights out',2); // It removes the flag light with message light out and level 0
      * pull('light','lights out',2,400); // It removes the flag light #400 with message light out and level 0
      * </pre>
-     * @param string $idUnique This value is used to identify each flag
+     * @param string|int $idUnique This value is used to identify each flag
      *
-     * @param string $msg      (optional) used for log
-     * @param int    $level    (optional) used for log
-     * @param int    $idRel    (optional) ID related (for example, the id of the job) used for log
+     * @param string     $msg      (optional) used for log
+     * @param int        $level    (optional) used for log
+     * @param int        $idRel    (optional) ID related (for example, the id of the job) used for log
      *
      * @return $this
      */
-    public function pull($idUnique = '', $msg = '', $level = 0, $idRel = 0): self
+    public function pull(string $idUnique = '', string $msg = '', int $level = 0, int $idRel = 0): self
     {
         if (isset($this->stack[$idUnique])) {
             unset($this->stack[$idUnique], $this->stackId[$idUnique], $this->timeExpire[$idUnique]);
@@ -168,7 +166,7 @@ class Flags implements StateSerializable
      *
      * @return string
      */
-    public function toString():string
+    public function toString(): string
     {
         return serialize($this->__serialize()); //4
     }
@@ -209,7 +207,7 @@ class Flags implements StateSerializable
      *
      * @return $this
      */
-    public function push($idUnique = 0, $msg = '', $level = 0, $timeExpire = -1, $idRel = 0): self
+    public function push($idUnique = 0, string $msg = '', int $level = 0, int $timeExpire = -1, ?int $idRel = 0): self
     {
         if (isset($this->stack[$idUnique]) && @$this->stackId[$idUnique] == $idRel
             && $this->stack[$idUnique] == $msg && $this->level[$idUnique] == $level
@@ -227,10 +225,11 @@ class Flags implements StateSerializable
         $this->level[$idUnique] = $level;
         $this->changed = true;
         if ($this->parentJob && $this->caller) {
-            $this->caller->addLog($this->parentJob, $this->name, 'PUSH', "flag,,changed,,$idUnique,,$level,,$idRel,,$msg",$idRel);
+            $this->caller->addLog($this->parentJob, $this->name, 'PUSH', "flag,,changed,,$idUnique,,$level,,$idRel,,$msg", $idRel);
         }
         return $this;
     }
+
     public function message($msg = ''): Flags
     {
         if (isset($this->stack['_msg']) && $this->stack['_msg'] == $msg
@@ -239,12 +238,12 @@ class Flags implements StateSerializable
             return $this;
         }
         $this->stack['_msg'] = $msg;
-        $this->stackId['_msg'] = ($this->parentJob!==null) ? $this->parentJob->idJob : 0;
-        $this->timeExpire['_msg']=-1; // messages never expires.
+        $this->stackId['_msg'] = ($this->parentJob !== null) ? $this->parentJob->idJob : 0;
+        $this->timeExpire['_msg'] = -1; // messages never expires.
         $this->level['_msg'] = 0;
         $this->changed = true;
         if ($this->parentJob && $this->caller) {
-            $this->caller->addLog($this->parentJob, $this->name, 'MESSAGE', $msg,$this->stackId['_msg']);
+            $this->caller->addLog($this->parentJob, $this->name, 'MESSAGE', $msg, $this->stackId['_msg']);
         }
         return $this;
     }
@@ -252,7 +251,7 @@ class Flags implements StateSerializable
     /**
      * It returns true if the flag exists, false if not.
      *
-     * @param int $idUnique
+     * @param string|int $idUnique
      *
      * @return bool
      */
@@ -273,7 +272,7 @@ class Flags implements StateSerializable
 
     /**
      * Get a flag as an associative array (or null if the flag does not exist).
-     * @param int $idUnique
+     * @param string|int $idUnique
      *
      * @return array|null=['flag','id','level','time']
      */
@@ -311,14 +310,13 @@ class Flags implements StateSerializable
     /**
      * It sets the parent job.
      *
-     * @param Job $job
+     * @param Job|null $job
      *
      * @return $this
      */
-    public function setParent($job):self
+    public function setParent(?Job $job): self
     {
         $this->parentJob = $job;
-
         return $this;
     }
 

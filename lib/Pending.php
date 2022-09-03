@@ -4,16 +4,15 @@
 
 namespace eftec\statemachineone;
 
-
 use RuntimeException;
 
 class Pending implements StateSerializable
 {
-    /** @var array=[\eftec\statemachineone\Pending::factoryScheduleItem()]  */
+    /** @var array=[\eftec\statemachineone\Pending::factoryScheduleItem()] */
     public $schedule;
 
-    public $cyclical=false;
-    public $cyclicalInterval=0;
+    public $cyclical = false;
+    public $cyclicalInterval = 0;
 
     /**
      * @param int  $time
@@ -21,20 +20,20 @@ class Pending implements StateSerializable
      *
      * @return array
      */
-    public static function factoryScheduleItem($time=0,$done=false): array
+    public static function factoryScheduleItem(int $time = 0, bool $done = false): array
     {
-        return ['time'=>$time,'done'=>$done];
+        return ['time' => $time, 'done' => $done];
     }
 
 
     /**
      * Pending constructor.
      *
-     * @param array $schedule=[\eftec\statemachineone\Pending::factoryScheduleItem()]
+     * @param array $schedule =[\eftec\statemachineone\Pending::factoryScheduleItem()]
      * @param bool  $cyclical
      * @param int   $cyclicalInterval
      */
-    public function __construct($schedule=[], $cyclical=false, $cyclicalInterval=0)
+    public function __construct(array $schedule = [], bool $cyclical = false, int $cyclicalInterval = 0)
     {
         $this->schedule = $schedule;
         $this->cyclical = $cyclical;
@@ -47,31 +46,31 @@ class Pending implements StateSerializable
      *
      * @return int
      */
-    public function getLastIndex($time=null): int
+    public function getLastIndex(?int $time = null): int
     {
-        $time= $time ?? time();
-        $result=0;
-        $index=-1;
-        foreach($this->schedule as $k=>$s) {
-            if ($s['time']<$time && $s['time']>$result) {
-                $result=$s['time'];
-                $index=$k;
+        $time = $time ?? time();
+        $result = 0;
+        $index = -1;
+        foreach ($this->schedule as $k => $s) {
+            if ($s['time'] < $time && $s['time'] > $result) {
+                $result = $s['time'];
+                $index = $k;
             }
         }
         return $index;
     }
 
-    public function toString():string
+    public function toString(): string
     {
-        return serialize($this->schedule).';;'.serialize($this->cyclical).';;'.serialize($this->cyclicalInterval);
+        return serialize($this->schedule) . ';;' . serialize($this->cyclical) . ';;' . serialize($this->cyclicalInterval);
     }
 
-    public function fromString($job,$string)
+    public function fromString($job, $string)
     {
         $arr = explode(';;', $string);
-        $this->schedule=unserialize($arr[0],['allowed_classes'=>false]);
-        $this->cyclical=unserialize($arr[1],['allowed_classes'=>false]);
-        $this->cyclicalInterval=unserialize($arr[2],['allowed_classes'=>false]);
+        $this->schedule = unserialize($arr[0], ['allowed_classes' => false]);
+        $this->cyclical = unserialize($arr[1], ['allowed_classes' => false]);
+        $this->cyclicalInterval = unserialize($arr[2], ['allowed_classes' => false]);
     }
 
     /**
@@ -81,8 +80,8 @@ class Pending implements StateSerializable
      *
      * @return void
      */
-    public function setParent($job):void
+    public function setParent($job): void
     {
-       throw new RuntimeException("Not implemented");
+        throw new RuntimeException("Not implemented");
     }
 }
