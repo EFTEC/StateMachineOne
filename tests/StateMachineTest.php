@@ -111,8 +111,30 @@ class StateMachineTest extends AbstractStateMachineOneTestCase {
         self::assertEquals('200',$job->fields['field2'],'field2 must be 200');
         self::assertEquals('STATE1',$this->statemachineone->getJobStateName($job),'current state must be STATE1');
         self::assertEquals('active',$job->getActive(),'active must be stop');
-
     }
+
+    public function testVariableTransition(): void
+    {
+        $this->statemachineone->setStates([10=>"STATE1",20=>"STATE2",30=>"STATE3"]);
+        $this->statemachineone->setDefaultInitState(10);
+        $this->statemachineone->fieldDefault=['field1'=>1,'field2'=>0,'counter'=>0,'field3'=>0,'field4'=>0,'field5'=>0];
+        $this->statemachineone->addTransition(10,20
+            ,'when field1 = 1 set field2=200 and field3=_state1 and field4=_idjob and field5=_time');
+
+        $this->statemachineone->createJob();
+        $this->statemachineone->checkAllJobs();
+        $job=$this->statemachineone->getLastJob();
+        // let's check consistency
+        self::assertEquals(true,$this->statemachineone->checkConsistency(false),'consistency must be true');
+
+        self::assertEquals('200',$job->fields['field2'],'field2 must be 200');
+        self::assertEquals('20',$job->fields['field3'],'field3 must be 20'); // the current status
+        self::assertEquals(1,$job->fields['field4'],'field4 must be 1'); // the number of job
+        self::assertGreaterThan(100,$job->fields['field5'],'field5 great than 100'); // the current timestamp.
+        self::assertEquals('STATE2',$this->statemachineone->getJobStateName($job),'current state must be STATE1');
+        self::assertEquals('active',$job->getActive(),'active must be stop');
+    }
+
     public function test4Duration(): void
     {
         $this->statemachineone->resetTransition();

@@ -105,6 +105,8 @@ class Transition
      */
     public function evalLogic(StateMachineOne $smo, Job $job, int $idTransition): bool
     {
+        $this->caller->miniLang->setDictEntry('_idjob',$job->idJob);
+        $this->caller->miniLang->setDictEntry('_time',$this->caller->getTime());
         $r = $this->caller->miniLang->evalLogic($idTransition);
         //echo "<br>eval:<br>";
         //var_dump($this->caller->miniLang->errorLog);
@@ -139,6 +141,11 @@ class Transition
         }
         $this->currentJob = $job;
         $job->transitions[$numTransaction] = true;
+        // we set some variables that we could use in our code minilang.
+        $this->caller->miniLang->setDictEntry('_result',$this->result);
+        $this->caller->miniLang->setDictEntry('_state0',$this->state0);
+        $this->caller->miniLang->setDictEntry('_state1',$this->state1);
+
         switch ($this->result) {
             case 'change':
                 if ($forced || $ga === 'active') { // we only changed if the job is active.

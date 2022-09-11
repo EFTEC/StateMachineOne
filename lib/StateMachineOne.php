@@ -905,9 +905,8 @@ class StateMachineOne
     }
 
     /**
-     * It returns the current timestamp. If exists a universal timer
-     * (a global function called universaltime), then it uses it.  Why?
-     * It is because sometimes we want the same time.
+     * It returns the current timestamp. If exists a universal timer function (a global function called universaltime),
+     * then it is uses.  Why? It is because sometimes we want the same time across different services.
      *
      * @param bool $microtime if true then it returns the microtime as float
      *
@@ -1080,6 +1079,9 @@ class StateMachineOne
                 ) {
                     // timeout time is up, we will do the transition anyway
                     $this->miniLang->setDict($job->fields);
+                    $this->miniLang->setDictEntry('_idjob',$job->idJob);
+                    $this->miniLang->setDictEntry('_time',$this->getTime());
+                    $this->miniLang->setDictEntry('_state0',$job->state);
                     if ($trn->doTransition($this, $job, true, $idTransition)) {
                         if ($trn->state0 != $trn->state1) {
                             $job->stateFlow[] = [$trn->state0, $trn->state1];
@@ -1089,6 +1091,9 @@ class StateMachineOne
                 } elseif ($this->miniLang->usingClass || count($this->miniLang->where[$idTransition])) {
                     // we check the transition based on table
                     $this->miniLang->setDict($job->fields);
+                    $this->miniLang->setDictEntry('_idjob',$job->idJob);
+                    $this->miniLang->setDictEntry('_time',$this->getTime());
+                    $this->miniLang->setDictEntry('_state0',$job->state);
                     if ($trn->evalLogic($this, $job, $idTransition)) {
                         if ($trn->result !== 'stay') {
                             $job->stateFlow[$idTransition] = [$trn->state0, $trn->state1];
@@ -1383,6 +1388,9 @@ cin;
             return;
         }
         $this->events[$name]->setDict($jobExec->fields);
+        $this->events[$name]->setDictEntry('_idjob',$job->idJob);
+        $this->events[$name]->setDictEntry('_time',$this->getTime());
+        $this->events[$name]->setDictEntry('_state0',$job->state);
         $this->events[$name]->evalSet();
         $this->checkJob($jobExec);
         if ($this->dbActive != self::NODB) {

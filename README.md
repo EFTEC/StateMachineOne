@@ -297,7 +297,29 @@ Values of the field could be as the next ones:
 
 * **_idjob** = it is the number of the current job. It is calculated every time the job is evaluated
 ```php
-"when id=_idjob"
+"set id=_idjob"
+```
+* **_time** = it is the current timestamp. It is calculated every time the job is evaluated. Note: It uses the function
+getTime() and it could be modified.
+```php
+"set ts=_time"
+```
+* **_state0** = it is the initial (current) state of the job (as an id of state)
+```php
+"set currentstate=_state0"
+```
+* **_state1** = it is the next state (as an id) of the job. It is only evaluated when the job transitions of state,
+otherwise, it is null.  You can't use in a "when" because the transition hasn't happened yet.
+```php
+"set nextstate=_state1"
+```
+
+* **_result** = it is the result of the transition ('change','pause','continue','stop','stay','stayonce'). It is only 
+evaluated when the job transitions of state, otherwise it is null.  You can't use in a "when" because the transition 
+hasn't happened yet.
+
+```php
+"set transition_happened=_result"
 ```
 
 * **$var** = it is a global variable of PHP.  Take note that 
@@ -350,8 +372,6 @@ $smachine->addTransition(S1,S2,'when $v1=1'); // RIGHT:(') the variable v1 is ev
 "set field=flip()" // it is only valid for set.
 ```
 
-
-
 * **now()** it defines the current timestamp (in seconds)
 * **interval()** it returns the current interval between now and the last state.
 * **fullinterval()** it returns the current interval between now and the start of the job.
@@ -377,7 +397,7 @@ $smachine->addTransition(STATE_ONE,STATE_TWO
 
 ### Transition set
 
-We could add an operation of change of variables when a transition is done.
+We could add one or many change of variables when a transition is done.
 
 ```php
 $smachine->addTransition(STATE_ONE,STATE_TWO,'when field = 0 set field=1');
@@ -631,6 +651,8 @@ Commonly, the log format could be of the type info or error.   Flag could show a
 Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
+* 2.22 22-09-11
+  * Added variables \_state0,\_state1,\_time,\_result and fixed \_idjob
 * 2.21.1 2022-09-03
   * Fixed a problem with Flags where the Job or Parent is null.
   * Interface StateSerializable arguments allows Job or null
@@ -668,7 +690,7 @@ Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 * 2.10.1 2020-10-15
   * A small bug in saveDbJob where the $backup field is null, and we are updating.
 * 2.10 2020-10-15 
-   * Logs now are separated by ",," instead of |. It is because some message could use "|"
+   * Logs now are separated by ',,' instead of |. It is because some message could use "|"
    * Log state, we added the number of transaction.  
 * saveDbJob(): Update in the database: The library doesn't update fields that aren't changed. For this,  
 it creates a backup variable every time a job is loaded, and it compares the backup with the job to save.
