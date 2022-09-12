@@ -1,4 +1,4 @@
-<?php /** @noinspection UnknownInspectionInspection */
+<?php
 /** @noinspection PhpUnusedParameterInspection */
 /** @noinspection PhpUnused */
 
@@ -27,6 +27,8 @@ class Transition
     public $conditions;
     /** @var string=['change','pause','continue','stop','stay','stayonce'][$i] */
     public $result = '';
+    /** @var string|null an optional description of the transition */
+    public $description;
     /** @var MiniLang */
     public $miniLang;
     /** @var StateMachineOne */
@@ -61,15 +63,17 @@ class Transition
      * @param string          $result     =['change','pause','continue','stop','stay'][$i]
      * @param bool            $storeClass If true, then it doesn't change the state, but it stores the operation in
      *                                    MiniLang. It is useful if you want to create a MiniLang class.
+     * @param string|null     $description an optional description
      * @see https://github.com/EFTEC/MiniLang for more information about conditions.
      */
     public function __construct(StateMachineOne $caller, $state0, $state1, $conditions
-        , string                                $result = '', bool $storeClass = false)
+        , string                                $result = '', bool $storeClass = false,?string $description=null)
     {
         $this->caller = $caller;
         $this->state0 = $state0;
         $this->state1 = $state1;
         $this->result = $result;
+        $this->description=$description;
         if (is_callable($conditions)) {
             $this->txtCondition = 'custom function()';
             $this->function = $conditions;
@@ -80,10 +84,10 @@ class Transition
                 // we need to evaluate the code (otherwise, we do nothing)
                 if ($storeClass) {
                     // we generate php code
-                    $this->caller->miniLang->separate2($conditions); // this process could be a bit expensive.
+                    $this->caller->miniLang->separate2($conditions,-1,$description); // this process could be a bit expensive.
                 } else {
                     // we parse the code in runtime.
-                    $this->caller->miniLang->separate($conditions); // this process could be a bit expensive.
+                    $this->caller->miniLang->separate($conditions,-1,$description); // this process could be a bit expensive.
                 }
             }
             if (isset($this->caller->miniLang->areaValue['timeout'])) {
@@ -266,6 +270,7 @@ class Transition
     }
 
     /**
+     * It gets the conditions (set/get/init) untouched.
      * @return string
      */
     public function getTxtCondition(): string

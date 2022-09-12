@@ -651,6 +651,9 @@ Commonly, the log format could be of the type info or error.   Flag could show a
 Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
+* 2.23 22-09-11
+  * Added description (comments) to transitions.
+  * Fixed a problem with the GUI (job must be an integer)
 * 2.22 22-09-11
   * Added variables \_state0,\_state1,\_time,\_result and fixed \_idjob
 * 2.21.1 2022-09-03

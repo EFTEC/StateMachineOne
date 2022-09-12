@@ -1,4 +1,4 @@
-<?php /** @noinspection UnknownInspectionInspection */
+<?php
 /** @noinspection PhpUnused */
 /** @noinspection PhpUnusedParameterInspection */
 

@@ -3,10 +3,8 @@
 /** @noinspection PhpPropertyOnlyWrittenInspection */
 /** @noinspection SqlNoDataSourceInspection */
 /** @noinspection SqlResolve */
-/** @noinspection UnknownInspectionInspection */
 /** @noinspection JsonEncodingApiUsageInspection */
 /** @noinspection TypeUnsafeComparisonInspection */
-/** @noinspection PhpPrivateFieldCanBeLocalVariableInspection */
 /** @noinspection PhpUnused */
 /** @noinspection PhpUnusedParameterInspection */
 /** @noinspection SqlDialectInspection */
@@ -25,7 +23,7 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.21.1 2022-09-03
+ * @version  2.23 2022-09-11
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
@@ -37,7 +35,7 @@ class StateMachineOne
     public const PDODB = 1;
     /** @var int PDODB constants indicate that DocumentStoreOne database would be used */
     public const DOCDB = 2;
-    public $VERSION = '2.21.1';
+    public $VERSION = '2.23';
     /**
      * @var array Possible states. It must be an associative array.<br>
      * <p>$statemachine->states=['State1'=>'name of the state','State2'=>'another name'];</p>
@@ -194,18 +192,19 @@ class StateMachineOne
      *                                          1=1"
      *                                          </p>
      * @param string                $result     =['change','pause','continue','stop','stay'][$i]
-     *
+     * @param string|null           $description
      * @return int Returns the last id of the transaction.
-     * @see \eftec\statemachineone\StateMachineOne::setStates
+     * @see          \eftec\statemachineone\StateMachineOne::setStates
+     * @noinspection DuplicatedCode
      */
-    public function addTransition($state0, $state1, $conditions, string $result = 'change'): int
+    public function addTransition($state0, $state1, $conditions, string $result = 'change', ?string $description = null): int
     {
         if (is_array($state0)) {
             foreach ($state0 as $stateV) {
-                $this->transitions[] = new Transition($this, $stateV, $state1, $conditions, $result);
+                $this->transitions[] = new Transition($this, $stateV, $state1, $conditions, $result, false, $description);
             }
         } else {
-            $this->transitions[] = new Transition($this, $state0, $state1, $conditions, $result);
+            $this->transitions[] = new Transition($this, $state0, $state1, $conditions, $result, false, $description);
         }
         return count($this->transitions) - 1;
     }
@@ -220,31 +219,33 @@ class StateMachineOne
      * state
      * </pre>
      *
-     * @param string|array    $state0     Initial state defined in setStates()
-     * @param string|int|null $state1     Ending state defined in setStates() if <b>result</b>="stay", then
-     *                                    <b>state1</b> is ignored.
-     * @param mixed           $conditions It sets a condition(s) (also it could changes of properties). Example:<br>
-     *                                    <p><b>"when store_open = 1 and stock_milk > 0"</b> = it jumps if the
-     *                                    condition(s) is meet</p>
-     *                                    <p><b>"when money >= price set milk = 1'"</b> = it jump if the condition(s)
-     *                                    also sets milk as 1</p>
-     *                                    <p><b>"when wait timeout 500"</b> = transitions if has passed more than 500
-     *                                    seconds since the last stage</p>
-     *                                    <p><b>"when true()"</b> = it always transitions. It is the same as "when 1=1"
-     *                                    </p>
-     * @param string          $result     =['change','pause','continue','stop','stay'][$i]
-     *
+     * @param string|array    $state0      Initial state defined in setStates()
+     * @param string|int|null $state1      Ending state defined in setStates() if <b>result</b>="stay", then
+     *                                     <b>state1</b> is ignored.
+     * @param mixed           $conditions  It sets a condition(s) (also it could changes of properties). Example:<br>
+     *                                     <p><b>"when store_open = 1 and stock_milk > 0"</b> = it jumps if the
+     *                                     condition(s) is meet</p>
+     *                                     <p><b>"when money >= price set milk = 1'"</b> = it jump if the condition(s)
+     *                                     also sets milk as 1</p>
+     *                                     <p><b>"when wait timeout 500"</b> = transitions if has passed more than 500
+     *                                     seconds since the last stage</p>
+     *                                     <p><b>"when true()"</b> = it always transitions. It is the same as "when 1=1"
+     *                                     </p>
+     * @param string          $result      =['change','pause','continue','stop','stay'][$i]
+     * @param string|null     $description An optional description
      * @return int Returns the last id of the transaction.
-     * @see \eftec\statemachineone\StateMachineOne::setStates
+     * @see          \eftec\statemachineone\StateMachineOne::setStates
+     * @noinspection DuplicatedCode
      */
-    public function addMethodTransition2($state0, $state1, $conditions, string $result = 'change'): int
+    public function addMethodTransition2($state0, $state1, $conditions, string $result = 'change',
+                                         ?string $description = null): int
     {
         if (is_array($state0)) {
             foreach ($state0 as $stateV) {
-                $this->transitions[] = new Transition($this, $stateV, $state1, $conditions, $result, true);
+                $this->transitions[] = new Transition($this, $stateV, $state1, $conditions, $result, true, $description);
             }
         } else {
-            $this->transitions[] = new Transition($this, $state0, $state1, $conditions, $result, true);
+            $this->transitions[] = new Transition($this, $state0, $state1, $conditions, $result, true, $description);
         }
         return count($this->transitions) - 1;
     }
@@ -259,20 +260,22 @@ class StateMachineOne
      *
      * @param string|array $state the id of the state.
      * @param string       $then  if then when/where condition is empty then it always true.
+     * @param string|null  $description
      * @return int Returns the last id of the transaction.
-     * @see \eftec\statemachineone\StateMachineOne::setStates
+     * @see          \eftec\statemachineone\StateMachineOne::setStates
+     * @noinspection DuplicatedCode
      */
-    public function duringState($state, string $then): int
+    public function duringState($state, string $then, ?string $description = null): int
     {
         if (stripos($then, 'when') === false || stripos($then, 'where') === false) {
             $then = 'when true() ' . $then;
         }
         if (is_array($state)) {
             foreach ($state as $stateV) {
-                $this->transitions[] = new Transition($this, $stateV, $stateV, $then, 'stay');
+                $this->transitions[] = new Transition($this, $stateV, $stateV, $then, 'stay', false, $description);
             }
         } else {
-            $this->transitions[] = new Transition($this, $state, $state, $then, 'stay');
+            $this->transitions[] = new Transition($this, $state, $state, $then, 'stay', false, $description);
         }
         return count($this->transitions) - 1;
     }
@@ -288,20 +291,22 @@ class StateMachineOne
      *
      * @param string|array $state the id of the state.
      * @param string       $then  if then when/where condition is empty then it always true.
+     * @param string|null  $description
      * @return int Returns the last id of the transaction.
-     * @see \eftec\statemachineone\StateMachineOne::setStates
+     * @see          \eftec\statemachineone\StateMachineOne::setStates
+     * @noinspection DuplicatedCode
      */
-    public function duringState2($state, string $then): int
+    public function duringState2($state, string $then, ?string $description = null): int
     {
         if (stripos($then, 'when') === false || stripos($then, 'where') === false) {
             $then = 'when true() ' . $then;
         }
         if (is_array($state)) {
             foreach ($state as $stateV) {
-                $this->transitions[] = new Transition($this, $stateV, $stateV, $then, 'stay', true);
+                $this->transitions[] = new Transition($this, $stateV, $stateV, $then, 'stay', true, $description);
             }
         } else {
-            $this->transitions[] = new Transition($this, $state, $state, $then, 'stay', true);
+            $this->transitions[] = new Transition($this, $state, $state, $then, 'stay', true, $description);
         }
         return count($this->transitions) - 1;
     }
@@ -338,7 +343,7 @@ class StateMachineOne
         // each event is a self mini lang.
         $eventMiniLang = new MiniLang($this, $this->states, ['wait', 'always'], ['timeout', 'fulltimeout'],
             $this->serviceObject);
-        $eventMiniLang->separate($conditions);
+        $eventMiniLang->separate($conditions, -1, 'event $name');
         $this->eventNames[$name] = $conditions;
         $this->events[$name] = $eventMiniLang;
     }
@@ -1079,9 +1084,9 @@ class StateMachineOne
                 ) {
                     // timeout time is up, we will do the transition anyway
                     $this->miniLang->setDict($job->fields);
-                    $this->miniLang->setDictEntry('_idjob',$job->idJob);
-                    $this->miniLang->setDictEntry('_time',$this->getTime());
-                    $this->miniLang->setDictEntry('_state0',$job->state);
+                    $this->miniLang->setDictEntry('_idjob', $job->idJob);
+                    $this->miniLang->setDictEntry('_time', $this->getTime());
+                    $this->miniLang->setDictEntry('_state0', $job->state);
                     if ($trn->doTransition($this, $job, true, $idTransition)) {
                         if ($trn->state0 != $trn->state1) {
                             $job->stateFlow[] = [$trn->state0, $trn->state1];
@@ -1091,9 +1096,9 @@ class StateMachineOne
                 } elseif ($this->miniLang->usingClass || count($this->miniLang->where[$idTransition])) {
                     // we check the transition based on table
                     $this->miniLang->setDict($job->fields);
-                    $this->miniLang->setDictEntry('_idjob',$job->idJob);
-                    $this->miniLang->setDictEntry('_time',$this->getTime());
-                    $this->miniLang->setDictEntry('_state0',$job->state);
+                    $this->miniLang->setDictEntry('_idjob', $job->idJob);
+                    $this->miniLang->setDictEntry('_time', $this->getTime());
+                    $this->miniLang->setDictEntry('_state0', $job->state);
                     if ($trn->evalLogic($this, $job, $idTransition)) {
                         if ($trn->result !== 'stay') {
                             $job->stateFlow[$idTransition] = [$trn->state0, $trn->state1];
@@ -1253,6 +1258,7 @@ cin;
         if (!$lastjob) {
             $job = $this->getLastJob();
         } else {
+            $lastjob = (int)$lastjob;
             $job = $this->getJob($lastjob);
             if (!$job) {
                 $job = $this->getLastJob();
@@ -1335,7 +1341,9 @@ cin;
                 }
                 break;
             case 'check':
+                echo "<div style='overflow:auto; width: 98%; height:400px; overflow-x: scroll;'>";
                 $this->checkConsistency();
+                echo "</div>";
                 break;
         }
         return $msg;
@@ -1388,9 +1396,9 @@ cin;
             return;
         }
         $this->events[$name]->setDict($jobExec->fields);
-        $this->events[$name]->setDictEntry('_idjob',$job->idJob);
-        $this->events[$name]->setDictEntry('_time',$this->getTime());
-        $this->events[$name]->setDictEntry('_state0',$job->state);
+        $this->events[$name]->setDictEntry('_idjob', $job->idJob);
+        $this->events[$name]->setDictEntry('_time', $this->getTime());
+        $this->events[$name]->setDictEntry('_state0', $job->state);
         $this->events[$name]->evalSet();
         $this->checkJob($jobExec);
         if ($this->dbActive != self::NODB) {
@@ -1532,18 +1540,83 @@ cin;
             echo '<hr>checking:<hr>';
         }
         $result = true;
-        foreach ($this->transitions as $trans) {
+        $anterior = '';
+        $html = [];
+        // sort
+        $transitions = $this->transitions;
+        $num = count($transitions);
+        //foreach ($transitions as $i => $iValue) {
+        /** @noinspection ForeachInvariantsInspection */
+        for ($i = 0; $i < $num; $i++) {
+            for ($e = $i + 1; $e < $num; $e++) {
+                if ($transitions[$e]->state0 < $transitions[$i]->state0) {
+                    $tmp = $transitions[$e];
+                    $transitions[$e] = $transitions[$i];
+                    $transitions[$i] = $tmp;
+                }
+            }
+        }
+        foreach ($transitions as $trans) {
             $name0 = $this->states[$trans->state0];
             $name1 = $this->states[$trans->state1];
+            $condition = $trans->getTxtCondition();
+            $condition = str_replace("\n", " ", $condition);
+            $init = self::between($condition, 'init ', ' when ');
+            $where0 = self::between($condition, 'when ', ' then ');
+            $where0 = $where0 === false ? self::between($condition, 'when ', ' set ') : $where0;
+            $where0 = $where0 === false ? self::between($condition, 'when ', ' else ') : $where0;
+            $where0 = $where0 === false ? self::between($condition, 'when ', '') : $where0;
+            $set = self::between($condition, ' then ', ' else ');
+            $set = $set === false ? self::between($condition, ' set ', ' else ') : $set;
+            $set = $set === false ? self::between($condition, ' then ', '') : $set;
+            $set = $set === false ? self::between($condition, ' set ', '') : $set;
+            $else = self::between($condition, ' else ', '');
+            $else = $else === false ? self::between($condition, 'else ', '') : $else;
             if ($output) {
-                echo "CHECKING: <b>$name0</b>-><b>$name1</b>: ";
+                if ($trans->state0 !== $anterior) {
+                    $anterior = $trans->state0;
+                    $html = ["STEP: <b>$name0($trans->state0)</b> {xx}<br>"];
+                }
+                switch ($trans->result) {
+                    case 'change':
+                        $icon = '➡';
+                        break;
+                    case 'pause':
+                        $icon = '⏸';
+                        break;
+                    case 'continue':
+                        $icon = '▶';
+                        break;
+                    case 'stop':
+                        $icon = '⏹';
+                        break;
+                    case 'stay':
+                        $icon = '🔁';
+                        break;
+                    default:
+                        $icon = '🔂';
+                }
+                if ($init) {
+                    $html[] = str_repeat('&nbsp;', 4) . "❗ init:" . htmlentities($init) . "<br>";
+                }
+                if ($trans->result === 'change') {
+                    $html[] = str_repeat('&nbsp;', 4) . "❓ " . htmlentities($where0 ?? '(no condition)') . ' (' . $trans->result . ") $icon <b>$name1 ($trans->state1)</b> <i> $trans->description</i><br>";
+                } else {
+                    $html[] = str_repeat('&nbsp;', 4) . "❓ " . htmlentities($where0 ?? '(no condition)') . ' (' . $trans->result . ") $icon <i> $trans->description</i><br>";
+                }
+                if ($set) {
+                    $html[] = str_repeat('&nbsp;', 10) . "✔ " . htmlentities($set) . " <br>";
+                }
+                if ($else) {
+                    $html[] = str_repeat('&nbsp;', 10) . "❌ " . htmlentities($else) . " <br>";
+                }
             }
             $fail = false;
             if (!in_array($trans->state0, $arr)) {
                 $fail = true;
                 $result = false;
                 if ($output) {
-                    echo "ERROR: Transition <b>$name0</b> -> <b>$name1</b> with missing initial state<br>";
+                    $html[0] = str_replace('{xx}', "ERROR: Transition <b>$name0</b> -> <b>$name1</b> with missing initial state<br>", $html[0] ?? '{xx}');
                 }
             } else {
                 $arrCopy[] = $trans->state0;
@@ -1552,14 +1625,16 @@ cin;
                 $fail = true;
                 $result = false;
                 if ($output) {
-                    echo "ERROR: Transition <b>$name0</b> -> <b>$name1</b> with missing ending state<br>";
+                    $html[0] = str_replace('{xx}', "ERROR: Transition <b>$name0</b> -> <b>$name1</b> with missing ending state<br>", $html[0] ?? '{xx}');
                 }
             } else {
                 $arrCopy[] = $trans->state1;
             }
             if (!$fail && $output) {
-                echo 'OK<br>';
+                $html[0] = str_replace('{xx}', "🆗", $html[0] ?? '{xx}');
             }
+            echo implode("\n", $html);
+            $html = [];
         }
         foreach ($arr as $missing) {
             if (!in_array($missing, $arrCopy)) {
@@ -1597,6 +1672,7 @@ cin;
             if (!$lastjob) {
                 $job = $this->getLastJob();
             } else {
+                $lastjob = (int)$lastjob;
                 $job = $this->getJob($lastjob); // we read the job by id
                 if (!$job) {
                     $job
@@ -1699,7 +1775,7 @@ cin;
         echo "<button class='btn btn-primary' name='frm_button' type='submit' title='It sets the job using the current fields' value='setfield'>Set field values</button>&nbsp;&nbsp;&nbsp;";
         echo "<button class='btn btn-success' name='frm_button' type='submit' title='Create a new job using the information in the current screen' value='create'>Create a new Job (current data) </button>&nbsp;&nbsp;&nbsp;";
         echo "<button class='btn btn-success' name='frm_button' type='submit' title='Create a new job using the default information'  value='createnew'>Create a new Job (default data)</button>&nbsp;&nbsp;&nbsp;";
-        echo "<button class='btn btn-warning' name='frm_button' type='submit' value='check'>Check consistency</button>&nbsp;&nbsp;&nbsp;";
+        echo "<button class='btn btn-warning' name='frm_button' type='submit' value='check'>Generate diagram</button>&nbsp;&nbsp;&nbsp;";
         echo "<button class='btn btn-danger' name='frm_button' type='submit' value='delete'>Delete this job</button>&nbsp;&nbsp;&nbsp;";
         echo '</div>';
         echo "<div class='form-group row'>";
@@ -1777,6 +1853,46 @@ cin;
     }
 
     /**
+     * Obtain a string between one text and other.
+     * Example: between('mary has a lamb','has','lamb') // returns ' a '
+     *
+     * @param string   $haystack
+     * @param string   $startNeedle The initial text to search<br />
+     *                              if empty then it starts at the start of the haystack.
+     * @param string   $endNeedle   The end tag to search<br />
+     *                              if empty then it ends at the end of the haystack
+     * @param null|int $offset
+     * @param bool     $ignoreCase
+     *
+     * @return bool|string
+     */
+    public static function between(string $haystack, string $startNeedle, string $endNeedle, int &$offset = 0,
+                                   bool   $ignoreCase = false)
+    {
+        if ($startNeedle === '') {
+            $ini = 0;
+        } else {
+            $ini = ($ignoreCase) ? @stripos($haystack, $startNeedle, $offset)
+                : @strpos($haystack, $startNeedle, $offset);
+        }
+        if ($ini === false) {
+            return false;
+        }
+        $ini += strlen($startNeedle);
+        if ($endNeedle === '') {
+            $len = strlen($haystack);
+        } else {
+            $len = (($ignoreCase) ? stripos($haystack, $endNeedle, $ini) : strpos($haystack, $endNeedle, $ini));
+            if ($len === false) {
+                return false;
+            }
+            $len -= $ini;
+        }
+        $offset = $ini + $len;
+        return substr($haystack, $ini, $len);
+    }
+
+    /**
      * Set the job queue
      *
      * @param Job[] $jobQueue
@@ -1849,7 +1965,7 @@ cin;
             case 'READ':
                 echo "<input class='form-control' autocomplete='off' readonly
                                 type='text' name='frm_$colFields' 
-                                value='" . htmlentities($value) . "' /></br>";
+                                value='" . htmlentities($value ?? '') . "' /></br>";
                 break;
             case 'ONOFF':
                 echo "<div class='input-group mb-3'>

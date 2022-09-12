@@ -21,7 +21,7 @@
     "require": {
         "php": ">=7.2",
         "eftec/pdoone": "^3.12.2",
-        "eftec/minilang": "^2.26",
+        "eftec/minilang": "^2.27",
         "ext-ctype": "*",
         "ext-json": "*",
         "eftec/documentstoreone": "^1.24"
