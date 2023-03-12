@@ -23,7 +23,7 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.23 2022-09-11
+ * @version  2.23.1 2023-03-11
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
@@ -187,14 +187,14 @@ class StateMachineOne
      *                                          condition(s) also sets milk as 1</p>
      *                                          <p><b>"when wait timeout 500"</b> = transitions if has passed more than
      *                                          500 seconds since the last stage</p>
-     *                                          <p><b>"when true()"</b> = it always transitions. It is the same than
+     *                                          <p><b>"when true()"</b> = it always transitions. It is the same as
      *                                          "when
      *                                          1=1"
      *                                          </p>
      * @param string                $result     =['change','pause','continue','stop','stay'][$i]
      * @param string|null           $description
      * @return int Returns the last id of the transaction.
-     * @see          \eftec\statemachineone\StateMachineOne::setStates
+     * @see          StateMachineOne::setStates
      * @noinspection DuplicatedCode
      */
     public function addTransition($state0, $state1, $conditions, string $result = 'change', ?string $description = null): int
@@ -234,7 +234,7 @@ class StateMachineOne
      * @param string          $result      =['change','pause','continue','stop','stay'][$i]
      * @param string|null     $description An optional description
      * @return int Returns the last id of the transaction.
-     * @see          \eftec\statemachineone\StateMachineOne::setStates
+     * @see          StateMachineOne::setStates
      * @noinspection DuplicatedCode
      */
     public function addMethodTransition2($state0, $state1, $conditions, string $result = 'change',
@@ -262,7 +262,7 @@ class StateMachineOne
      * @param string       $then  if then when/where condition is empty then it always true.
      * @param string|null  $description
      * @return int Returns the last id of the transaction.
-     * @see          \eftec\statemachineone\StateMachineOne::setStates
+     * @see          StateMachineOne::setStates
      * @noinspection DuplicatedCode
      */
     public function duringState($state, string $then, ?string $description = null): int
@@ -293,7 +293,7 @@ class StateMachineOne
      * @param string       $then  if then when/where condition is empty then it always true.
      * @param string|null  $description
      * @return int Returns the last id of the transaction.
-     * @see          \eftec\statemachineone\StateMachineOne::setStates
+     * @see          StateMachineOne::setStates
      * @noinspection DuplicatedCode
      */
     public function duringState2($state, string $then, ?string $description = null): int
@@ -396,7 +396,7 @@ class StateMachineOne
      *
      * @param PdoOne $pdoOne
      *
-     * @see \eftec\statemachineone\StateMachineOne::setDB
+     * @see StateMachineOne::setDB
      */
     public function setPdoOne(PdoOne $pdoOne): void
     {
@@ -465,7 +465,7 @@ class StateMachineOne
      * @param string $schema database(schema), example "sakila"
      *
      * @return bool true if the database is open
-     * @see \eftec\statemachineone\StateMachineOne::setPdoOne
+     * @see StateMachineOne::setPdoOne
      *
      */
     public function setDB(string $type, string $server, string $user, string $pwd, string $schema): ?bool
@@ -858,7 +858,7 @@ class StateMachineOne
                         $arr[$k] = $job->fields[$k];
                     }
                 } elseif ($v instanceof StateSerializable) {
-                    /** @see \eftec\statemachineone\Flags::__serialize */
+                    /** @see Flags::__serialize */
                     $text[$k] = $job->fields[$k]; //->toString();
                 }
             }
@@ -956,7 +956,7 @@ class StateMachineOne
      * @param array $arr
      *
      * @return bool|null
-     * @see \eftec\statemachineone\StateMachineOne::$customSaveDBJobLog
+     * @see StateMachineOne
      */
     public function saveDBJobLog(Job $job, array $arr): ?bool
     {
@@ -1383,7 +1383,7 @@ cin;
      * @param Job|null $job
      *
      * @throws Exception
-     * @see \eftec\statemachineone\StateMachineOne::addEvent
+     * @see StateMachineOne::addEvent
      */
     public function callEvent($name, ?Job $job = null): void
     {
@@ -1798,7 +1798,7 @@ cin;
                         . htmlentities($job->fields[$colFields]->toString()) . "' />";
                     $level = $job->fields[$colFields]->getMinLevel();
                     $css = ($level == 0) ? 'alert-primary' : (($level == 1) ? 'alert-warning' : 'alert-danger');
-                    /** @see \eftec\statemachineone\Flags::getStack() */
+                    /** @see Flags::getStack */
                     $stack = $job->fields[$colFields]->getStack();
                     echo "<div class='alert $css'>";
                     foreach ($stack as $item) {
@@ -1979,7 +1979,7 @@ cin;
                 break;
             case 'NUMERIC':
                 echo "<input class='form-control' autocomplete='off' 
-                                type='numeric' name='frm_$colFields' 
+                                type='number' name='frm_$colFields' 
                                 value='" . htmlentities($value) . "' /></br>";
                 break;
             default:

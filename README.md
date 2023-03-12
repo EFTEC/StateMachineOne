@@ -7,47 +7,11 @@ Since this library is PHP native, then it could run in Laravel, Symfony and any 
 
 [![Packagist](https://img.shields.io/packagist/v/eftec/statemachineone.svg)](https://packagist.org/packages/eftec/statemachineone)
 [![Total Downloads](https://poser.pugx.org/eftec/statemachineone/downloads)](https://packagist.org/packages/eftec/statemachineone)
-[![Maintenance](https://img.shields.io/maintenance/yes/2022.svg)]()
+[![Maintenance](https://img.shields.io/maintenance/yes/2023.svg)]()
 [![composer](https://img.shields.io/badge/composer-%3E1.8-blue.svg)]()
 [![php](https://img.shields.io/badge/php-7.2-green.svg)]()
 [![php](https://img.shields.io/badge/php-8.x-green.svg)]()
 [![CocoaPods](https://img.shields.io/badge/docs-70%25-yellow.svg)]()
-
-- [StateMachineOne](#statemachineone)
-  - [What is a state machine?.](#what-is-a-state-machine)
-  - [Notes](#notes)
-  - [Example, ChopSuey Chinese Delivery Food.](#example-chopsuey-chinese-delivery-food)
-    - [Fields (ChopSuey's exercise)](#fields-chopsueys-exercise)
-    - [States (ChopSuey's exercise)](#states-chopsueys-exercise)
-    - [Transitions (ChopSuey's exercise)](#transitions-chopsueys-exercise)
-    - [Final Code (ChopSuey's example)](#final-code-chopsueys-example)
-  - [Other examples](#other-examples)
-  - [Transition language](#transition-language)
-  - [The transition language is written with the next syntax.](#the-transition-language-is-written-with-the-next-syntax)
-    - [Transition when](#transition-when)
-    - [Transition set](#transition-set)
-    - [Transition else](#transition-else)
-    - [Transition timeout (in seconds)](#transition-timeout-in-seconds)
-    - [Transition fulltimeout (in seconds)](#transition-fulltimeout-in-seconds)
-  - [JOB](#job)
-    - [What is a job?](#what-is-a-job)
-    - [Creating a job](#creating-a-job)
-    - [Running the state machine in a job](#running-the-state-machine-in-a-job)
-    - [Getting a job](#getting-a-job)
-    - [Database and jobs.](#database-and-jobs)
-    - [Fields used in Job](#fields-used-in-job)
-  - [GUI](#gui)
-  - [Classes](#classes)
-  - [Cache Configuration](#cache-configuration)
-    - [Saving configuration](#saving-configuration)
-    - [Loading configuration:](#loading-configuration)
-  - [Log Format](#log-format)
-    - [[info]](#info)
-    - [[error]](#error)
-  - [License](#license)
-  - [Version](#version)
-  - [What is missing](#what-is-missing)
-
 
 ## What is a state machine?.
 
@@ -58,6 +22,46 @@ and the job changes of state (**transition**) according to some logic or conditi
 
 The target of this library is to ease the process to create a state machine for business.  
 
+## Table of Contents
+
+<!-- TOC -->
+* [StateMachineOne](#statemachineone)
+  * [What is a state machine?.](#what-is-a-state-machine)
+  * [Table of Contents](#table-of-contents)
+  * [Notes](#notes)
+  * [Example, ChopSuey Chinese Delivery Food.](#example-chopsuey-chinese-delivery-food)
+    * [Fields (ChopSuey's exercise)](#fields--chopsueys-exercise-)
+    * [States (ChopSuey's exercise)](#states--chopsueys-exercise-)
+    * [Transitions (ChopSuey's exercise)](#transitions--chopsueys-exercise-)
+    * [Final Code (ChopSuey's example)](#final-code--chopsueys-example-)
+  * [Other examples](#other-examples)
+  * [Transition language](#transition-language)
+  * [The transition language is written with the next syntax.](#the-transition-language-is-written-with-the-next-syntax)
+    * [Transition when](#transition-when)
+      * [For example](#for-example)
+    * [Transition set](#transition-set)
+    * [Transition else](#transition-else)
+    * [Transition timeout (in seconds)](#transition-timeout--in-seconds-)
+    * [Transition fulltimeout (in seconds)](#transition-fulltimeout--in-seconds-)
+  * [JOB](#job)
+    * [What is a job?](#what-is-a-job)
+    * [Creating a job](#creating-a-job)
+    * [Running the state machine in a job](#running-the-state-machine-in-a-job)
+    * [Getting a job](#getting-a-job)
+    * [Database and jobs.](#database-and-jobs)
+    * [Fields used in Job](#fields-used-in-job)
+  * [GUI](#gui)
+  * [Classes](#classes)
+  * [Cache Configuration](#cache-configuration)
+    * [Saving configuration](#saving-configuration)
+    * [Loading configuration:](#loading-configuration-)
+  * [Log Format](#log-format)
+    * [[info]](#info)
+    * [[error]](#error)
+  * [License](#license)
+  * [Version](#version)
+  * [What is missing](#what-is-missing)
+<!-- TOC -->
 
 
 ## Notes
@@ -651,6 +655,8 @@ Commonly, the log format could be of the type info or error.   Flag could show a
 Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
+* 2.23.1 23-03-11
+  * updated dependencies. 
 * 2.23 22-09-11
   * Added description (comments) to transitions.
   * Fixed a problem with the GUI (job must be an integer)
