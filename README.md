@@ -30,19 +30,19 @@ The target of this library is to ease the process to create a state machine for 
   * [Table of Contents](#table-of-contents)
   * [Notes](#notes)
   * [Example, ChopSuey Chinese Delivery Food.](#example-chopsuey-chinese-delivery-food)
-    * [Fields (ChopSuey's exercise)](#fields--chopsueys-exercise-)
-    * [States (ChopSuey's exercise)](#states--chopsueys-exercise-)
-    * [Transitions (ChopSuey's exercise)](#transitions--chopsueys-exercise-)
-    * [Final Code (ChopSuey's example)](#final-code--chopsueys-example-)
+    * [Fields (ChopSuey's exercise)](#fields-chopsueys-exercise)
+    * [States (ChopSuey's exercise)](#states-chopsueys-exercise)
+    * [Transitions (ChopSuey's exercise)](#transitions-chopsueys-exercise)
+    * [Final Code (ChopSuey's example)](#final-code-chopsueys-example)
   * [Other examples](#other-examples)
   * [Transition language](#transition-language)
   * [The transition language is written with the next syntax.](#the-transition-language-is-written-with-the-next-syntax)
     * [Transition when](#transition-when)
-      * [For example](#for-example)
+      * [For example](#for-example-)
     * [Transition set](#transition-set)
     * [Transition else](#transition-else)
-    * [Transition timeout (in seconds)](#transition-timeout--in-seconds-)
-    * [Transition fulltimeout (in seconds)](#transition-fulltimeout--in-seconds-)
+    * [Transition timeout (in seconds)](#transition-timeout-in-seconds)
+    * [Transition fulltimeout (in seconds)](#transition-fulltimeout-in-seconds)
   * [JOB](#job)
     * [What is a job?](#what-is-a-job)
     * [Creating a job](#creating-a-job)
@@ -54,7 +54,7 @@ The target of this library is to ease the process to create a state machine for 
   * [Classes](#classes)
   * [Cache Configuration](#cache-configuration)
     * [Saving configuration](#saving-configuration)
-    * [Loading configuration:](#loading-configuration-)
+    * [Loading configuration:](#loading-configuration)
   * [Log Format](#log-format)
     * [[info]](#info)
     * [[error]](#error)
@@ -655,6 +655,8 @@ Commonly, the log format could be of the type info or error.   Flag could show a
 Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
+* 2.23.2 2023-06-29
+  * fix a bgu with flag:push where the value is null. 
 * 2.23.1 23-03-11
   * updated dependencies. 
 * 2.23 22-09-11

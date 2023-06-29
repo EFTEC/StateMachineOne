@@ -1,5 +1,6 @@
 <?php
 /** @noinspection TypeUnsafeComparisonInspection */
+
 /** @noinspection PhpUnused */
 
 namespace eftec\statemachineone;
@@ -68,8 +69,8 @@ class Flags implements StateSerializable
     /**
      * Creates a flag from a job and a string
      *
-     * @param Job|null    $job
-     * @param String $string a serialized string containing the information of the flag.
+     * @param Job|null $job
+     * @param String   $string a serialized string containing the information of the flag.
      *
      * @return void
      */
@@ -110,7 +111,7 @@ class Flags implements StateSerializable
 
     public function getTime($microtime = false)
     {
-        if ($this->caller!==null) {
+        if ($this->caller !== null) {
             return $this->caller->getTime($microtime);
         }
         return $microtime ? microtime(true) : time();
@@ -136,7 +137,7 @@ class Flags implements StateSerializable
     {
         if (isset($this->stack[$idUnique])) {
             unset($this->stack[$idUnique], $this->stackId[$idUnique], $this->timeExpire[$idUnique]);
-            if ($this->parentJob!==null && $this->caller!==null) {
+            if ($this->parentJob !== null && $this->caller !== null) {
                 $this->caller->addLog($this->parentJob, $this->name ?? '', 'PULL'
                     , "flag,,changed,,$idUnique,,$idRel,,$level,,$msg", $idRel);
             }
@@ -197,23 +198,26 @@ class Flags implements StateSerializable
      * push('info','work done',0,60,23); // Work #23 done
      * </pre>
      *
-     * @param string|int $idUnique   This value is used to identify each flag
-     * @param string     $msg        Message (or value) of the flag.
-     * @param int        $level      The level of the flag. The context of the flag
-     *                               is defined by each application
-     * @param int        $timeExpire (optional) The time (in seconds) this process will expire and
-     *                               it will be self deleted. -1 means no expiration.
-     * @param int|null   $idRel      (optional) The ID of the relation of "to whom is the flag".
+     * @param string|int  $idUnique   This value is used to identify each flag
+     * @param string|null $msg        Message (or value) of the flag. If null, then it pull it
+     * @param int         $level      The level of the flag. The context of the flag
+     *                                is defined by each application
+     * @param int         $timeExpire (optional) The time (in seconds) this process will expire and
+     *                                it will be self deleted. -1 means no expiration.
+     * @param int|null    $idRel      (optional) The ID of the relation of "to whom is the flag".
      *
      * @return $this
      */
-    public function push($idUnique = 0, string $msg = '', int $level = 0, int $timeExpire = -1, ?int $idRel = 0): self
+    public function push($idUnique = 0, ?string $msg = '', int $level = 0, int $timeExpire = -1, ?int $idRel = 0): self
     {
         if (isset($this->stack[$idUnique]) && @$this->stackId[$idUnique] == $idRel
             && $this->stack[$idUnique] == $msg && $this->level[$idUnique] == $level
         ) {
             // it's the same state, we do nothing (the time could change)
             return $this;
+        }
+        if ($msg === null) {
+            return $this->pull($idUnique, $msg, $level, $idRel);
         }
         @$this->stack[$idUnique] = $msg;
         @$this->stackId[$idUnique] = $idRel;
@@ -224,7 +228,7 @@ class Flags implements StateSerializable
         }
         $this->level[$idUnique] = $level;
         $this->changed = true;
-        if ($this->parentJob!==null && $this->caller!==null) {
+        if ($this->parentJob !== null && $this->caller !== null) {
             $this->caller->addLog($this->parentJob, $this->name ?? '', 'PUSH', "flag,,changed,,$idUnique,,$level,,$idRel,,$msg", $idRel);
         }
         return $this;
@@ -242,7 +246,7 @@ class Flags implements StateSerializable
         $this->timeExpire['_msg'] = -1; // messages never expires.
         $this->level['_msg'] = 0;
         $this->changed = true;
-        if ($this->parentJob!==null && $this->caller!==null) {
+        if ($this->parentJob !== null && $this->caller !== null) {
             $this->caller->addLog($this->parentJob, $this->name ?? '', 'MESSAGE', $msg, $this->stackId['_msg']);
         }
         return $this;
