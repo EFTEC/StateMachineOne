@@ -17,7 +17,7 @@ use Exception;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.15 2021-09-18
+ * @version  2.23.3 2023-06-29
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class Flags implements StateSerializable
@@ -125,15 +125,15 @@ class Flags implements StateSerializable
      * pull('light','lights out',2); // It removes the flag light with message light out and level 0
      * pull('light','lights out',2,400); // It removes the flag light #400 with message light out and level 0
      * </pre>
-     * @param string|int $idUnique This value is used to identify each flag
+     * @param string|int  $idUnique This value is used to identify each flag
      *
-     * @param string     $msg      (optional) used for log
-     * @param int        $level    (optional) used for log
-     * @param int        $idRel    (optional) ID related (for example, the id of the job) used for log
+     * @param string|null $msg      (optional) used for log
+     * @param int         $level    (optional) used for log
+     * @param int         $idRel    (optional) ID related (for example, the id of the job) used for log
      *
      * @return $this
      */
-    public function pull(string $idUnique = '', string $msg = '', int $level = 0, int $idRel = 0): self
+    public function pull(string $idUnique = '', ?string $msg = '', int $level = 0, int $idRel = 0): self
     {
         if (isset($this->stack[$idUnique])) {
             unset($this->stack[$idUnique], $this->stackId[$idUnique], $this->timeExpire[$idUnique]);
