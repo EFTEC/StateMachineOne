@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection UnknownInspectionInspection */
 /** @noinspection PhpUnusedParameterInspection */
 /** @noinspection PhpUnused */
 
@@ -10,7 +10,7 @@ use eftec\minilang\MiniLang;
  * Class Transition
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  1.5 2021-07-03
+ * @version  2.24 2024-07-18
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class Transition
@@ -22,19 +22,18 @@ class Transition
     /** @var callable */
     public $function;
     /** @var string */
-    public $txtCondition;
+    public string $txtCondition;
     /** @var callable|mixed */
     public $conditions;
     /** @var string=['change','pause','continue','stop','stay','stayonce'][$i] */
-    public $result = '';
+    public string $result = '';
     /** @var string|null an optional description of the transition */
-    public $description;
+    public ?string $description;
     /** @var MiniLang */
-    public $miniLang;
-    /** @var StateMachineOne */
-    public $caller;
+    public MiniLang $miniLang;
+    public ?StateMachineOne $caller;
     /** @var Job used to determine the current time */
-    public $currentJob;
+    public Job $currentJob;
     /**
      * @var int|array Maximum duration (in seconds) of this transition. If the time it's up, then the transition is
      *      executed
@@ -52,9 +51,9 @@ class Transition
      * The transition allows moving one job from one state to another if happens some conditions.<br>
      * It also allows to do some operation such as to pause, stay and stop (end of the workflow)<br>
      * <b>Example:</b><br>
-     * <pre>
+     * ```
      * $a1=new Transition($caller,'initialstate','endstate','if condition=1','change')
-     * </pre>
+     * ```
      *
      * @param StateMachineOne $caller     The caller (usually, a statemachine instance).
      * @param string|int|null $state0     The initial state
@@ -112,8 +111,6 @@ class Transition
         $this->caller->miniLang->setDictEntry('_idjob',$job->idJob);
         $this->caller->miniLang->setDictEntry('_time',$this->caller->getTime());
         $r = $this->caller->miniLang->evalLogic($idTransition);
-        //echo "<br>eval:<br>";
-        //var_dump($this->caller->miniLang->errorLog);
         if ($r === 'wait') {
             return false;
         } // wait

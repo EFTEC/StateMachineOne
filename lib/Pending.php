@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection UnknownInspectionInspection */
 
 /** @noinspection PhpUnused */
 
@@ -9,10 +9,10 @@ use RuntimeException;
 class Pending implements StateSerializable
 {
     /** @var array=[\eftec\statemachineone\Pending::factoryScheduleItem()] */
-    public $schedule;
+    public array $schedule;
 
-    public $cyclical = false;
-    public $cyclicalInterval = 0;
+    public bool $cyclical = false;
+    public int $cyclicalInterval = 0;
 
     /**
      * @param int  $time
@@ -65,7 +65,7 @@ class Pending implements StateSerializable
         return serialize($this->schedule) . ';;' . serialize($this->cyclical) . ';;' . serialize($this->cyclicalInterval);
     }
 
-    public function fromString($job, $string)
+    public function fromString($job,string $string)
     {
         $arr = explode(';;', $string);
         $this->schedule = unserialize($arr[0], ['allowed_classes' => false]);

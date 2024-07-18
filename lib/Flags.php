@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection UnknownInspectionInspection */
 /** @noinspection TypeUnsafeComparisonInspection */
 
 /** @noinspection PhpUnused */
@@ -23,20 +23,20 @@ use Exception;
 class Flags implements StateSerializable
 {
     /** @var string It is the name (or id) of the container. It is used for debug purposes. */
-    private $name;
+    private string $name;
     /** @var array|null */
-    private $stack = [];
-    private $stackId = [];
+    private ?array $stack = [];
+    private array $stackId = [];
     /** @var array|null */
-    private $level = [];
+    private ?array $level = [];
     /** @var int[] (time of expiration, if -1 then it does not expire) */
-    private $timeExpire = [];
+    private array $timeExpire = [];
     /** @var bool if true then the container has changed */
-    private $changed;
+    private bool $changed;
     /** @var null|StateMachineOne The statemachine caller. It is used for callbacks */
-    private $caller;
+    private ?StateMachineOne $caller;
     /** @var Job|null The job related with the flag. It is used for callbacks */
-    private $parentJob;
+    private ?Job $parentJob;
 
     /**
      * Flags constructor.
@@ -120,11 +120,11 @@ class Flags implements StateSerializable
     /**
      * It pulls or remove a flag identified by an idUnique.<br>
      * <b>Example:</b><br>
-     * <pre>
+     * ```
      * pull('light'); // It removes the flag light
      * pull('light','lights out',2); // It removes the flag light with message light out and level 0
      * pull('light','lights out',2,400); // It removes the flag light #400 with message light out and level 0
-     * </pre>
+     * ```
      * @param string|int  $idUnique This value is used to identify each flag
      *
      * @param string|null $msg      (optional) used for log
@@ -189,14 +189,14 @@ class Flags implements StateSerializable
     /**
      * It pushes a new flag under a specific identifier.<br>
      * <b>Example:</b><br>
-     * <pre>
+     * ```
      * push('light','ON',2); // It adds a flag in 'lights' (level 2)
      * push('light','ON',2); // It does nothing because the id/message/level are the same.
      * push('light','OFF',2); // It replaces the other flag (level 2)
      * push('siren','new message',2); // It adds a flag in 'siren'
      * push('info','work done',0,60); // It adds a message work done, level 0 and last 60 seconds
      * push('info','work done',0,60,23); // Work #23 done
-     * </pre>
+     * ```
      *
      * @param string|int  $idUnique   This value is used to identify each flag
      * @param string|null $msg        Message (or value) of the flag. If null, then it pull it

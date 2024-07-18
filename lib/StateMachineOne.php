@@ -1,4 +1,5 @@
-<?php /** @noinspection TypeUnsafeArraySearchInspection */
+<?php /** @noinspection UnknownInspectionInspection */
+/** @noinspection TypeUnsafeArraySearchInspection */
 /** @noinspection NestedTernaryOperatorInspection */
 /** @noinspection PhpPropertyOnlyWrittenInspection */
 /** @noinspection SqlNoDataSourceInspection */
@@ -23,52 +24,53 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.23.3 2023-06-29
+ * @version  2.24 2024-07-18
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne
 {
+    public const VERSION = '2.24';
     /** @var int NODB constants indicate that NO DB would be used */
     public const NODB = 0;
     /** @var int PDODB constants indicate that PdoOne database would be used */
     public const PDODB = 1;
     /** @var int PDODB constants indicate that DocumentStoreOne database would be used */
     public const DOCDB = 2;
-    public $VERSION = '2.23';
+
     /**
      * @var array Possible states. It must be an associative array.<br>
      * <p>$statemachine->states=['State1'=>'name of the state','State2'=>'another name'];</p>
      */
-    public $states = [];
+    public array $states = [];
     /** @var Transition[] */
-    public $transitions = [];
+    public array $transitions = [];
     /** @var int Used to debug */
-    public $currentTransition = -1;
+    public int $currentTransition = -1;
     /** @var MiniLang[] */
-    public $events = [];
+    public array $events = [];
     /** @var string[] */
-    public $eventNames = [];
+    public array $eventNames = [];
     /** @var string The name of the table to store the jobs */
-    public $tableJobs = 'stm_jobs';
+    public string $tableJobs = 'stm_jobs';
     /** @var string The name of the table to store the logs per job. If it's empty then it is not used */
-    public $tableJobLogs = '';
+    public string $tableJobLogs = '';
     /** @var array The list of database columns used by the job */
-    public $columnJobs = ['idjob', 'idparentjob', 'idactive', 'idstate', 'dateinit', 'datelastchange'
+    public array $columnJobs = ['idjob', 'idparentjob', 'idactive', 'idstate', 'dateinit', 'datelastchange'
         , 'dateexpired', 'dateend'];
     /** @var array The List of database columns used by the log of the job */
-    public $columnJobLogs = ['idjoblog', 'idjob', 'idrel', 'type', 'description', 'date'];
+    public array $columnJobLogs = ['idjoblog', 'idjob', 'idrel', 'type', 'description', 'date'];
     /** @var array It indicates extra fields/states */
-    public $fieldDefault = [''];
+    public array $fieldDefault = [''];
     /**
      * @var array (optional) it is used to indicate how to display the values in the web-ui<br>
      *                            <b>Example:</b>
-     *                            <pre>
+     *                            ```
      *                            $this->fieldUI=['col'=>'READWRITE'
      *                            'col2'=>'WRITE'
-     *                            'col3'=['Type1'=>20,'Type2=>40]]
+     *                            'col3'=['Type1'=>20,'Type2'=>40]
      *                            ];
-     *                            </pre>
+     *                            ```
      *                            <ul>
      *                            <li>READ :Read only values</li>
      *                            <li>READWRITE : Read and write value (default)</li>
@@ -77,59 +79,58 @@ class StateMachineOne
      *                            <li>(array) : Dropdownlist using an associative array</li>
      *                            </ul>
      */
-    public $fieldUI = [];
+    public array $fieldUI = [];
     /** @var MiniLang */
     public $miniLang;
     /** @var null|object It is the service class (optional) */
-    public $serviceObject;
+    public ?object $serviceObject=null;
     /** @var string =['after','before','instead'][$i] */
-    public $pauseTriggerWhen; // none
+    public string $pauseTriggerWhen; // none
     /** @var callable|null It is used to replace the current method used to store the logs */
     public $customSaveDBJobLog;
     /** @var bool it's true if any value is changed during checkAllJobs() */
-    public $changed = false;
-    private $debug = false;
-    private $debugAsArray = false;
-    private $debugArray = [];
+    public bool $changed = false;
+    private bool $debug = false;
+    private bool $debugAsArray = false;
+    private array $debugArray = [];
     /** @var bool */
-    private $autoGarbage = false;
-    private $counter;
+    private bool $autoGarbage = false;
+    private int $counter;
     /** @var Job[] */
-    private $jobQueue;
+    private array $jobQueue;
     /** @var Job[] */
-    private $jobQueueBackup;
+    private array $jobQueueBackup;
     /** @var int */
-    private $defaultInitState = 0;
+    private int $defaultInitState = 0;
     /** @var null|int=[self::NODB,self::PDODB,self::DOCDB][$i] If the database is active. It is marked true every automatically when we set the database. */
-    private $dbActive = 0;
-    private $dbType = '';
-    private $dbServer = '';
-    private $dbUser = '';
-    private $dbPassword = '';
-    private $dbSchema = '';
-
+    private ?int $dbActive = 0;
+    private string $dbType = '';
+    private string $dbServer = '';
+    private string $dbUser = '';
+    private string $dbPassword = '';
+    private string $dbSchema = '';
     // callbacks
     /** @var PdoOne|null */
-    private $pdoOne;
+    private ?PdoOne $pdoOne=null;
     /** @var DocumentStoreOne */
-    private $docOne;
+    private DocumentStoreOne $docOne;
     /** @var callable it's called when we change state (by default it returns true) */
     private $changeStateTrigger;
     /** @var string =['after','before','instead'][$i] */
-    private $changeStateTriggerWhen;
+    private string $changeStateTriggerWhen;
     /** @var callable it's called when we start the job (by default it returns true) */
     private $startTrigger;
     /** @var string =['after','before','instead'][$i] */
-    private $startTriggerWhen;
+    private string $startTriggerWhen;
     /** @var callable it's called when we pause the job (by default it returns true) */
     private $pauseTrigger;
     /** @var callable it's called when we stop the job (by default it returns true) */
     private $stopTrigger;
     /** @var string =['after','before','instead'][$i] */
-    private $stopTriggerWhen;
+    private string $stopTriggerWhen;
     /** @var callable This function increased in 1 the next id of the job. It is only called if we are not using a database */
     private $getNumberTrigger;
-    public $zeroDate = '1970-01-01 00:00:01';
+    public string $zeroDate = '1970-01-01 00:00:01';
 
     /**
      * Constructor of the class. By default, the construct set default triggers.
@@ -145,19 +146,19 @@ class StateMachineOne
         $this->jobQueue = [];
         $this->jobQueueBackup = [];
         $this->counter = 0;
-        $this->changeStateTrigger = static function (StateMachineOne $smo, Job $job, $newState) {
+        $this->changeStateTrigger = static function(StateMachineOne $smo, Job $job, $newState) {
             return true;
         };
-        $this->startTrigger = static function (StateMachineOne $smo, Job $job) {
+        $this->startTrigger = static function(StateMachineOne $smo, Job $job) {
             return true;
         };
-        $this->pauseTrigger = static function (StateMachineOne $smo, Job $job) {
+        $this->pauseTrigger = static function(StateMachineOne $smo, Job $job) {
             return true;
         };
-        $this->stopTrigger = static function (StateMachineOne $smo, Job $job) {
+        $this->stopTrigger = static function(StateMachineOne $smo, Job $job) {
             return true;
         };
-        $this->getNumberTrigger = static function (StateMachineOne $smo) {
+        $this->getNumberTrigger = static function(StateMachineOne $smo) {
             // you could use the database if you are pleased to.
             $smo->counter++;
             return $smo->counter;
@@ -167,26 +168,25 @@ class StateMachineOne
         $this->miniLang = new $miniLangClass($this, $dict, ['wait', 'always', 'timestate'], ['timeout', 'fulltimeout'], $serviceObject);
     }
 
-
     /**
      * Add a new transition. It is the definition of transition, indicating the "from", "where" and "conditions".
-     * <pre>
+     * ```
      * $this->addTransition(10,11,'when condition>2 set value=20','change') // if condition>2 then set the value
      *                                                                      // and change to the state 11
      * $this->addTransition(10,11,'when condition>2 set value=20','stay') // it changes values but keeps the state
-     * </pre>
+     * ```
      *
      * @param string|int|null|array $state0     Initial state defined in setStates()
      * @param string|int|null       $state1     Ending state defined in setStates() if <b>result</b>="stay", then
      *                                          <b>state1</b> is ignored.
-     * @param mixed                 $conditions It sets a condition(s) (also it could changes of properties).
+     * @param mixed                 $conditions It sets a condition(s) (also it could change of properties).
      *                                          Example:<br>
      *                                          <p><b>"when store_open = 1 and stock_milk > 0"</b> = it jumps if the
      *                                          condition(s) is meet</p>
      *                                          <p><b>"when money >= price set milk = 1'"</b> = it jump if the
      *                                          condition(s) also sets milk as 1</p>
-     *                                          <p><b>"when wait timeout 500"</b> = transitions if has passed more than
-     *                                          500 seconds since the last stage</p>
+     *                                          <p><b>"when wait timeout 500"</b> = it transitions if it has passed
+     *                                          more than 500 seconds since the last stage</p>
      *                                          <p><b>"when true()"</b> = it always transitions. It is the same as
      *                                          "when
      *                                          1=1"
@@ -212,27 +212,30 @@ class StateMachineOne
     /**
      * Add a new transition and store into Minilang, so you later could save into a Minilang Class.<br>
      * It allows to create a definition of transition, indicating the "from", "where" and "conditions".
-     * <pre>
-     * $this->addMethodTransition2(10,11,'when condition>2 set value=20','change') // if condition>2 then set the value
-     *                                                                      // and change to the state 11
-     * $this->addMethodTransition2(10,11,'when condition>2 set value=20','stay') // it changes values but keeps the
-     * state
-     * </pre>
+     * ```
+     * $this->addMethodTransition2(10,11,'when cond>2 set v=20','change'); // if condition>2 then set the value
+     *                                                                      // and change to the state 10=>11
+     * $this->addMethodTransition2(10,11,'when cond>2 set v=20','stay'); // it changes values but keeps the state
+     * $this->addMethodTransition2([10,11],12,'when cond>2 set va=20','change'); // simmilar to 10=>12 and 11=>12
+     * $this->addMethodTransition2([10,11],[12,13],'when cond>2 set v=20','change'); // simmilar to 10=>12 and 11>13
+     * ```
      *
-     * @param string|array    $state0      Initial state defined in setStates()
-     * @param string|int|null $state1      Ending state defined in setStates() if <b>result</b>="stay", then
-     *                                     <b>state1</b> is ignored.
-     * @param mixed           $conditions  It sets a condition(s) (also it could changes of properties). Example:<br>
-     *                                     <p><b>"when store_open = 1 and stock_milk > 0"</b> = it jumps if the
-     *                                     condition(s) is meet</p>
-     *                                     <p><b>"when money >= price set milk = 1'"</b> = it jump if the condition(s)
-     *                                     also sets milk as 1</p>
-     *                                     <p><b>"when wait timeout 500"</b> = transitions if has passed more than 500
-     *                                     seconds since the last stage</p>
-     *                                     <p><b>"when true()"</b> = it always transitions. It is the same as "when 1=1"
-     *                                     </p>
-     * @param string          $result      =['change','pause','continue','stop','stay'][$i]
-     * @param string|null     $description An optional description
+     * @param string|array          $state0      Initial state defined in setStates()
+     * @param string|int|null|array $state1      Ending state defined in setStates() if <b>result</b>="stay", then
+     *                                           <b>state1</b> is ignored.
+     * @param mixed                 $conditions  It sets a condition(s) (also it could change of properties).
+     *                                           Example:<br>
+     *                                           <p><b>"when store_open = 1 and stock_milk > 0"</b> = it jumps if the
+     *                                           condition(s) is meet</p>
+     *                                           <p><b>"when money >= price set milk = 1'"</b> = it jump if the
+     *                                           condition(s) also sets milk as 1</p>
+     *                                           <p><b>"when wait timeout 500"</b> = transitions if it has passed more
+     *                                           than 500 seconds since the last stage</p>
+     *                                           <p><b>"when true()"</b> = it always transitions. It is the same as
+     *                                           "when 1=1"
+     *                                           </p>
+     * @param string                $result      =['change','pause','continue','stop','stay'][$i]
+     * @param string|null           $description An optional description
      * @return int Returns the last id of the transaction.
      * @see          StateMachineOne::setStates
      * @noinspection DuplicatedCode
@@ -241,8 +244,16 @@ class StateMachineOne
                                          ?string $description = null): int
     {
         if (is_array($state0)) {
-            foreach ($state0 as $stateV) {
-                $this->transitions[] = new Transition($this, $stateV, $state1, $conditions, $result, true, $description);
+            $isArr1 = is_array($state1);
+            if ($isArr1 && count($state1) !== count($state0)) {
+                throw new RuntimeException('Wrong state defined, if both are array, then they must match');
+            }
+            foreach ($state0 as $kn => $stateV) {
+                if ($isArr1) {
+                    $this->transitions[] = new Transition($this, $stateV, $state1[$kn], $conditions, $result, true, $description);
+                } else {
+                    $this->transitions[] = new Transition($this, $stateV, $state1, $conditions, $result, true, $description);
+                }
             }
         } else {
             $this->transitions[] = new Transition($this, $state0, $state1, $conditions, $result, true, $description);
@@ -253,10 +264,10 @@ class StateMachineOne
     /**
      * It is a macro of addTransition. It does an operation (indicated by "then" every time the job is in the state.<br>
      * <b>Example:</b><br>
-     * <pre>
+     * ```
      * $this->duringState(123,'when condition>2 set value=20')
      * $this->duringState(123,'set value=20') // when is always true
-     * </pre>
+     * ```
      *
      * @param string|array $state the id of the state.
      * @param string       $then  if then when/where condition is empty then it always true.
@@ -284,10 +295,10 @@ class StateMachineOne
      * It is a macro of addTransition. It's similar to duringState() but it is used to store the information in
      * MiniLang, so you can save it later inside a Minilang Class
      * <b>Example:</b><br>
-     * <pre>
+     * ```
      * $this->duringState2(123,'when condition>2 set value=20')
      * $this->duringState2(123,'set value=20') // when is always true
-     * </pre>
+     * ```
      *
      * @param string|array $state the id of the state.
      * @param string       $then  if then when/where condition is empty then it always true.
@@ -952,10 +963,10 @@ class StateMachineOne
     /**
      * Insert a new job log into the database.
      *
-     * @param Job   $job
-     * @param array $arr
+     * @param Job   $job The job.
+     * @param array $arr The values of the job to save
      *
-     * @return bool|null
+     * @return bool|null False if the operation fails.
      * @see StateMachineOne
      */
     public function saveDBJobLog(Job $job, array $arr): ?bool
@@ -980,7 +991,7 @@ class StateMachineOne
                     $query->insert();
                     return true;
                 } catch (Exception $e) {
-                    echo 'error ' . $e->getMessage();
+                    //echo 'error ' . $e->getMessage();
                     return false;
                     //$this->addLog(0,"ERROR","Saving the joblog ".$e->getMessage());
                 }
@@ -994,7 +1005,12 @@ class StateMachineOne
                     'description' => $arr['description'],
                     'date' => date('Y-m-d H:i:s', $arr['date'])
                 ];
-                $this->docOne->appendValue($this->tableJobLogs, $this->csvStr($log));
+                try {
+                    $this->docOne->appendValue($this->tableJobLogs, $this->csvStr($log));
+                } catch (Exception $e) {
+                    //echo 'error ' . $e->getMessage();
+                    return false;
+                }
                 break;
         }
         return false;
@@ -1691,7 +1707,7 @@ cin;
         $jobCombobox .= '</select>';
         echo '<!doctype html>';
         echo "<html lang='en'>";
-        echo '<head><title>StateMachineOne Version ' . $this->VERSION . '</title>';
+        echo '<head><title>StateMachineOne Version ' . self::VERSION . '</title>';
         echo "<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>";
         echo '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">';
         echo '<style>html { font-size: 14px; }</style>';
@@ -1700,7 +1716,7 @@ cin;
         echo '<div class="card">';
         echo "<form method='post'>";
         echo '<h5 class="card-header bg-primary text-white">';
-        echo 'StateMachineOne Version ' . $this->VERSION . ' Job #' . $idJob . ' Jobs in queue: ' .
+        echo 'StateMachineOne Version ' . self::VERSION . ' Job #' . $idJob . ' Jobs in queue: ' .
             ' (' . count($this->getJobQueue()) . ') </h5>';
         echo '<div class="card-body">';
         if ($msg != '') {
@@ -1997,7 +2013,7 @@ cin;
      */
     private function isAssoc(array $arr): bool
     {
-        if (array() === $arr) {
+        if ([] === $arr) {
             return false;
         }
         return array_keys($arr) !== range(0, count($arr) - 1);
@@ -2040,7 +2056,7 @@ cin;
      */
     public function setDbActive(int $dbActive): void
     {
-        $this->dbActive = ($this->dbActive === true) ? self::PDODB : $this->dbActive;
+        $this->dbActive = $this->dbActive ? self::PDODB : $this->dbActive;
         //$this->dbActive = $dbActive;
     }
 
@@ -2213,7 +2229,6 @@ cin;
     {
         return $this->transitions[$this->currentTransition];
     }
-
     //</editor-fold>
 }
 

@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection UnknownInspectionInspection */
 /** @noinspection PhpUnused */
 /** @noinspection PhpUnusedParameterInspection */
 
@@ -13,26 +13,26 @@ namespace eftec\statemachineone;
 class Job
 {
     /** @var int number or position of the job on the queue */
-    public $idJob = 0;
+    public int $idJob = 0;
     /** @var int|null the number of the parent job */
-    public $idParentJob;
+    public ?int $idParentJob = null;
     /** @var int|null initial date (timestamp) */
-    public $dateInit;
+    public ?int $dateInit = null;
     /** @var int|null date of the last change (timestamp) */
-    public $dateLastChange;
+    public ?int $dateLastChange = null;
     /** @var int|null date of end (timestamp) */
-    public $dateEnd;
+    public ?int $dateEnd = null;
     /** @var int|null date of expiration (timestamp) */
-    public $dateExpired;
+    public ?int $dateExpired = null;
     /** @var string|int|null the id of the current state */
     public $state;
     /** @var array fields or values per job. It must be an associative array */
-    public $fields;
+    public array $fields;
     /** @var array indicates the flow of states */
-    public $stateFlow = [];
+    public array $stateFlow = [];
 
     /** @var bool[] it is used to determine if transition was already executed */
-    public $transitions = [];
+    public array $transitions = [];
     /**
      * none= the job doesn't exist, or it's deleted.
      * inactive= the job exists, but it hasn't started
@@ -41,13 +41,13 @@ class Job
      * stop = the job has ended (succesfully,cancelled or other)
      * @var string ['none','inactive','active','pause','stop'][$i]
      */
-    private $active = 'none';
+    private string $active = 'none';
     /** @var bool If the job is new or not. It is used to store into the database (insert) */
-    public $isNew = false;
+    public bool $isNew = false;
     /** @var bool If the job is updated. It is used to store into the database (update) */
-    public $isUpdate = false;
+    public bool $isUpdate = false;
     /** @var string[] */
-    public $log;
+    public array $log;
 
     public function wait($param = null): bool
     {
