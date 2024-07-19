@@ -17,7 +17,7 @@ use Exception;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.23.3 2023-06-29
+ * @version  2.25 2024-07-19
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class Flags implements StateSerializable

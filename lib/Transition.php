@@ -10,7 +10,7 @@ use eftec\minilang\MiniLang;
  * Class Transition
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.24 2024-07-18
+ * @version  2.25 2024-07-19
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class Transition
@@ -153,9 +153,11 @@ class Transition
                     $smo->changeState($job, $this->state1);
                     $this->caller->miniLang->evalSet($numTransaction);
                     //if ($smo->isDbActive()) $smo->saveDBJob($job);
+
                     $smo->addLog($job, 'INFO', 'TRANSITION', 'state,,changed,,'
                         . $smo->getStates()[$this->state0] . ",,$this->state0,,"
                         . $smo->getStates()[$this->state1] . ",,$this->state1,,$numTransaction,,$this->result");
+
                     return true;
                 }
                 break;

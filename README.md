@@ -655,6 +655,8 @@ Commonly, the log format could be of the type info or error.   Flag could show a
 Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
+* 2.25 2024-07-19
+  * added function setTime() 
 * 2.24 2024-07-18
   * updated to PHP 7.4 
   * update comments

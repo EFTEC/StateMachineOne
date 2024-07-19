@@ -24,20 +24,19 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.24 2024-07-18
+ * @version  2.25 2024-07-19
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne
 {
-    public const VERSION = '2.24';
+    public const VERSION = '2.25';
     /** @var int NODB constants indicate that NO DB would be used */
     public const NODB = 0;
     /** @var int PDODB constants indicate that PdoOne database would be used */
     public const PDODB = 1;
     /** @var int PDODB constants indicate that DocumentStoreOne database would be used */
     public const DOCDB = 2;
-
     /**
      * @var array Possible states. It must be an associative array.<br>
      * <p>$statemachine->states=['State1'=>'name of the state','State2'=>'another name'];</p>
@@ -54,7 +53,7 @@ class StateMachineOne
     /** @var string The name of the table to store the jobs */
     public string $tableJobs = 'stm_jobs';
     /** @var string The name of the table to store the logs per job. If it's empty then it is not used */
-    public string $tableJobLogs = '';
+    public string $tableJobLogs = 'stm_logs';
     /** @var array The list of database columns used by the job */
     public array $columnJobs = ['idjob', 'idparentjob', 'idactive', 'idstate', 'dateinit', 'datelastchange'
         , 'dateexpired', 'dateend'];
@@ -83,7 +82,7 @@ class StateMachineOne
     /** @var MiniLang */
     public $miniLang;
     /** @var null|object It is the service class (optional) */
-    public ?object $serviceObject=null;
+    public ?object $serviceObject = null;
     /** @var string =['after','before','instead'][$i] */
     public string $pauseTriggerWhen; // none
     /** @var callable|null It is used to replace the current method used to store the logs */
@@ -111,7 +110,7 @@ class StateMachineOne
     private string $dbSchema = '';
     // callbacks
     /** @var PdoOne|null */
-    private ?PdoOne $pdoOne=null;
+    private ?PdoOne $pdoOne = null;
     /** @var DocumentStoreOne */
     private DocumentStoreOne $docOne;
     /** @var callable it's called when we change state (by default it returns true) */
@@ -131,6 +130,10 @@ class StateMachineOne
     /** @var callable This function increased in 1 the next id of the job. It is only called if we are not using a database */
     private $getNumberTrigger;
     public string $zeroDate = '1970-01-01 00:00:01';
+    /**
+     * @var callable|null
+     */
+    private $timeFunction;
 
     /**
      * Constructor of the class. By default, the construct set default triggers.
@@ -921,9 +924,13 @@ class StateMachineOne
     }
 
     /**
-     * It returns the current timestamp. If exists a universal timer function (a global function called universaltime),
-     * then it is uses.  Why? It is because sometimes we want the same time across different services.
-     *
+     * It returns the current timestamp using the microtime function. It is used internally.<br>
+     * If exists a universal timer function (a global function called universaltime),then it is uses.<br>
+     * If setTime() is set, then it uses the value set there.<br>
+     * **Example**
+     * ```
+     * $time=$this->getTime();
+     * ```
      * @param bool $microtime if true then it returns the microtime as float
      *
      * @return int|float
@@ -933,7 +940,38 @@ class StateMachineOne
         if (function_exists('universaltime')) {
             return universaltime($microtime);
         }
+        if ($this->timeFunction !== null) {
+            $fn = $this->timeFunction;
+            return $fn($microtime);
+        }
         return $microtime ? microtime(true) : time();
+    }
+
+    /**
+     * It sets the way to determine the current time (timestamp). If it is not set, then it uses microtime()<br>
+     * **Example**<br>
+     * ```
+     * $this->setTime(10); // GMT: Thursday, 1 January 1970 0:00:10
+     * $this->setTime(new DateTime("2024-01-01 11:12:14"));
+     * $this->setTime(function($microtime=false) { return microtime($microtime); });
+     * ```
+     * @param callable|DateTime|numeric|null $newTime if callable, then it uses a funcion to determine the current time
+     *                                            if DateTime, then it is converted to timestamp
+     *                                            If int, then it is used as the current timestamp
+     * @return void
+     */
+    public function setTime($newTime): void
+    {
+        if (is_callable($newTime)) {
+            $this->timeFunction = $newTime;
+        } else {
+            if($newTime instanceof DateTime) {
+                $newTime = $newTime->getTimestamp();
+            }
+            $this->timeFunction = static function($arg = null) use ($newTime) {
+                return $newTime;
+            };
+        }
     }
 
     /**
@@ -1412,9 +1450,9 @@ cin;
             return;
         }
         $this->events[$name]->setDict($jobExec->fields);
-        $this->events[$name]->setDictEntry('_idjob', $job->idJob);
+        $this->events[$name]->setDictEntry('_idjob', $job !== null ? $job->idJob : null);
         $this->events[$name]->setDictEntry('_time', $this->getTime());
-        $this->events[$name]->setDictEntry('_state0', $job->state);
+        $this->events[$name]->setDictEntry('_state0', $job !== null ? $job->state : null);
         $this->events[$name]->evalSet();
         $this->checkJob($jobExec);
         if ($this->dbActive != self::NODB) {
