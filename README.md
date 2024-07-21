@@ -50,6 +50,7 @@ The target of this library is to ease the process to create a state machine for 
     * [Getting a job](#getting-a-job)
     * [Database and jobs.](#database-and-jobs)
     * [Fields used in Job](#fields-used-in-job)
+  * [Flags](#flags)
   * [GUI](#gui)
   * [Classes](#classes)
   * [Cache Configuration](#cache-configuration)
@@ -286,8 +287,8 @@ Types of transition:
 It compares a constant. The binary operator for comparison are
 * = Equals
 * **&lt;&gt;** Not equals
-* **&lt; &lt;=** Less and less than
-* **&gt; &gt;=** Great and great than
+* **&lt; &lt;=** "Less" and "less than"
+* **&gt; &gt;=** "Great" and "greater than"
 * **contain** If a text contains other.
 ```php
 "when field contain 'text'"
@@ -581,6 +582,23 @@ $smachine->deleteJobDB($job); // we delete a specific job.
 * **$isUpdate** bool If the job is updated. It is used to store into the database (update)
 * **$log**  string[]
 
+## Flags
+It is possible to store one or multiples flags inside a job.  
+A flag is a state or value that:
+* It can have a name.
+* It could have a level, for example a level of severity.
+* It could have an expiration time.
+* can have an interchangeable value, such as switch on and switch off.
+* It is associate with a StateMachineOne instance and with a Job.
+
+Example of creates an array of flags:
+
+```php
+$flags=new Flags('flag1', true, $smachine); // the flags is called flag1, $smachine is a state machine 
+$flags->setParent($job); // it is also associate with a job.
+```
+
+
 
 
 ## GUI
@@ -655,6 +673,8 @@ Commonly, the log format could be of the type info or error.   Flag could show a
 Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
+* 2.26 2024-07-20
+  * added function setRecordEventState(),replayRecordInit() and replayRecordInsideLoop() 
 * 2.25 2024-07-19
   * added function setTime() 
 * 2.24 2024-07-18

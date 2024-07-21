@@ -24,13 +24,13 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.25 2024-07-19
+ * @version  2.26 2024-07-20
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne
 {
-    public const VERSION = '2.25';
+    public const VERSION = '2.26';
     /** @var int NODB constants indicate that NO DB would be used */
     public const NODB = 0;
     /** @var int PDODB constants indicate that PdoOne database would be used */
@@ -134,6 +134,8 @@ class StateMachineOne
      * @var callable|null
      */
     private $timeFunction;
+    private ?string $recordFile = null;
+
 
     /**
      * Constructor of the class. By default, the construct set default triggers.
@@ -872,6 +874,7 @@ class StateMachineOne
                         $arr[$k] = $job->fields[$k];
                     }
                 } elseif ($v instanceof StateSerializable) {
+
                     /** @see Flags::__serialize */
                     $text[$k] = $job->fields[$k]; //->toString();
                 }
@@ -956,8 +959,8 @@ class StateMachineOne
      * $this->setTime(function($microtime=false) { return microtime($microtime); });
      * ```
      * @param callable|DateTime|numeric|null $newTime if callable, then it uses a funcion to determine the current time
-     *                                            if DateTime, then it is converted to timestamp
-     *                                            If int, then it is used as the current timestamp
+     *                                                if DateTime, then it is converted to timestamp
+     *                                                If int, then it is used as the current timestamp
      * @return void
      */
     public function setTime($newTime): void
@@ -965,7 +968,7 @@ class StateMachineOne
         if (is_callable($newTime)) {
             $this->timeFunction = $newTime;
         } else {
-            if($newTime instanceof DateTime) {
+            if ($newTime instanceof DateTime) {
                 $newTime = $newTime->getTimestamp();
             }
             $this->timeFunction = static function($arg = null) use ($newTime) {
@@ -1461,7 +1464,11 @@ cin;
     }
 
     /**
-     * It creates a new job.
+     * It creates a new job.<br>
+     * **Example:**
+     * ```
+     * $job=$this->createJob([],'active',1,0,200,300);
+     * ```
      *
      * @param array|null $fields      The fields of the new job. If null, then it uses the default values defined by
      *                                $this->fieldDefault
@@ -1482,7 +1489,7 @@ cin;
         ?int   $expireSec = null
     ): Job
     {
-        $fields = $fields ?? $this->fieldDefault;
+        $fields = $fields ?? $this->getFieldDefaultClone();
         $initState = $initState ?? $this->defaultInitState;
         $dateStart = $dateStart ?? (int)$this->getTime();
         $dateEnd = $durationSec === null ? 2047483640 : $dateStart + $durationSec;
@@ -1518,29 +1525,63 @@ cin;
             }
         }
         $this->jobQueue[$job->idJob] = $job; // we store the job created in the list of jobs
+        $job->fields['_idjob'] = $job->idJob;
+        $job->fields['_time'] = $this->getTime();
+        $job->fields['_state0'] = $initState;
+        $job->fields['_state1'] = $initState;
+        $job->fields['_result'] = '';
         $this->jobQueueBackup[$job->idJob] = clone $job;
+        $this->recordEventState($job);
         return $job;
     }
     //</editor-fold>
 
     /**
+     * It creates a clone of values of fieldDefault. It is because sometimes fieldDefault uses objects, so they are
+     * passed are reference.<br>
+     * **Example:**
+     * ```
+     * $params=$this->getFieldDefaultClone();
+     * ```
+     *
+     * @return array
+     */
+    public function getFieldDefaultClone(): array
+    {
+        $r=[];
+        foreach($this->fieldDefault as $k=>$v) {
+            if(is_object($v)) {
+                $r[$k] = clone $v;
+            } else {
+                $r[$k] = $v;
+            }
+        }
+        return $r;
+    }
+
+    /**
+     * It deletes a job<br>
+     * **Example:**
+     * ```
+     * $result=$this->deleteJobDB($job);
+     * ```
      * @param Job $job
      *
+     * @return bool|int|null
      * @throws Exception
      */
-    public function deleteJobDB(Job $job): void
+    public function deleteJobDB(Job $job)
     {
         switch ($this->dbActive) {
             case self::PDODB:
-                $this->getDB()
+                return $this->getDB()
                     ->from($this->tableJobs)
                     ->where(['idjob' => $job->idJob])
                     ->delete();
-                break;
             case self::DOCDB:
-                $this->docOne->delete('job' . $job->idJob);
-                break;
+                return $this->docOne->delete('job' . $job->idJob);
         }
+        return null;
     }
 
 
@@ -2220,8 +2261,11 @@ cin;
     }
 
     /**
-     * It sets the method called when the job stop. The method must have two arguments
-     * <p>$this->setStopTrigger(function (StateMachineOne $smo, Job $job) { ... });</p>
+     * It sets the method called when the job stop. The method must have two arguments<br>
+     * **Example:**
+     * ```
+     * $this->setStopTrigger(function (StateMachineOne $smo, Job $job) { ... });
+     * ```
      *
      * @param callable $stopTrigger
      * @param string   $when =['after','before','instead'][$i] If we want to call it after it's stop, before or instead
@@ -2266,6 +2310,107 @@ cin;
     public function getCurrentTransition(): Transition
     {
         return $this->transitions[$this->currentTransition];
+    }
+
+    /**
+     * If set, then it records every event and state in a file, so it could be replicated later.
+     * @param string|null $fullFilename The full filename and path of the file with extension
+     * @param bool        $deletePreviousFile
+     * @return StateMachineOne
+     */
+    public function setRecordEventState(?string $fullFilename = null,
+                                        bool    $deletePreviousFile = false): StateMachineOne
+    {
+        $this->recordFile = $fullFilename;
+        if ($deletePreviousFile && $this->recordFile !== null) {
+            @unlink($this->recordFile);
+        }
+        return $this;
+    }
+
+    /**
+     * Used internally: It is records in a filethe current event and states of a job in file but only if
+     * setRecordEventState() is set.
+     * @param Job $job The job to record the state.
+     * @return void
+     * @see StateMachineOne::setRecordEventState
+     * @noinspection GrazieInspection
+     */
+    public function recordEventState(Job $job): void
+    {
+        if (!$this->recordFile) {
+            return;
+        }
+        $existFile = file_exists($this->recordFile);
+        if (!$existFile) {
+            $content = "[\n";
+        } else {
+            $content = file_get_contents($this->recordFile);
+            $content = substr(trim($content), 0, -1); // we removed the trailing "]"
+        }
+        if ($existFile) {
+            $content .= ',';
+        }
+        $fields=[];
+        foreach($job->fields as $k=>$v) {
+            if ($v instanceof StateSerializable) {
+                $fields[$k]=$v->toString();
+            } else {
+                $fields[$k]=$v;
+            }
+        }
+
+        $content .= json_encode($fields, JSON_PRETTY_PRINT) . "\n]";
+        file_put_contents($this->recordFile, $content);
+    }
+
+    /**
+     * It starts replaying a record stored in a file.<br>
+     * This method must work together with replayRecordInsideLoop()<br>
+     * **Example**
+     * ```
+     * $rows=$this->replayRecordInit('record.json');
+     * ```
+     * @param string $fullfilename
+     * @return array
+     */
+    public function replayRecordInit(string $fullfilename):array {
+        $r= json_decode(file_get_contents($fullfilename), true);
+        if(count($r)>0) {
+            $this->setTime($r[0]['_time']); // it sets the time to the first time.
+        }
+        return $r;
+    }
+
+    /**
+     * It replays a record stor into a file. This method is used after replayRecordInit() and it must run inside a loop.
+     **Example**
+     * ```
+     * $rows=$this->replayRecordInit('record.json');
+     * $job = $this->createJob();
+     * foreach($rows as $row) {
+     *     $this->replayRecordInsideLoop($row,$job);
+     *     $this->checkJob($job);
+     *     // do something here.
+     * }
+     * ```
+     * @param array $row A row with the fields of the job. It doesn't include _state0,_state1 and _result.
+     * @param Job   $job The job to run.
+     * @return void
+     */
+    public function replayRecordInsideLoop(array $row,Job $job):void {
+        // those values must be calculated, not set manually, however they are stored for manual debug purpose
+        unset($row['_state0'], $row['_state1'], $row['_result']);
+        foreach ($row as $k => $v) {
+            if (isset($this->fieldDefault[$k]) && $this->fieldDefault[$k] instanceof StateSerializable) {
+                $flags = new Flags();
+                $flags->fromString($job, $v);
+                $job->fields[$k] = $flags;
+            } else {
+                $job->fields[$k] = $v;
+            }
+        }
+        $this->setTime($job->fields['_time']);
     }
     //</editor-fold>
 }

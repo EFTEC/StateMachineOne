@@ -10,7 +10,7 @@ use eftec\minilang\MiniLang;
  * Class Transition
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.25 2024-07-19
+ * @version  2.26 2024-07-20
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class Transition
@@ -100,6 +100,7 @@ class Transition
 
 
     /**
+     * Evaluated the logic of a transition applied to a specific job.
      * @param StateMachineOne $smo
      * @param Job             $job
      * @param int             $idTransition number of the transition.
@@ -157,7 +158,7 @@ class Transition
                     $smo->addLog($job, 'INFO', 'TRANSITION', 'state,,changed,,'
                         . $smo->getStates()[$this->state0] . ",,$this->state0,,"
                         . $smo->getStates()[$this->state1] . ",,$this->state1,,$numTransaction,,$this->result");
-
+                    $this->caller->recordEventState($job);
                     return true;
                 }
                 break;
@@ -165,6 +166,7 @@ class Transition
                 if ($forced || $ga === 'active') { // we keep the current state
                     //$smo->changeState($job, $this->state1);
                     $this->caller->miniLang->evalSet($numTransaction);
+                    $this->caller->recordEventState($job);
                     //if ($smo->isDbActive()) $smo->saveDBJob($job);
                     //$smo->addLog($job, "INFO", "state <b>stay</b> in "
                     //    .$smo->getStates()[$this->state0]."($this->state0) $this->result");
@@ -189,6 +191,7 @@ class Transition
                     if ($smo->pauseTriggerWhen === 'after') {
                         $smo->callPauseTrigger($job);
                     }
+                    $this->caller->recordEventState($job);
                     return true;
                 }
                 break;
@@ -201,6 +204,7 @@ class Transition
                     $smo->addLog($job, 'INFO', 'TRANSITION', 'state,,continue,,'
                         . $smo->getStates()[$this->state0] . ",,$this->state0,,"
                         . $smo->getStates()[$this->state1] . ",,$this->state1,,$numTransaction,,$this->result");
+                    $this->caller->recordEventState($job);
                     return true;
                 }
                 break;
@@ -217,6 +221,7 @@ class Transition
                     if ($smo->isAutoGarbage()) {
                         $smo->garbageCollector(); // job done, deleting from the queue.
                     }
+                    $this->caller->recordEventState($job);
                     return true;
                 }
                 break;
