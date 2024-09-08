@@ -34,9 +34,9 @@ class Flags implements StateSerializable
     /** @var bool if true then the container has changed */
     private bool $changed;
     /** @var null|StateMachineOne The statemachine caller. It is used for callbacks */
-    private ?StateMachineOne $caller;
+    private ?StateMachineOne $caller=null;
     /** @var Job|null The job related with the flag. It is used for callbacks */
-    private ?Job $parentJob;
+    private ?Job $parentJob=null;
 
     /**
      * Flags constructor.
