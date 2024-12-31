@@ -7,10 +7,10 @@ Since this library is PHP native, then it could run in Laravel, Symfony and any 
 
 [![Packagist](https://img.shields.io/packagist/v/eftec/statemachineone.svg)](https://packagist.org/packages/eftec/statemachineone)
 [![Total Downloads](https://poser.pugx.org/eftec/statemachineone/downloads)](https://packagist.org/packages/eftec/statemachineone)
-[![Maintenance](https://img.shields.io/maintenance/yes/2023.svg)]()
-[![composer](https://img.shields.io/badge/composer-%3E1.8-blue.svg)]()
-[![php](https://img.shields.io/badge/php-7.2-green.svg)]()
-[![php](https://img.shields.io/badge/php-8.x-green.svg)]()
+[![Maintenance](https://img.shields.io/maintenance/yes/2025.svg)]()
+[![composer](https://img.shields.io/badge/composer-%3E2.0-blue.svg)]()
+[![php](https://img.shields.io/badge/php-7.4-green.svg)]()
+[![php](https://img.shields.io/badge/php-8.4-green.svg)]()
 [![CocoaPods](https://img.shields.io/badge/docs-70%25-yellow.svg)]()
 
 ## What is a state machine?.
@@ -673,6 +673,8 @@ Commonly, the log format could be of the type info or error.   Flag could show a
 Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
+* 2.28 2024-12-31
+  * Updated to php 8.4 
 * 2.26 2024-07-20
   * added function setRecordEventState(),replayRecordInit() and replayRecordInsideLoop() 
 * 2.25 2024-07-19

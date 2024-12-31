@@ -55,7 +55,7 @@ class StateMachineOne_all_Test extends TestCase
         $this->state->checkJob($job);
         unset($job->fields['_time']);
         self::assertEquals(['pedal' => 0, 'turnkey' => 0, 'gas' => 100, 'brake' => 0, 'speed' => 0, '_idjob' => 1,
-            '_state0' => 1], $job->fields);
+            '_state0' => 1,    '_state1' => 1, '_result' => '',    '_changed' => null], $job->fields);
         $job->fields['pedal'] = 1;
         $job->fields['turnkey'] = 1;
         // I push the pedal and I turn the key. gas > 0
@@ -66,7 +66,7 @@ class StateMachineOne_all_Test extends TestCase
     '_state0' => 2,
 
     '_result' => 'change',
-    '_state1' => 2
+    '_state1' => 2   , '_changed' => null
         ], $job->fields);
         self::assertEquals(IDLING, $job->state);
         // i speed
@@ -77,7 +77,7 @@ class StateMachineOne_all_Test extends TestCase
         ,    '_idjob' => 1,
     '_state0' => 3,
     '_result' => 'change',
-    '_state1' => 3
+    '_state1' => 3    ,'_changed' => null
         ], $job->fields);
         self::assertEquals(DRIVING, $job->state);
         // speed is zero, I am braking
@@ -89,7 +89,7 @@ class StateMachineOne_all_Test extends TestCase
         ,    '_idjob' => 1,
     '_state0' => 2,
     '_result' => 'change',
-    '_state1' => 2
+    '_state1' => 2   , '_changed' => null
         ], $job->fields);
         self::assertEquals(IDLING, $job->state);
         // it's stopped and key is not turned.
@@ -101,7 +101,7 @@ class StateMachineOne_all_Test extends TestCase
             '_idjob' => 1,
     '_state0' => 2,
     '_result' => 'stop',
-    '_state1' => 1
+    '_state1' => 1,    '_changed' => null
             ], $job->fields);
         self::assertEquals(PARKED, $job->state);
     }
@@ -135,11 +135,46 @@ class StateMachineOne_all_Test extends TestCase
                 '_idjob' => 1,
     '_state0' => 1,
     '_result' => 'stay',
-    '_state1' => 1
+    '_state1' => 1,
+                '_changed' => null
             ]
             , $job->fields);
     }
 
+    public function test_norepeat(): void
+    {
+        $this->state->setDefaultInitState(1);
+        $this->state->setStates([
+            1 => 'STATE1',
+            2 => 'STATE2',
+            3 => 'STATE3',
+            4 => 'STATE4'
+        ]);
+        $this->state->fieldDefault = [
+            'counter1' => 0,
+            'counter2' => 0
+        ];
+        $this->state->addTransition(1, 1
+            , 'when norepeat() then counter1=counter1+1 else stop()');
+        /*$this->state->addTransition(1, 2
+            , 'when norepeat() then counter1=counter1+1');
+        $this->state->addTransition(2,3
+            , 'when norepeat() then counter1=counter1+10', 'change');
+        $this->state->addTransition(3,1
+            , 'when norepeat() then counter1=counter1+100 else stop()', 'change');*/
+        $job = $this->state->createJob($this->state->fieldDefault);
+
+        $this->state->checkAllJobs();
+
+        //$this->state->checkAllJobs();
+
+        unset($job->fields['_time']);
+
+        $this->assertEquals('stop', $job->getActive());
+        $this->assertEquals(1, $job->fields['counter1']);
+
+
+    }
     public function test_3(): void
     {
         $this->state->setDefaultInitState(PARKED);

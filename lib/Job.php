@@ -7,7 +7,7 @@ namespace eftec\statemachineone;
  * Class Job
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.27 2024-07-20
+ * @version  2.28 2024-12-31
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class Job

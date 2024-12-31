@@ -22,9 +22,9 @@ $smachine->setTime(1000);
 //$smachine->setTime(6000);
 $smachine->setStates([1 => 'init', 2 => 'mid', 3 => 'end']);
 $smachine->fieldDefault = ['v1' => 0, 'flag1' => new Flags('flag1', true, $smachine), 'v3' => 'abc'];
-$smachine->addTransition(1, 1, 'where _time=1005 then flag1.push("a1","abc") and v3="second1005"', 'stay');
-$smachine->addTransition(1, 2, 'where _time>=1010 then flag1.push("a1","xyz") and v3="second1010"', 'change');
-$smachine->addTransition(2, 3, 'where _time>=1020 then and v3="second1020"', 'change');
+$smachine->addTransition(1, 1, 'where _time>=1005 and _time<1010 and norepeat() then flag1.push("a1","abc") and v3="second1005"', 'stay');
+$smachine->addTransition(1, 2, 'where _time>=1010 and norepeat() then flag1.push("a1","xyz") and v3="second1010"', 'change');
+$smachine->addTransition(2, 3, 'where _time>=1020 and norepeat() then and v3="second1020"', 'change');
 $smachine->setTime(1000);
 $job = $smachine->createJob();
 $job->idJob=1;
@@ -53,7 +53,7 @@ foreach ($oldValues as $row) {
     $r = $job->fields;
     unset($r['flag1']);
 
-    echo "State:".json_encode($r)." time:$i<br>";
+    echo "State:".json_encode($r)."<br>";
 
 
 }

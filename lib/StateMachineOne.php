@@ -24,13 +24,13 @@ use RuntimeException;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.26 2024-07-20
+ * @version  2.28 2024-12-31
  * @license  LGPL-3.0 (you could use in a comercial-close-source product but any change to this library must be shared)
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class StateMachineOne
 {
-    public const VERSION = '2.26';
+    public const VERSION = '2.28';
     /** @var int NODB constants indicate that NO DB would be used */
     public const NODB = 0;
     /** @var int PDODB constants indicate that PdoOne database would be used */
@@ -135,7 +135,11 @@ class StateMachineOne
      */
     private $timeFunction;
     private ?string $recordFile = null;
-
+    private ?Job $currentJob=null;
+    /**
+     * @var true
+     */
+    private bool $noRepeatRunning=false;
 
     /**
      * Constructor of the class. By default, the construct set default triggers.
@@ -352,7 +356,7 @@ class StateMachineOne
      * It adds an event with a name
      *
      * @param int|string $name       name of the event
-     * @param string     $conditions Example: 'set field = field2 , field = 0 , field = function()
+     * @param string     $conditions Example: set field = field2 , field = 0 , field = function()
      */
     public function addEvent($name, string $conditions): void
     {
@@ -362,6 +366,39 @@ class StateMachineOne
         $eventMiniLang->separate($conditions, -1, 'event $name');
         $this->eventNames[$name] = $conditions;
         $this->events[$name] = $eventMiniLang;
+    }
+    public function norepeat():bool {
+
+        if(isset($this->currentJob->fields['_norepeat'][$this->currentTransition])) {
+            // the transition was realized previously
+            return false;
+        }
+        $this->noRepeatRunning=true;
+        return true;
+    }
+    public function nope(): bool
+    {
+        return false;
+    }
+
+    /**
+     * It is used internally to mark the transition of the current job in evaluated as done.<br>
+     * This function is only executed if noRepeatRunning=true
+     * @param int|null $idTransition The number of transition. If null then it only marks noRepeatRunning=false
+     * @return void
+     */
+    public function noRepeatMark(?int $idTransition=null):void {
+        if(!$this->noRepeatRunning) {
+            return;
+        }
+        $this->noRepeatRunning=false;
+        if($idTransition!==null) {
+            $this->currentJob->fields['_norepeat'][$this->currentTransition]=$this->currentTransition;
+        }
+    }
+    public function stop():void {
+        $this->currentJob->setActive('stop');
+        $this->miniLang->setDictEntry('_changed','stop');
     }
 
     /**
@@ -1131,6 +1168,7 @@ class StateMachineOne
             $job->setActive();
             $job->setIsUpdate();
         }
+        $this->currentJob=$job;
         foreach ($this->transitions as $idTransition => $trn) {
             $this->currentTransition = $idTransition;
             // the isset it is because the job could be deleted from the queue.
@@ -2150,7 +2188,7 @@ cin;
     }
 
     /**
-     * Set the debug mode. By default the debug mode is false.
+     * Set the debug mode. By default, the debug mode is false.
      *
      * @param bool $debug
      */
@@ -2383,15 +2421,16 @@ cin;
     }
 
     /**
-     * It replays a record stor into a file. This method is used after replayRecordInit() and it must run inside a loop.
-     **Example**
+     * It replays a record stor into a file. This method is used after replayRecordInit() and it
+     * must run inside a loop.<br>
+     * **Example**
      * ```
      * $rows=$this->replayRecordInit('record.json');
      * $job = $this->createJob();
      * foreach($rows as $row) {
      *     $this->replayRecordInsideLoop($row,$job);
      *     $this->checkJob($job);
-     *     // do something here.
+     *     // do something here;
      * }
      * ```
      * @param array $row A row with the fields of the job. It doesn't include _state0,_state1 and _result.

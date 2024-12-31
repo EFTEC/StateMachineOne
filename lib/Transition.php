@@ -10,7 +10,7 @@ use eftec\minilang\MiniLang;
  * Class Transition
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.26 2024-07-20
+ * @version  2.28 2024-12-31
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class Transition
@@ -28,12 +28,12 @@ class Transition
     /** @var string=['change','pause','continue','stop','stay','stayonce'][$i] */
     public string $result = '';
     /** @var string|null an optional description of the transition */
-    public ?string $description;
+    public ?string $description = null;
     /** @var MiniLang */
     public MiniLang $miniLang;
-    public ?StateMachineOne $caller;
-    /** @var Job used to determine the current time */
-    public Job $currentJob;
+    public ?StateMachineOne $caller = null;
+    /** @var Job|null used to determine the current time */
+    public ?Job $currentJob = null;
     /**
      * @var int|array Maximum duration (in seconds) of this transition. If the time it's up, then the transition is
      *      executed
@@ -55,24 +55,24 @@ class Transition
      * $a1=new Transition($caller,'initialstate','endstate','if condition=1','change')
      * ```
      *
-     * @param StateMachineOne $caller     The caller (usually, a statemachine instance).
-     * @param string|int|null $state0     The initial state
-     * @param string|int|null $state1     The end state. It could be the same initial state.
-     * @param mixed           $conditions The code with the conditions. The conditions are expressed by MiniLang.
-     * @param string          $result     =['change','pause','continue','stop','stay'][$i]
-     * @param bool            $storeClass If true, then it doesn't change the state, but it stores the operation in
-     *                                    MiniLang. It is useful if you want to create a MiniLang class.
+     * @param StateMachineOne $caller      The caller (usually, a statemachine instance).
+     * @param string|int|null $state0      The initial state
+     * @param string|int|null $state1      The end state. It could be the same initial state.
+     * @param mixed           $conditions  The code with the conditions. The conditions are expressed by MiniLang.
+     * @param string          $result      =['change','pause','continue','stop','stay'][$i]
+     * @param bool            $storeClass  If true, then it doesn't change the state, but it stores the operation in
+     *                                     MiniLang. It is useful if you want to create a MiniLang class.
      * @param string|null     $description an optional description
      * @see https://github.com/EFTEC/MiniLang for more information about conditions.
      */
     public function __construct(StateMachineOne $caller, $state0, $state1, $conditions
-        , string                                $result = '', bool $storeClass = false,?string $description=null)
+        , string                                $result = '', bool $storeClass = false, ?string $description = null)
     {
         $this->caller = $caller;
         $this->state0 = $state0;
         $this->state1 = $state1;
         $this->result = $result;
-        $this->description=$description;
+        $this->description = $description;
         if (is_callable($conditions)) {
             $this->txtCondition = 'custom function()';
             $this->function = $conditions;
@@ -83,10 +83,10 @@ class Transition
                 // we need to evaluate the code (otherwise, we do nothing)
                 if ($storeClass) {
                     // we generate php code
-                    $this->caller->miniLang->separate2($conditions,-1,$description); // this process could be a bit expensive.
+                    $this->caller->miniLang->separate2($conditions, -1, $description); // this process could be a bit expensive.
                 } else {
                     // we parse the code in runtime.
-                    $this->caller->miniLang->separate($conditions,-1,$description); // this process could be a bit expensive.
+                    $this->caller->miniLang->separate($conditions, -1, $description); // this process could be a bit expensive.
                 }
             }
             if (isset($this->caller->miniLang->areaValue['timeout'])) {
@@ -98,7 +98,6 @@ class Transition
         }
     }
 
-
     /**
      * Evaluated the logic of a transition applied to a specific job.
      * @param StateMachineOne $smo
@@ -109,18 +108,24 @@ class Transition
      */
     public function evalLogic(StateMachineOne $smo, Job $job, int $idTransition): bool
     {
-        $this->caller->miniLang->setDictEntry('_idjob',$job->idJob);
-        $this->caller->miniLang->setDictEntry('_time',$this->caller->getTime());
+        $this->caller->miniLang->setDictEntry('_idjob', $job->idJob);
+        $this->caller->miniLang->setDictEntry('_time', $this->caller->getTime());
         $r = $this->caller->miniLang->evalLogic($idTransition);
+        //$this->caller->miniLang->setDictEntry('_result',$r);
         if ($r === 'wait') {
+            $this->caller->noRepeatMark(); // clear the norepeat() if any
             return false;
         } // wait
         if ($this->result === 'stayonce' && isset($job->transitions[$idTransition])) {
+            $this->caller->noRepeatMark(); // clear the norepeat() if any
             return false; // transition was already done.
         }
         if ($r) {
+            $this->caller->noRepeatMark($idTransition); // store the norepeat if any and clear it
             return $this->doTransition($smo, $job, false, $idTransition);
         }
+        $this->caller->noRepeatMark(); // clear the norepeat() if any
+        $this->caller->miniLang->setDictEntry('_changed', null);
         $this->caller->miniLang->evalSet($idTransition, 'else');
         return false;
     }
@@ -144,17 +149,19 @@ class Transition
         $this->currentJob = $job;
         $job->transitions[$numTransaction] = true;
         // we set some variables that we could use in our code minilang.
-        $this->caller->miniLang->setDictEntry('_result',$this->result);
-        $this->caller->miniLang->setDictEntry('_state0',$this->state0);
-        $this->caller->miniLang->setDictEntry('_state1',$this->state1);
-
+        $this->caller->miniLang->setDictEntry('_result', $this->result);
+        $this->caller->miniLang->setDictEntry('_state0', $this->state0);
+        $this->caller->miniLang->setDictEntry('_state1', $this->state1);
         switch ($this->result) {
             case 'change':
                 if ($forced || $ga === 'active') { // we only changed if the job is active.
                     $smo->changeState($job, $this->state1);
+                    $this->caller->miniLang->setDictEntry('_changed', null);
                     $this->caller->miniLang->evalSet($numTransaction);
+                    if ($this->caller->miniLang->getDictEntry('_changed') === 'stop') {
+                        return $this->doTransitionStop($ga, $forced, $smo, $job, $numTransaction, false);
+                    }
                     //if ($smo->isDbActive()) $smo->saveDBJob($job);
-
                     $smo->addLog($job, 'INFO', 'TRANSITION', 'state,,changed,,'
                         . $smo->getStates()[$this->state0] . ",,$this->state0,,"
                         . $smo->getStates()[$this->state1] . ",,$this->state1,,$numTransaction,,$this->result");
@@ -209,24 +216,31 @@ class Transition
                 }
                 break;
             case 'stop':
-                if ($ga === 'active' || $ga === 'pause' || $forced) { // we only changed if the job is paused or active.
-                    $smo->changeState($job, $this->state1);
-                    $job->setActive('stop');
-                    $this->caller->miniLang->evalSet($numTransaction);
-                    //if ($smo->isDbActive()) $smo->saveDBJob($job);
-                    $smo->addLog($job, 'INFO', 'TRANSITION', 'state,,stop,,'
-                        . $smo->getStates()[$this->state0] . ",,$this->state0,,"
-                        . $smo->getStates()[$this->state1] . ",,$this->state1,,$numTransaction,,$this->result");
-                    $smo->callStopTrigger($job);
-                    if ($smo->isAutoGarbage()) {
-                        $smo->garbageCollector(); // job done, deleting from the queue.
-                    }
-                    $this->caller->recordEventState($job);
-                    return true;
-                }
-                break;
+                return $this->doTransitionStop($ga, $forced, $smo, $job, $numTransaction);
             default:
                 trigger_error("Error: Result of transition $this->result not defined");
+        }
+        return false;
+    }
+
+    protected function doTransitionStop($ga, $forced, $smo, $job, $numTransaction, $evalSet = true): bool
+    {
+        if ($ga === 'active' || $ga === 'pause' || $forced) { // we only changed if the job is paused or active.
+            $smo->changeState($job, $this->state1);
+            $job->setActive('stop');
+            if ($evalSet) {
+                $this->caller->miniLang->evalSet($numTransaction);
+            }
+            //if ($smo->isDbActive()) $smo->saveDBJob($job);
+            $smo->addLog($job, 'INFO', 'TRANSITION', 'state,,stop,,'
+                . $smo->getStates()[$this->state0] . ",,$this->state0,,"
+                . $smo->getStates()[$this->state1] . ",,$this->state1,,$numTransaction,,$this->result");
+            $smo->callStopTrigger($job);
+            if ($smo->isAutoGarbage()) {
+                $smo->garbageCollector(); // job done, deleting from the queue.
+            }
+            $this->caller->recordEventState($job);
+            return true;
         }
         return false;
     }
@@ -311,6 +325,4 @@ class Transition
         $this->function = $function;
         return $this;
     }
-
-
 }

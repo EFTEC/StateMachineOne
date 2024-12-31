@@ -1,6 +1,5 @@
 <?php /** @noinspection UnknownInspectionInspection */
 /** @noinspection TypeUnsafeComparisonInspection */
-
 /** @noinspection PhpUnused */
 
 namespace eftec\statemachineone;
@@ -17,7 +16,7 @@ use Exception;
  *
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.25 2024-07-19
+ * @version  2.28 2024-12-31
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class Flags implements StateSerializable
@@ -33,10 +32,12 @@ class Flags implements StateSerializable
     private array $timeExpire = [];
     /** @var bool if true then the container has changed */
     private bool $changed;
-    /** @var null|StateMachineOne The statemachine caller. It is used for callbacks */
-    private ?StateMachineOne $caller;
+    /** @var null|StateMachineOne The statemachine caller. It is used for callbacks
+     * @noinspection PhpUnusedFieldDefaultValueInspection
+     */
+    private ?StateMachineOne $caller = null;
     /** @var Job|null The job related with the flag. It is used for callbacks */
-    private ?Job $parentJob;
+    private ?Job $parentJob = null;
 
     /**
      * Flags constructor.
