@@ -673,6 +673,8 @@ Commonly, the log format could be of the type info or error.   Flag could show a
 Dual license (LGPL 3.0 and Commercial). See LICENSE file.
 
 ## Version
+* 2.29 2025-02-07
+  * updated timeout
 * 2.28 2024-12-31
   * Updated to php 8.4 
 * 2.26 2024-07-20

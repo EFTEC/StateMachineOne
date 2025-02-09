@@ -10,7 +10,7 @@ use eftec\minilang\MiniLang;
  * Class Transition
  * @package  eftec\statemachineone
  * @author   Jorge Patricio Castro Castillo <jcastro arroba eftec dot cl>
- * @version  2.28 2024-12-31
+ * @version  2.29 2025-02-07
  * @link     https://github.com/EFTEC/StateMachineOne
  */
 class Transition
@@ -38,12 +38,12 @@ class Transition
      * @var int|array Maximum duration (in seconds) of this transition. If the time it's up, then the transition is
      *      executed
      */
-    private $duration = 2000000;
+    private $duration = 864000000; // 10k days
     /**
-     * @var int|array Maximum duration (in second) considering the whole job. If the time it's up then this transitin
+     * @var int|array Maximum duration (in second) considering the whole job. If the time it's up then this transition
      *      is done
      */
-    private $fullDuration = 2000000;
+    private $fullDuration = 864000000; // 10k days
 
     /**
      * Transition constructor.<br>
